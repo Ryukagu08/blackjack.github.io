@@ -6,13 +6,21 @@ const commandInput = document.getElementById('command-input');
 const game = {
     deck: [],
     playerHand: [],
+    playerHands: [],    // For split hands
+    activeHandIndex: 0, // Current hand being played
     dealerHand: [],
     playerScore: 0,
     dealerScore: 0,
     money: 100,
     currentBet: 0,
+    insuranceBet: 0,
     gameInProgress: false,
-    playerTurn: true
+    playerTurn: true,
+    canSplit: false,
+    canDouble: false,
+    canInsurance: false,
+    canSurrender: false,
+    handSplit: false
 };
 
 // Card definitions
@@ -74,6 +82,18 @@ function processCommand(command) {
         case 'stand':
             stand();
             break;
+        case 'double':
+            doubleDown();
+            break;
+        case 'split':
+            splitHand();
+            break;
+        case 'insurance':
+            takeInsurance();
+            break;
+        case 'surrender':
+            surrender();
+            break;
         case 'money':
             checkMoney();
             break;
@@ -88,13 +108,17 @@ function processCommand(command) {
 // Show help
 function showHelp() {
     output("Available commands:");
-    output("  help   - Show this help message");
-    output("  bet N  - Place a bet of N dollars");
-    output("  deal   - Deal cards and start the game");
-    output("  hit    - Take another card");
-    output("  stand  - End your turn");
-    output("  money  - Check your current balance");
-    output("  clear  - Clear the terminal");
+    output("  help      - Show this help message");
+    output("  bet N     - Place a bet of N dollars");
+    output("  deal      - Deal cards and start the game");
+    output("  hit       - Take another card");
+    output("  stand     - End your turn");
+    output("  double    - Double your bet and take one more card");
+    output("  split     - Split your hand when you have two cards of same value");
+    output("  insurance - Take insurance when dealer shows an Ace");
+    output("  surrender - Surrender and lose half your bet");
+    output("  money     - Check your current balance");
+    output("  clear     - Clear the terminal");
 }
 
 // Place a bet
@@ -155,9 +179,13 @@ function startGame() {
     // Initialize game state
     game.deck = createDeck();
     game.playerHand = [];
+    game.playerHands = [];
+    game.activeHandIndex = 0;
     game.dealerHand = [];
     game.playerTurn = true;
     game.gameInProgress = true;
+    game.handSplit = false;
+    game.insuranceBet = 0;
     
     // Deal initial cards
     game.playerHand.push(dealCard());
@@ -169,8 +197,25 @@ function startGame() {
     game.playerScore = calculateHandValue(game.playerHand);
     game.dealerScore = calculateHandValue(game.dealerHand);
     
+    // Check if player can double (always allowed on initial hand)
+    game.canDouble = game.money >= game.currentBet;
+    
+    // Check if player can split (two cards of same value)
+    game.canSplit = (game.playerHand[0].value === game.playerHand[1].value || 
+                    getCardValue(game.playerHand[0]) === getCardValue(game.playerHand[1])) && 
+                    game.money >= game.currentBet;
+    
+    // Check if player can take insurance (dealer shows an Ace)
+    game.canInsurance = game.dealerHand[0].value === 'A' && game.money >= Math.ceil(game.currentBet / 2);
+    
+    // Check if player can surrender (always allowed on initial hand)
+    game.canSurrender = true;
+    
     // Display game state
     displayGameState();
+    
+    // Show available options
+    showOptions();
     
     // Check for blackjack
     if (game.playerScore === 21) {
@@ -186,10 +231,41 @@ function startGame() {
         }
     } else if (game.dealerScore === 21) {
         // Dealer has blackjack
-        output("Dealer has Blackjack! You lose.");
-        game.money -= game.currentBet;
+        if (game.insuranceBet > 0) {
+            output("Dealer has Blackjack! Your insurance pays 2:1.");
+            game.money += game.insuranceBet * 2;
+            game.money -= game.currentBet; // Still lose the main bet
+        } else {
+            output("Dealer has Blackjack! You lose.");
+            game.money -= game.currentBet;
+        }
         endGame();
     }
+}
+
+// Get card value (used for splitting logic)
+function getCardValue(card) {
+    if (['J', 'Q', 'K'].includes(card.value)) {
+        return 10;
+    } else if (card.value === 'A') {
+        return 11;
+    } else {
+        return parseInt(card.value);
+    }
+}
+
+// Show available options based on game state
+function showOptions() {
+    if (!game.playerTurn) return;
+    
+    let options = ["hit", "stand"];
+    
+    if (game.canDouble) options.push("double");
+    if (game.canSplit) options.push("split");
+    if (game.canInsurance) options.push("insurance");
+    if (game.canSurrender) options.push("surrender");
+    
+    output("Available actions: " + options.join(", "));
 }
 
 // Deal a card from the deck
@@ -223,7 +299,7 @@ function calculateHandValue(hand) {
     return value;
 }
 
-// Display simple ASCII card
+// Display simple ASCII card with dashed borders
 function cardToAscii(card, hidden = false) {
     if (hidden) {
         return [
@@ -235,14 +311,29 @@ function cardToAscii(card, hidden = false) {
         ];
     }
     
-    const value = card.value.padEnd(2);
-    return [
-        "+-----+",
-        `|${value}   |`,
-        `|  ${card.suit}  |`,
-        `|   ${value}|`,
-        "+-----+"
-    ];
+    // Extract value and suit
+    const value = card.value;
+    const suit = card.suit;
+    
+    // Create card with proper formatting to match screenshot
+    // Adjust spacing based on value length (for double digits like "10")
+    if (value.length > 1) {
+        return [
+            "+-----+",
+            `|${value}   |`,
+            `|  ${suit}  |`,
+            `|   ${value}|`,
+            "+-----+"
+        ];
+    } else {
+        return [
+            "+-----+",
+            `|${value}    |`,
+            `|  ${suit}  |`,
+            `|    ${value}|`,
+            "+-----+"
+        ];
+    }
 }
 
 // Format hand as ASCII art
@@ -255,7 +346,7 @@ function handToAscii(hand, hideSecond = false) {
         cardLines.push(cardToAscii(hand[i], hideSecond && i === 1));
     }
     
-    // Combine horizontally
+    // Combine horizontally with proper spacing
     const result = ["", "", "", "", ""];
     for (let row = 0; row < 5; row++) {
         for (let card = 0; card < cardLines.length; card++) {
@@ -268,7 +359,18 @@ function handToAscii(hand, hideSecond = false) {
 
 // Display game state
 function displayGameState() {
-    // Create ASCII table
+    let betInfo = '';
+    
+    if (game.handSplit) {
+        // Show multiple bet amounts for split hands
+        let totalBet = 0;
+        game.playerHands.forEach(hand => totalBet += hand.bet);
+        betInfo = `Total Bet: ${totalBet.toString().padStart(3)}`;
+    } else {
+        betInfo = `Bet: ${game.currentBet.toString().padStart(3)}`;
+    }
+    
+    // Create ASCII table header
     let tableArt = 
 `+---------------------------------------------------------------+
 |                         BLACKJACK                             |
@@ -280,15 +382,39 @@ function displayGameState() {
 |                                                               |
 |                                                               |
 |                                                               |
-+---------------------------------------------------------------+
++---------------------------------------------------------------+`;
+
+    // Split hand display requires more space
+    if (game.handSplit) {
+        tableArt += `
+|                                                               |
+| PLAYER HANDS:                                                 |`;
+        
+        // Add space for each hand
+        for (let h = 0; h < game.playerHands.length; h++) {
+            tableArt += `
+|                                                               |
+| Hand ${h + 1}:                                                        |
+|                                                               |
+|                                                               |
+|                                                               |
+|                                                               |
+|                                                               |`;
+        }
+    } else {
+        tableArt += `
 |                                                               |
 | PLAYER:                                                       |
 |                                                               |
 |                                                               |
 |                                                               |
 |                                                               |
-|                                                               |
-| Bet: $${game.currentBet.toString().padStart(3)}                      Money: $${game.money.toString().padStart(3)}      |
+|                                                               |`;
+    }
+    
+    // Add footer
+    tableArt += `
+| ${betInfo.padEnd(33)} Money: ${game.money.toString().padStart(3)}                  |
 +---------------------------------------------------------------+`;
 
     const tableLines = tableArt.split('\n');
@@ -304,22 +430,40 @@ function displayGameState() {
         tableLines[9] = `| Score: ${game.dealerScore.toString().padEnd(55)}|`;
     }
     
-    // Add player cards
-    const playerCardLines = handToAscii(game.playerHand);
-    for (let i = 0; i < playerCardLines.length; i++) {
-        tableLines[12 + i] = `| ${playerCardLines[i].padEnd(61)}|`;
+    if (game.handSplit) {
+        // Add each player hand
+        let lineOffset = 12;
+        
+        for (let h = 0; h < game.playerHands.length; h++) {
+            const hand = game.playerHands[h];
+            const handCardLines = handToAscii(hand.cards);
+            
+            // Highlight active hand
+            const handPrefix = (h === game.activeHandIndex && game.playerTurn) ? '> ' : '  ';
+            
+            // Update hand title with bet and score
+            tableLines[lineOffset + 1] = `| Hand ${h + 1}: ${handPrefix}Bet: ${hand.bet}  Score: ${hand.score}${h === game.activeHandIndex && game.playerTurn ? ' (active)' : ''}`.padEnd(62) + '|';
+            
+            // Add cards
+            for (let i = 0; i < handCardLines.length; i++) {
+                tableLines[lineOffset + 2 + i] = `| ${handCardLines[i].padEnd(61)}|`;
+            }
+            
+            lineOffset += 7; // Move to next hand section
+        }
+    } else {
+        // Standard player hand display
+        const playerCardLines = handToAscii(game.playerHand);
+        for (let i = 0; i < playerCardLines.length; i++) {
+            tableLines[12 + i] = `| ${playerCardLines[i].padEnd(61)}|`;
+        }
+        
+        // Add player score
+        tableLines[17] = `| Score: ${game.playerScore.toString().padEnd(55)}|`;
     }
-    
-    // Add player score
-    tableLines[17] = `| Score: ${game.playerScore.toString().padEnd(44)}Bet: $${game.currentBet.toString().padStart(3)}      Money: $${game.money.toString().padStart(3)}      |`;
     
     // Output the table
     output(tableLines.join('\n'), true);
-    
-    // Show game options
-    if (game.playerTurn) {
-        output("Type 'hit' to take another card or 'stand' to hold.");
-    }
 }
 
 // Player takes another card
@@ -329,21 +473,77 @@ function hit() {
         return;
     }
     
-    // Deal a card to player
-    game.playerHand.push(dealCard());
-    game.playerScore = calculateHandValue(game.playerHand);
+    // After first hit, player can no longer double, surrender, or take insurance
+    game.canDouble = false;
+    game.canSurrender = false;
+    game.canInsurance = false;
     
-    // Display updated game state
-    displayGameState();
-    
-    // Check for bust or 21
-    if (game.playerScore > 21) {
-        output("BUST! You went over 21. You lose.");
-        game.money -= game.currentBet;
-        endGame();
-    } else if (game.playerScore === 21) {
-        output("You have 21! Standing automatically.");
-        stand();
+    // Deal a card to player's current hand
+    if (game.handSplit) {
+        // When playing split hands
+        const currentHand = game.playerHands[game.activeHandIndex];
+        currentHand.cards.push(dealCard());
+        currentHand.score = calculateHandValue(currentHand.cards);
+        
+        // Display updated game state
+        displayGameState();
+        
+        // Check for bust or 21
+        if (currentHand.score > 21) {
+            output(`Hand ${game.activeHandIndex + 1} BUSTS! You lose this hand's bet.`);
+            game.money -= currentHand.bet;
+            
+            // Move to next hand or end game
+            if (game.activeHandIndex < game.playerHands.length - 1) {
+                game.activeHandIndex++;
+                output(`Playing hand ${game.activeHandIndex + 1}...`);
+                // Reset options for new hand
+                game.canDouble = true;
+                displayGameState();
+                showOptions();
+            } else {
+                // All hands are done, dealer's turn
+                game.playerTurn = false;
+                dealerPlay();
+            }
+        } else if (currentHand.score === 21) {
+            output(`Hand ${game.activeHandIndex + 1} has 21! Standing automatically.`);
+            
+            // Move to next hand or end game
+            if (game.activeHandIndex < game.playerHands.length - 1) {
+                game.activeHandIndex++;
+                output(`Playing hand ${game.activeHandIndex + 1}...`);
+                // Reset options for new hand
+                game.canDouble = true;
+                displayGameState();
+                showOptions();
+            } else {
+                // All hands are done, dealer's turn
+                game.playerTurn = false;
+                dealerPlay();
+            }
+        } else {
+            showOptions();
+        }
+    } else {
+        // Standard single hand play
+        game.playerHand.push(dealCard());
+        game.playerScore = calculateHandValue(game.playerHand);
+        
+        // Display updated game state
+        displayGameState();
+        
+        // Check for bust or 21
+        if (game.playerScore > 21) {
+            output("BUST! You went over 21. You lose.");
+            game.money -= game.currentBet;
+            endGame();
+        } else if (game.playerScore === 21) {
+            output("You have 21! Standing automatically.");
+            stand();
+        } else {
+            showOptions();
+        }
     }
 }
 
@@ -354,14 +554,224 @@ function stand() {
         return;
     }
     
-    game.playerTurn = false;
-    output("You stand. Dealer's turn.");
+    if (game.handSplit) {
+        // When playing split hands
+        output(`Standing on hand ${game.activeHandIndex + 1}.`);
+        
+        // Move to next hand or end game
+        if (game.activeHandIndex < game.playerHands.length - 1) {
+            game.activeHandIndex++;
+            output(`Playing hand ${game.activeHandIndex + 1}...`);
+            // Reset options for new hand
+            game.canDouble = true;
+            displayGameState();
+            showOptions();
+        } else {
+            // All hands are done, dealer's turn
+            game.playerTurn = false;
+            output("All hands complete. Dealer's turn.");
+            dealerPlay();
+        }
+    } else {
+        // Standard single hand play
+        game.playerTurn = false;
+        output("You stand. Dealer's turn.");
+        
+        // Reveal dealer's hand
+        displayGameState();
+        
+        // Dealer plays
+        dealerPlay();
+    }
+}
+
+// Double Down
+function doubleDown() {
+    if (!game.gameInProgress || !game.playerTurn || !game.canDouble) {
+        output("You can't double down right now.");
+        return;
+    }
     
-    // Reveal dealer's hand
+    if (game.handSplit) {
+        // When playing split hands
+        const currentHand = game.playerHands[game.activeHandIndex];
+        
+        // Double the bet for this hand
+        if (game.money < currentHand.bet) {
+            output("You don't have enough money to double down.");
+            return;
+        }
+        
+        output(`Doubling down on hand ${game.activeHandIndex + 1}.`);
+        currentHand.bet *= 2;
+        
+        // Take exactly one more card
+        currentHand.cards.push(dealCard());
+        currentHand.score = calculateHandValue(currentHand.cards);
+        
+        // Display updated game state
+        displayGameState();
+        
+        // Check result
+        if (currentHand.score > 21) {
+            output(`Hand ${game.activeHandIndex + 1} BUSTS! You lose this hand's bet.`);
+            game.money -= currentHand.bet;
+        }
+        
+        // Move to next hand or end game
+        if (game.activeHandIndex < game.playerHands.length - 1) {
+            game.activeHandIndex++;
+            output(`Playing hand ${game.activeHandIndex + 1}...`);
+            // Reset options for new hand
+            game.canDouble = true;
+            displayGameState();
+            showOptions();
+        } else {
+            // All hands are done, dealer's turn
+            game.playerTurn = false;
+            dealerPlay();
+        }
+    } else {
+        // Standard single hand play
+        // Double the bet
+        if (game.money < game.currentBet) {
+            output("You don't have enough money to double down.");
+            return;
+        }
+        
+        output("Doubling down! Bet is now $" + (game.currentBet * 2) + ".");
+        game.currentBet *= 2;
+        
+        // Take exactly one more card and stand
+        game.playerHand.push(dealCard());
+        game.playerScore = calculateHandValue(game.playerHand);
+        
+        // Display updated game state
+        displayGameState();
+        
+        // Check result
+        if (game.playerScore > 21) {
+            output("BUST! You went over 21. You lose $" + game.currentBet + ".");
+            game.money -= game.currentBet;
+            endGame();
+        } else {
+            // Automatically stand after doubling
+            game.playerTurn = false;
+            output("Standing automatically after double down. Dealer's turn.");
+            dealerPlay();
+        }
+    }
+}
+
+// Split Hand
+function splitHand() {
+    if (!game.gameInProgress || !game.playerTurn || !game.canSplit) {
+        output("You can't split right now.");
+        return;
+    }
+    
+    // Need exactly two cards of same value
+    if (game.playerHand.length !== 2 || 
+        (game.playerHand[0].value !== game.playerHand[1].value && 
+         getCardValue(game.playerHand[0]) !== getCardValue(game.playerHand[1]))) {
+        output("You can only split with two cards of the same value.");
+        return;
+    }
+    
+    // Check if player has enough money for the additional bet
+    if (game.money < game.currentBet) {
+        output("You don't have enough money to split.");
+        return;
+    }
+    
+    output("Splitting your hand!");
+    
+    // Set up split hands
+    game.handSplit = true;
+    game.playerHands = [
+        {
+            cards: [game.playerHand[0]],
+            bet: game.currentBet,
+            score: 0
+        },
+        {
+            cards: [game.playerHand[1]],
+            bet: game.currentBet,
+            score: 0
+        }
+    ];
+    
+    // Deal one more card to each hand
+    game.playerHands[0].cards.push(dealCard());
+    game.playerHands[1].cards.push(dealCard());
+    
+    // Calculate scores
+    game.playerHands[0].score = calculateHandValue(game.playerHands[0].cards);
+    game.playerHands[1].score = calculateHandValue(game.playerHands[1].cards);
+    
+    // Set active hand to first one
+    game.activeHandIndex = 0;
+    
+    // Reset options
+    game.canSplit = false;
+    game.canSurrender = false;
+    game.canInsurance = false;
+    game.canDouble = true;
+    
+    output("Playing hand 1...");
     displayGameState();
+    showOptions();
+}
+
+// Take Insurance
+function takeInsurance() {
+    if (!game.gameInProgress || !game.playerTurn || !game.canInsurance) {
+        output("You can't take insurance right now.");
+        return;
+    }
     
-    // Dealer plays
-    dealerPlay();
+    // Dealer's up card must be an Ace
+    if (game.dealerHand[0].value !== 'A') {
+        output("Insurance is only available when the dealer shows an Ace.");
+        return;
+    }
+    
+    // Insurance costs half the original bet
+    const insuranceCost = Math.ceil(game.currentBet / 2);
+    
+    if (game.money < insuranceCost) {
+        output("You don't have enough money for insurance.");
+        return;
+    }
+    
+    game.insuranceBet = insuranceCost;
+    output(`Taking insurance for ${insuranceCost}.`);
+    
+    // If dealer has blackjack, insurance pays 2:1
+    if (game.dealerScore === 21) {
+        output("Dealer has Blackjack! Your insurance pays 2:1.");
+        game.money += game.insuranceBet * 2;
+        game.money -= game.currentBet; // Still lose the main bet
+        endGame();
+    } else {
+        output("Dealer does not have Blackjack. You lose your insurance bet.");
+        game.money -= game.insuranceBet;
+        // Game continues
+        game.canInsurance = false;
+        showOptions();
+    }
+}
+
+// Surrender
+function surrender() {
+    if (!game.gameInProgress || !game.playerTurn || !game.canSurrender) {
+        output("You can't surrender right now.");
+        return;
+    }
+    
+    output("You surrender. Half your bet is returned.");
+    game.money -= Math.floor(game.currentBet / 2);
+    endGame();
 }
 
 // Dealer's turn
@@ -374,22 +784,53 @@ function dealerPlay() {
         displayGameState();
     }
     
-    // Determine winner
-    if (game.dealerScore > 21) {
-        output("Dealer BUSTS! You win!");
-        game.money += game.currentBet;
-        endGame();
-    } else if (game.dealerScore > game.playerScore) {
-        output("Dealer wins with " + game.dealerScore + ". You lose.");
-        game.money -= game.currentBet;
-        endGame();
-    } else if (game.dealerScore < game.playerScore) {
-        output("You win with " + game.playerScore + "!");
-        game.money += game.currentBet;
+    if (game.handSplit) {
+        // For split hands, compare dealer with each hand
+        let totalWinnings = 0;
+        
+        for (let i = 0; i < game.playerHands.length; i++) {
+            const hand = game.playerHands[i];
+            
+            // Skip busted hands
+            if (hand.score > 21) {
+                output(`Hand ${i + 1} already busted.`);
+                continue;
+            }
+            
+            if (game.dealerScore > 21) {
+                output(`Dealer busts! Hand ${i + 1} wins ${hand.bet}.`);
+                totalWinnings += hand.bet;
+            } else if (hand.score > game.dealerScore) {
+                output(`Hand ${i + 1} wins with ${hand.score} vs dealer's ${game.dealerScore}. You win ${hand.bet}.`);
+                totalWinnings += hand.bet;
+            } else if (hand.score < game.dealerScore) {
+                output(`Hand ${i + 1} loses with ${hand.score} vs dealer's ${game.dealerScore}. You lose ${hand.bet}.`);
+                totalWinnings -= hand.bet;
+            } else {
+                output(`Hand ${i + 1} ties with dealer at ${hand.score}. Bet returned.`);
+            }
+        }
+        
+        game.money += totalWinnings;
         endGame();
     } else {
-        output("It's a tie! Bet returned.");
-        endGame(true); // Push
+        // Standard single hand resolution
+        if (game.dealerScore > 21) {
+            output("Dealer BUSTS! You win!");
+            game.money += game.currentBet;
+            endGame();
+        } else if (game.dealerScore > game.playerScore) {
+            output("Dealer wins with " + game.dealerScore + ". You lose.");
+            game.money -= game.currentBet;
+            endGame();
+        } else if (game.dealerScore < game.playerScore) {
+            output("You win with " + game.playerScore + "!");
+            game.money += game.currentBet;
+            endGame();
+        } else {
+            output("It's a tie! Bet returned.");
+            endGame(true); // Push
+        }
     }
 }
 
