@@ -660,7 +660,7 @@ function displayGameState() {
     
     // Add footer
     tableArt += `
-| ${betInfo.padEnd(33)} ${getText('uiLabels.money')} ${game.money.toString().padStart(3)}${' '.repeat(14)}|
+| ${betInfo.padEnd(33)} ${getText('uiLabels.money')} ${game.money.toString().padStart(3)}${' '.repeat(18)}|
 +---------------------------------------------------------------+`;
 
     const tableLines = tableArt.split('\n');
@@ -668,7 +668,7 @@ function displayGameState() {
     // Add dealer cards
     const dealerCardLines = handToAscii(game.dealerHand, game.playerTurn);
     for (let i = 0; i < dealerCardLines.length; i++) {
-        tableLines[4 + i] = `| ${dealerCardLines[i].padEnd(61)}|`;
+        tableLines[4 + i] = `| ${dealerCardLines[i].padEnd(62)}|`;
     }
     
     // Add dealer score if visible
@@ -691,7 +691,7 @@ function displayGameState() {
             
             // Add cards
             for (let i = 0; i < handCardLines.length; i++) {
-                tableLines[lineOffset + 2 + i] = `| ${handCardLines[i].padEnd(61)}|`;
+                tableLines[lineOffset + 2 + i] = `| ${handCardLines[i].padEnd(62)}|`;
             }
             
             lineOffset += 7; // Move to next hand section
@@ -700,7 +700,7 @@ function displayGameState() {
         // Standard player hand display
         const playerCardLines = handToAscii(game.playerHand);
         for (let i = 0; i < playerCardLines.length; i++) {
-            tableLines[12 + i] = `| ${playerCardLines[i].padEnd(61)}|`;
+            tableLines[12 + i] = `| ${playerCardLines[i].padEnd(62)}|`;
         }
         
         // Add player score

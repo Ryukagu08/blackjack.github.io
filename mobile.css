@@ -1,0 +1,52 @@
+/* Mobile-specific responsive adjustments */
+@media screen and (max-width: 600px) {
+    body {
+        font-size: 14px; /* Slightly smaller, but more readable */
+        padding: 10px;
+    }
+
+    #terminal {
+        padding: 8px;
+    }
+
+    #input-line {
+        padding: 8px;
+    }
+
+    #command-input {
+        font-size: 14px; /* Maintain readability */
+    }
+
+    #prompt {
+        margin-right: 8px; /* Reasonable spacing */
+    }
+
+    .ascii-art {
+        line-height: 1.1;
+        font-size: 0.9em; /* Less reduction */
+    }
+}
+
+/* Very small screens - more gentle adjustments */
+@media screen and (max-width: 375px) {
+    body {
+        font-size: 12px;
+    }
+
+    #terminal {
+        padding: 6px;
+    }
+
+    #input-line {
+        padding: 6px;
+    }
+
+    #command-input {
+        font-size: 12px;
+    }
+
+    .ascii-art {
+        line-height: 1;
+        font-size: 0.85em;
+    }
+}
