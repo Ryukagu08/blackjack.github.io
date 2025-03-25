@@ -16,7 +16,7 @@ body {
     padding: 10px;
     white-space: pre-wrap;
     scrollbar-width: thin; /* Firefox */
-    scrollbar-color: #0f0 #000; /* Firefox */
+    scrollbar-color: var(--scrollbar-color, #0f0) #000; /* Firefox */
 }
 
 /* Webkit Browsers (Chrome, Safari, newer Edge) */
@@ -26,16 +26,15 @@ body {
 
 #terminal::-webkit-scrollbar-track {
     background: #000; /* Fully black background */
-    border-left: 1px solid #0a0; /* Dark green border */
 }
 
 #terminal::-webkit-scrollbar-thumb {
-    background: #0f0; /* Bright green */
+    background: #0f0; /* Default green */
     border-radius: 0; /* Sharp, blocky corners */
 }
 
 #terminal::-webkit-scrollbar-thumb:hover {
-    background: #0fa; /* Slightly brighter green on hover */
+    background: #0fa; /* Slightly brighter on hover */
 }
 
 #input-line {

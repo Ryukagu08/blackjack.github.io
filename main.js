@@ -241,7 +241,6 @@ const translations = {
     }
 };
 
-// Apply color theme to the UI
 function applyColorTheme() {
     const theme = colorThemes[game.colorTheme];
     document.body.style.backgroundColor = theme.bg;
@@ -256,6 +255,15 @@ function applyColorTheme() {
     
     if (inputLine) inputLine.style.borderColor = theme.text;
     if (prompt) prompt.style.color = theme.text;
+    
+    // Update scrollbar thumb color
+    const terminalScrollbar = document.querySelector('#terminal::-webkit-scrollbar-thumb');
+    if (terminalScrollbar) {
+        terminalScrollbar.style.background = theme.text;
+    }
+    
+    // Update Firefox scrollbar
+    document.documentElement.style.setProperty('--scrollbar-color', theme.text);
 }
 
 // Function to get translated text
