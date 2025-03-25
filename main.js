@@ -43,7 +43,40 @@ const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'
 const translations = {
     en: {
         welcome: "Welcome to Command Line Blackjack!",
-        helpPrompt: "Type 'help' for commands, 'language es' for Spanish, 'color' to change colors.",
+        helpPrompt: "Type 'help' for commands, 'rules' for game rules, 'language es' for Spanish, 'color' to change colors.",
+        rulesText: [
+            "BLACKJACK RULES:",
+            "---------------------",
+            "OBJECTIVE:",
+            "  Get a hand value closer to 21 than the dealer without going over.",
+            "",
+            "CARD VALUES:",
+            "  • Number cards (2-10): Face value",
+            "  • Face cards (J, Q, K): 10 points",
+            "  • Ace: 1 or 11 points (whichever benefits you more)",
+            "",
+            "GAMEPLAY:",
+            "  1. Place a bet to start the game",
+            "  2. You and the dealer each get two cards",
+            "  3. Dealer's first card is face up, second is hidden",
+            "  4. You choose to hit (take another card) or stand (end your turn)",
+            "  5. You can continue hitting until you stand or bust (go over 21)",
+            "  6. When you stand, the dealer reveals their hidden card",
+            "  7. Dealer must hit until they have 17 or higher",
+            "  8. Closest to 21 without busting wins",
+            "",
+            "SPECIAL MOVES:",
+            "  • DOUBLE: Double your bet and take exactly one more card",
+            "  • SPLIT: If you have two cards of the same value, split them into two hands",
+            "  • INSURANCE: If dealer shows an Ace, bet half your wager against dealer blackjack",
+            "  • SURRENDER: Give up your hand and lose only half your bet",
+            "",
+            "PAYOUTS:",
+            "  • Win: 1:1 (bet $10, win $10)",
+            "  • Blackjack (21 with first two cards): 3:2 (bet $10, win $15)",
+            "  • Insurance win: 2:1 (insurance bet $5, win $10)",
+            "  • Push (tie): Bet returned"
+        ],
         moneyStatus: `You have $${game.money}.`,
         betPlaced: (bet) => `Bet placed: $${bet}`,
         dealPrompt: "Type 'deal' to start the game.",
@@ -111,11 +144,13 @@ const translations = {
             money: "money",
             clear: "clear",
             language: "language",
-            color: "color"
+            color: "color",
+            rules: "rules"
         },
         helpText: [
             "Available commands:",
             "  help      - Show this help message",
+            "  rules     - Show Blackjack rules",
             "  bet N     - Place a bet of N dollars",
             "  deal      - Start the game after placing a bet",
             "  hit       - Take another card",
@@ -142,12 +177,45 @@ const translations = {
     },
     es: {
         welcome: "¡Bienvenido al Blackjack de Línea de Comandos!",
-        helpPrompt: "Escribe 'ayuda' para comandos, 'idioma en' para inglés, 'color' para cambiar colores.",
+        helpPrompt: "Escribe 'help' para comandos, 'rules' para reglas del juego, 'language en' para inglés, 'color' para cambiar colores.",
+        rulesText: [
+            "REGLAS DEL BLACKJACK:",
+            "---------------------",
+            "OBJETIVO:",
+            "  Obtener una mano con valor más cercano a 21 que el crupier sin pasarte.",
+            "",
+            "VALOR DE LAS CARTAS:",
+            "  • Cartas numéricas (2-10): Valor facial",
+            "  • Figuras (J, Q, K): 10 puntos",
+            "  • As: 1 u 11 puntos (el que más te beneficie)",
+            "",
+            "JUEGO:",
+            "  1. Haz una apuesta para comenzar el juego",
+            "  2. Tú y el crupier reciben dos cartas cada uno",
+            "  3. La primera carta del crupier está boca arriba, la segunda oculta",
+            "  4. Eliges pedir carta (hit) o plantarte (stand)",
+            "  5. Puedes seguir pidiendo cartas hasta que te plantes o te pases de 21",
+            "  6. Cuando te plantas, el crupier revela su carta oculta",
+            "  7. El crupier debe pedir carta hasta tener 17 o más",
+            "  8. El más cercano a 21 sin pasarse gana",
+            "",
+            "JUGADAS ESPECIALES:",
+            "  • DOBLAR: Duplica tu apuesta y recibe exactamente una carta más",
+            "  • DIVIDIR: Si tienes dos cartas del mismo valor, divídelas en dos manos",
+            "  • SEGURO: Si el crupier muestra un As, apuesta la mitad contra blackjack del crupier",
+            "  • RENDIRSE: Abandona tu mano y pierde solo la mitad de tu apuesta",
+            "",
+            "PAGOS:",
+            "  • Victoria: 1:1 (apuestas $10, ganas $10)",
+            "  • Blackjack (21 con las dos primeras cartas): 3:2 (apuestas $10, ganas $15)",
+            "  • Victoria del seguro: 2:1 (apuestas $5 en seguro, ganas $10)",
+            "  • Empate: Se devuelve la apuesta"
+        ],
         moneyStatus: `Tienes $${game.money}.`,
         betPlaced: (bet) => `Apuesta colocada: $${bet}`,
-        dealPrompt: "Escribe 'repartir' para comenzar el juego.",
+        dealPrompt: "Escribe 'deal' para comenzar el juego.",
         gameInProgress: "Ya hay un juego en progreso.",
-        needBet: "Necesitas hacer una apuesta primero. Usa 'apostar'.",
+        needBet: "Necesitas hacer una apuesta primero. Usa el comando 'bet'.",
         blackjackTie: "¡Ambos tienen Blackjack! Es un empate.",
         blackjackWin: "¡BLACKJACK! ¡Ganas 3:2 en tu apuesta!",
         dealerBlackjack: "¡El crupier tiene Blackjack! Pierdes.",
@@ -185,8 +253,8 @@ const translations = {
         tie: "¡Es un empate! Se devuelve la apuesta.",
         moneyLeft: (amount) => `Ahora tienes $${amount}.`,
         outOfMoney: "¡Te quedaste sin dinero! Fin del juego.",
-        playAgain: "Escribe 'apostar' para jugar de nuevo.",
-        unknownCommand: "Comando desconocido. Escribe 'ayuda' para comandos.",
+        playAgain: "Escribe 'bet' para jugar de nuevo.",
+        unknownCommand: "Comando desconocido. Escribe 'help' para comandos.",
         availableActions: (options) => `Acciones disponibles: ${options}`,
         handBust: (num) => `¡La mano ${num} SE PASA! Pierdes la apuesta de esta mano.`,
         hand21: (num) => `¡La mano ${num} tiene 21! Te plantas automáticamente.`,
@@ -197,36 +265,38 @@ const translations = {
         languageOptions: "Idiomas disponibles: en (Inglés), es (Español)",
         colorChanged: (theme) => `Tema de color cambiado a ${theme}.`,
         colorOptions: "Colores disponibles: green (verde), blue (azul), amber (ámbar), white (blanco), matrix",
+        // Using English commands, but will provide Spanish meanings in help
         commands: {
-            help: "ayuda",
-            bet: "apostar",
-            deal: "repartir",
-            hit: "carta",
-            stand: "plantarse",
-            double: "doblar",
-            split: "dividir",
-            insurance: "seguro",
-            surrender: "rendirse",
-            money: "dinero",
-            clear: "limpiar",
-            language: "idioma",
+            help: "help",
+            bet: "bet",
+            deal: "deal",
+            hit: "hit",
+            stand: "stand",
+            double: "double",
+            split: "split",
+            insurance: "insurance",
+            surrender: "surrender",
+            money: "money",
+            clear: "clear",
+            language: "language",
             color: "color"
         },
         helpText: [
             "Comandos disponibles:",
-            "  ayuda      - Mostrar este mensaje de ayuda",
-            "  apostar N  - Realizar una apuesta de N dólares",
-            "  repartir   - Comenzar el juego después de apostar",
-            "  carta      - Pedir otra carta",
-            "  plantarse  - Terminar tu turno",
-            "  doblar     - Doblar tu apuesta y tomar una carta más",
-            "  dividir    - Dividir tu mano cuando tienes dos cartas del mismo valor",
-            "  seguro     - Tomar seguro cuando el crupier muestra un As",
-            "  rendirse   - Rendirte y perder la mitad de tu apuesta",
-            "  dinero     - Verificar tu saldo actual",
-            "  limpiar    - Limpiar la terminal",
-            "  idioma     - Cambiar idioma (en/es)",
-            "  color      - Cambiar tema de color"
+            "  help      - Mostrar este mensaje de ayuda (ayuda)",
+            "  rules     - Mostrar reglas del Blackjack (reglas)",
+            "  bet N     - Realizar una apuesta de N dólares (apostar)",
+            "  deal      - Comenzar el juego después de apostar (repartir)",
+            "  hit       - Pedir otra carta (carta)",
+            "  stand     - Terminar tu turno (plantarse)",
+            "  double    - Doblar tu apuesta y tomar una carta más (doblar)",
+            "  split     - Dividir tu mano cuando tienes dos cartas del mismo valor (dividir)",
+            "  insurance - Tomar seguro cuando el crupier muestra un As (seguro)",
+            "  surrender - Rendirte y perder la mitad de tu apuesta (rendirse)",
+            "  money     - Verificar tu saldo actual (dinero)",
+            "  clear     - Limpiar la terminal (limpiar)",
+            "  language  - Cambiar idioma (en/es) (idioma)",
+            "  color     - Cambiar tema de color (color)"
         ],
         uiLabels: {
             dealer: "CRUPIER:",
@@ -288,13 +358,23 @@ function getText(key, ...args) {
     return text || key;
 }
 
-// Function to get command in current language
+// Function to get command - simplified since we only use English commands now
 function getCommand(cmd) {
-    const langCommands = translations[game.language].commands;
-    if (langCommands[cmd]) return langCommands[cmd];
-    for (const [enCmd, translatedCmd] of Object.entries(langCommands)) {
-        if (translatedCmd === cmd) return enCmd;
+    // Always use English commands regardless of language setting
+    const langCommands = translations.en.commands;
+    
+    // Check if it's a valid command in our list
+    if (Object.values(langCommands).includes(cmd)) {
+        return cmd;
     }
+    
+    // Find the corresponding command key
+    for (const [key, value] of Object.entries(langCommands)) {
+        if (value === cmd) {
+            return key;
+        }
+    }
+    
     return cmd;
 }
 
@@ -352,10 +432,11 @@ function processCommand(command) {
     output(`> ${command}`);
     const parts = command.trim().toLowerCase().split(' ');
     const cmd = parts[0];
-    const enCmd = getCommand(cmd);
     
-    switch (enCmd) {
+    // Always use English commands regardless of language
+    switch (cmd) {
         case 'help': showHelp(); break;
+        case 'rules': showRules(); break;
         case 'bet': placeBet(parts[1]); break;
         case 'deal': startGame(); break;
         case 'hit': hit(); break;
@@ -375,6 +456,13 @@ function processCommand(command) {
 // Show help
 function showHelp() {
     for (const line of getText('helpText')) {
+        output(line);
+    }
+}
+
+// Show rules
+function showRules() {
+    for (const line of getText('rulesText')) {
         output(line);
     }
 }
@@ -511,11 +599,12 @@ function getCardValue(card) {
 function showOptions() {
     if (!game.playerTurn) return;
     
-    let options = [getText('commands.hit'), getText('commands.stand')];
-    if (game.canDouble) options.push(getText('commands.double'));
-    if (game.canSplit) options.push(getText('commands.split'));
-    if (game.canInsurance) options.push(getText('commands.insurance'));
-    if (game.canSurrender) options.push(getText('commands.surrender'));
+    // Always use English commands in the options
+    let options = ['hit', 'stand'];
+    if (game.canDouble) options.push('double');
+    if (game.canSplit) options.push('split');
+    if (game.canInsurance) options.push('insurance');
+    if (game.canSurrender) options.push('surrender');
     
     output(getText('availableActions', options.join(", ")));
 }
