@@ -556,9 +556,9 @@ function cardToAscii(card, hidden = false) {
     if (hidden) {
         return [
             "+-----+",
-            "|#####|",
-            "|#####|",
-            "|#####|",
+            "|     |",
+            "|     |",
+            "|     |",
             "+-----+"
         ];
     }
