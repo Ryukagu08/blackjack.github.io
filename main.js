@@ -17,7 +17,8 @@ const game = {
     playerScore: 0, dealerScore: 0, money: 100, currentBet: 0, insuranceBet: 0,
     gameInProgress: false, playerTurn: true, canSplit: false, canDouble: false,
     canInsurance: false, canSurrender: false, handSplit: false, language: 'en',
-    colorTheme: 'green', firstGame: true
+    colorTheme: 'green', firstGame: true, waitingForUsername: false, highScore: 0,
+    maxMoney: 100 // Track highest money amount
 };
 
 // Card definitions
@@ -30,6 +31,11 @@ const translations = {
     en: {
         welcome: "Welcome to Command Line Blackjack!",
         helpPrompt: "Type 'help' for commands, 'rules' for game rules, 'language es' for Spanish, 'color' to change colors.",
+        highScore: "Congratulations! You got a high score!",
+        enterUsername: "Enter your name (15 chars max):",
+        leaderboardTitle: "LEADERBOARD",
+        noHighScores: "No high scores yet!",
+        highScoreAdded: "Your score has been added to the leaderboard!",
         rulesText: [
             "BLACKJACK RULES:",
             "---------------------",
@@ -120,24 +126,25 @@ const translations = {
         commands: {
             help: "help", bet: "bet", deal: "deal", hit: "hit", stand: "stand", double: "double",
             split: "split", insurance: "insurance", surrender: "surrender", money: "money",
-            clear: "clear", language: "language", color: "color", rules: "rules"
+            clear: "clear", language: "language", color: "color", rules: "rules", leaderboard: "leaderboard"
         },
         helpText: [
             "Available commands:",
-            "  help      - Show this help message",
-            "  rules     - Show Blackjack rules",
-            "  bet N     - Place a bet of N dollars",
-            "  deal      - Start the game after placing a bet",
-            "  hit       - Take another card",
-            "  stand     - End your turn",
-            "  double    - Double your bet and take one more card",
-            "  split     - Split your hand when you have two cards of same value",
-            "  insurance - Take insurance when dealer shows an Ace",
-            "  surrender - Surrender and lose half your bet",
-            "  money     - Check your current balance",
-            "  clear     - Clear the terminal",
-            "  language  - Change language (en/es)",
-            "  color     - Change color theme"
+            "  help        - Show this help message",
+            "  rules       - Show Blackjack rules",
+            "  bet N       - Place a bet of N dollars",
+            "  deal        - Start the game after placing a bet",
+            "  hit         - Take another card",
+            "  stand       - End your turn",
+            "  double      - Double your bet and take one more card",
+            "  split       - Split your hand when you have two cards of same value",
+            "  insurance   - Take insurance when dealer shows an Ace",
+            "  surrender   - Surrender and lose half your bet",
+            "  money       - Check your current balance",
+            "  clear       - Clear the terminal",
+            "  language    - Change language (en/es)",
+            "  color       - Change color theme",
+            "  leaderboard - Show top 10 high scores"
         ],
         uiLabels: {
             dealer: "DEALER:", player: "PLAYER:", playerHands: "PLAYER HANDS:",
@@ -148,6 +155,11 @@ const translations = {
     es: {
         welcome: "¡Bienvenido al Blackjack de Línea de Comandos!",
         helpPrompt: "Escribe 'help' para comandos, 'rules' para reglas del juego, 'language en' para inglés, 'color' para cambiar colores.",
+        highScore: "¡Felicidades! ¡Has conseguido una puntuación alta!",
+        enterUsername: "Ingresa tu nombre (máx. 15 caracteres):",
+        leaderboardTitle: "TABLA DE CLASIFICACIÓN",
+        noHighScores: "¡Aún no hay puntuaciones altas!",
+        highScoreAdded: "¡Tu puntuación ha sido añadida a la tabla!",
         rulesText: [
             "REGLAS DEL BLACKJACK:",
             "---------------------",
@@ -238,24 +250,25 @@ const translations = {
         commands: {
             help: "help", bet: "bet", deal: "deal", hit: "hit", stand: "stand", double: "double",
             split: "split", insurance: "insurance", surrender: "surrender", money: "money",
-            clear: "clear", language: "language", color: "color"
+            clear: "clear", language: "language", color: "color", leaderboard: "leaderboard"
         },
         helpText: [
             "Comandos disponibles:",
-            "  help      - Mostrar este mensaje de ayuda (ayuda)",
-            "  rules     - Mostrar reglas del Blackjack (reglas)",
-            "  bet N     - Realizar una apuesta de N dólares (apostar)",
-            "  deal      - Comenzar el juego después de apostar (repartir)",
-            "  hit       - Pedir otra carta (carta)",
-            "  stand     - Terminar tu turno (plantarse)",
-            "  double    - Doblar tu apuesta y tomar una carta más (doblar)",
-            "  split     - Dividir tu mano cuando tienes dos cartas del mismo valor (dividir)",
-            "  insurance - Tomar seguro cuando el crupier muestra un As (seguro)",
-            "  surrender - Rendirte y perder la mitad de tu apuesta (rendirse)",
-            "  money     - Verificar tu saldo actual (dinero)",
-            "  clear     - Limpiar la terminal (limpiar)",
-            "  language  - Cambiar idioma (en/es) (idioma)",
-            "  color     - Cambiar tema de color (color)"
+            "  help        - Mostrar este mensaje de ayuda (ayuda)",
+            "  rules       - Mostrar reglas del Blackjack (reglas)",
+            "  bet N       - Realizar una apuesta de N dólares (apostar)",
+            "  deal        - Comenzar el juego después de apostar (repartir)",
+            "  hit         - Pedir otra carta (carta)",
+            "  stand       - Terminar tu turno (plantarse)",
+            "  double      - Doblar tu apuesta y tomar una carta más (doblar)",
+            "  split       - Dividir tu mano cuando tienes dos cartas del mismo valor (dividir)",
+            "  insurance   - Tomar seguro cuando el crupier muestra un As (seguro)",
+            "  surrender   - Rendirte y perder la mitad de tu apuesta (rendirse)",
+            "  money       - Verificar tu saldo actual (dinero)",
+            "  clear       - Limpiar la terminal (limpiar)",
+            "  language    - Cambiar idioma (en/es) (idioma)",
+            "  color       - Cambiar tema de color (color)",
+            "  leaderboard - Mostrar tabla de clasificación (top 10)"
         ],
         uiLabels: {
             dealer: "CRUPIER:", player: "JUGADOR:", playerHands: "MANOS DEL JUGADOR:",
@@ -353,11 +366,35 @@ const commandHandlers = {
     money: checkMoney,
     clear: clearTerminal,
     language: changeLanguage,
-    color: changeColor
+    color: changeColor,
+    leaderboard: showLeaderboard
 };
 
 function processCommand(command) {
     output(`> ${command}`);
+    
+    // Check if we're waiting for a username for high score
+    if (game.waitingForUsername) {
+        // Validate username (non-empty, max 15 chars)
+        const username = command.trim().substring(0, 15);
+        if (username) {
+            // Add to leaderboard
+            leaderboard.addHighScore(username, game.highScore);
+            output(getText('highScoreAdded'));
+            game.waitingForUsername = false;
+            
+            // Show the leaderboard after adding
+            setTimeout(() => {
+                showLeaderboard();
+            }, 500);
+        } else {
+            // Invalid username, prompt again
+            leaderboard.promptForUsername(game.highScore);
+        }
+        return;
+    }
+    
+    // Normal command processing
     const parts = command.trim().toLowerCase().split(' ');
     const cmd = parts[0];
     
@@ -1026,9 +1063,22 @@ function endGame(push = false) {
         output(getText('moneyLeft', game.money));
     }
     
+    // Track highest money amount
+    if (game.money > game.maxMoney) {
+        game.maxMoney = game.money;
+    }
+    
     if (game.money <= 0) {
         output(getText('outOfMoney'));
         game.currentBet = 0; // Reset bet when out of money to prevent further play
+        
+        // Check if the max money amount qualifies for the leaderboard
+        if (leaderboard.checkHighScore(game.maxMoney)) {
+            leaderboard.promptForUsername(game.maxMoney);
+        }
+        
+        // Reset max money for next game
+        game.maxMoney = 100;
         return;
     }
     
@@ -1044,6 +1094,17 @@ function checkMoney() {
 function clearTerminal() {
     terminal.innerHTML = '';
     initGame();
+}
+
+// Show leaderboard
+function showLeaderboard() {
+    // Display a loading message
+    output('Loading leaderboard...');
+    
+    // Give Firebase a moment to fetch data (if needed)
+    setTimeout(() => {
+        leaderboard.displayLeaderboard();
+    }, 300);
 }
 
 // Event listener for command input
