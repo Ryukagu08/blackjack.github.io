@@ -1,4 +1,4 @@
-// DOM Elements
+// Cache DOM Elements
 const terminal = document.getElementById('terminal');
 const commandInput = document.getElementById('command-input');
 
@@ -13,33 +13,19 @@ const colorThemes = {
 
 // Game state
 const game = {
-    deck: [],
-    playerHand: [],
-    playerHands: [],
-    activeHandIndex: 0,
-    dealerHand: [],
-    playerScore: 0,
-    dealerScore: 0,
-    money: 100,
-    currentBet: 0,
-    insuranceBet: 0,
-    gameInProgress: false,
-    playerTurn: true,
-    canSplit: false,
-    canDouble: false,
-    canInsurance: false,
-    canSurrender: false,
-    handSplit: false,
-    language: 'en',
-    colorTheme: 'green',
-    firstGame: true
+    deck: [], playerHand: [], playerHands: [], activeHandIndex: 0, dealerHand: [],
+    playerScore: 0, dealerScore: 0, money: 100, currentBet: 0, insuranceBet: 0,
+    gameInProgress: false, playerTurn: true, canSplit: false, canDouble: false,
+    canInsurance: false, canSurrender: false, handSplit: false, language: 'en',
+    colorTheme: 'green', firstGame: true
 };
 
 // Card definitions
 const suits = ['♥', '♦', '♣', '♠'];
 const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+const cardValues = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11 };
 
-// Language translations
+// Language translations - unchanged
 const translations = {
     en: {
         welcome: "Welcome to Command Line Blackjack!",
@@ -132,20 +118,9 @@ const translations = {
         colorChanged: (theme) => `Color theme changed to ${theme}.`,
         colorOptions: "Available colors: green, blue, amber, white, matrix",
         commands: {
-            help: "help",
-            bet: "bet",
-            deal: "deal",
-            hit: "hit",
-            stand: "stand",
-            double: "double",
-            split: "split",
-            insurance: "insurance",
-            surrender: "surrender",
-            money: "money",
-            clear: "clear",
-            language: "language",
-            color: "color",
-            rules: "rules"
+            help: "help", bet: "bet", deal: "deal", hit: "hit", stand: "stand", double: "double",
+            split: "split", insurance: "insurance", surrender: "surrender", money: "money",
+            clear: "clear", language: "language", color: "color", rules: "rules"
         },
         helpText: [
             "Available commands:",
@@ -165,14 +140,9 @@ const translations = {
             "  color     - Change color theme"
         ],
         uiLabels: {
-            dealer: "DEALER:",
-            player: "PLAYER:",
-            playerHands: "PLAYER HANDS:",
-            hand: (num) => `Hand ${num}:`,
-            score: "Score:",
-            bet: "Bet:",
-            money: "Money:",
-            totalBet: "Total Bet:"
+            dealer: "DEALER:", player: "PLAYER:", playerHands: "PLAYER HANDS:",
+            hand: (num) => `Hand ${num}:`, score: "Score:", bet: "Bet:",
+            money: "Money:", totalBet: "Total Bet:"
         }
     },
     es: {
@@ -265,21 +235,10 @@ const translations = {
         languageOptions: "Idiomas disponibles: en (Inglés), es (Español)",
         colorChanged: (theme) => `Tema de color cambiado a ${theme}.`,
         colorOptions: "Colores disponibles: green (verde), blue (azul), amber (ámbar), white (blanco), matrix",
-        // Using English commands, but will provide Spanish meanings in help
         commands: {
-            help: "help",
-            bet: "bet",
-            deal: "deal",
-            hit: "hit",
-            stand: "stand",
-            double: "double",
-            split: "split",
-            insurance: "insurance",
-            surrender: "surrender",
-            money: "money",
-            clear: "clear",
-            language: "language",
-            color: "color"
+            help: "help", bet: "bet", deal: "deal", hit: "hit", stand: "stand", double: "double",
+            split: "split", insurance: "insurance", surrender: "surrender", money: "money",
+            clear: "clear", language: "language", color: "color"
         },
         helpText: [
             "Comandos disponibles:",
@@ -299,110 +258,62 @@ const translations = {
             "  color     - Cambiar tema de color (color)"
         ],
         uiLabels: {
-            dealer: "CRUPIER:",
-            player: "JUGADOR:",
-            playerHands: "MANOS DEL JUGADOR:",
-            hand: (num) => `Mano ${num}:`,
-            score: "Puntos:",
-            bet: "Apuesta:",
-            money: "Dinero:",
-            totalBet: "Apuesta Total:"
+            dealer: "CRUPIER:", player: "JUGADOR:", playerHands: "MANOS DEL JUGADOR:",
+            hand: (num) => `Mano ${num}:`, score: "Puntos:", bet: "Apuesta:",
+            money: "Dinero:", totalBet: "Apuesta Total:"
         }
     }
 };
 
+// Apply color theme - simplified
 function applyColorTheme() {
     const theme = colorThemes[game.colorTheme];
     document.body.style.backgroundColor = theme.bg;
     document.body.style.color = theme.text;
-    
-    // Style the input elements
     commandInput.style.color = theme.text;
-    
-    // Style the command prompt and input line
-    const inputLine = document.getElementById('input-line');
-    const prompt = document.getElementById('prompt');
-    
-    if (inputLine) inputLine.style.borderColor = theme.text;
-    if (prompt) prompt.style.color = theme.text;
-    
-    // Update scrollbar thumb color
-    const terminalScrollbar = document.querySelector('#terminal::-webkit-scrollbar-thumb');
-    if (terminalScrollbar) {
-        terminalScrollbar.style.background = theme.text;
-    }
-    
-    // Update Firefox scrollbar
+    document.getElementById('input-line').style.borderColor = theme.text;
+    document.getElementById('prompt').style.color = theme.text;
     document.documentElement.style.setProperty('--scrollbar-color', theme.text);
 }
 
-// Function to get translated text
+// Get translated text - optimized
 function getText(key, ...args) {
     const langData = translations[game.language];
     if (key.includes('.')) {
         const parts = key.split('.');
         let value = langData;
         for (const part of parts) {
-            if (value && typeof value === 'object') {
-                value = value[part];
-            } else {
-                value = undefined;
-                break;
-            }
+            if (!value) return key;
+            value = value[part];
         }
-        if (typeof value === 'function') return value(...args);
-        return value || key;
+        return typeof value === 'function' ? value(...args) : (value || key);
     }
     const text = langData[key];
-    if (typeof text === 'function') return text(...args);
-    return text || key;
-}
-
-// Function to get command - simplified since we only use English commands now
-function getCommand(cmd) {
-    // Always use English commands regardless of language setting
-    const langCommands = translations.en.commands;
-    
-    // Check if it's a valid command in our list
-    if (Object.values(langCommands).includes(cmd)) {
-        return cmd;
-    }
-    
-    // Find the corresponding command key
-    for (const [key, value] of Object.entries(langCommands)) {
-        if (value === cmd) {
-            return key;
-        }
-    }
-    
-    return cmd;
+    return typeof text === 'function' ? text(...args) : (text || key);
 }
 
 // Initialize game
 function initGame() {
-    const title = 
+    terminal.innerHTML = 
 `
 +--------------------------------------+
 |                                      |
 |          COMMAND LINE BLACKJACK      |
 |                                      |
 +--------------------------------------+
-`;
-    output(title, true);
-    output(getText('welcome'));
-    output(getText('helpPrompt'));
-    output(getText('moneyStatus'));
-    
-    // Apply the current color theme
+
+${getText('welcome')}
+${getText('helpPrompt')}
+${getText('moneyStatus')}`;
     applyColorTheme();
 }
 
-// Output text to terminal
+// Output text to terminal - optimized
 function output(text, isAsciiArt = false) {
-    const element = document.createElement('div');
-    element.textContent = text;
-    if (isAsciiArt) element.className = 'ascii-art';
-    terminal.appendChild(element);
+    const div = document.createElement('div');
+    div.textContent = text;
+    if (isAsciiArt) div.className = 'ascii-art';
+    terminal.appendChild(div);
     terminal.scrollTop = terminal.scrollHeight;
 }
 
@@ -427,50 +338,55 @@ function changeColor(theme) {
     }
 }
 
-// Process commands
+// Process commands - optimized with direct method calls and Map for commands
+const commandHandlers = {
+    help: showHelp,
+    rules: showRules,
+    bet: placeBet,
+    deal: startGame,
+    hit: hit,
+    stand: stand,
+    double: doubleDown,
+    split: splitHand,
+    insurance: takeInsurance,
+    surrender: surrender,
+    money: checkMoney,
+    clear: clearTerminal,
+    language: changeLanguage,
+    color: changeColor
+};
+
 function processCommand(command) {
     output(`> ${command}`);
     const parts = command.trim().toLowerCase().split(' ');
     const cmd = parts[0];
     
-    // Always use English commands regardless of language
-    switch (cmd) {
-        case 'help': showHelp(); break;
-        case 'rules': showRules(); break;
-        case 'bet': placeBet(parts[1]); break;
-        case 'deal': startGame(); break;
-        case 'hit': hit(); break;
-        case 'stand': stand(); break;
-        case 'double': doubleDown(); break;
-        case 'split': splitHand(); break;
-        case 'insurance': takeInsurance(); break;
-        case 'surrender': surrender(); break;
-        case 'money': checkMoney(); break;
-        case 'clear': clearTerminal(); break;
-        case 'language': changeLanguage(parts[1]); break;
-        case 'color': changeColor(parts[1]); break;
-        default: output(getText('unknownCommand'));
+    const handler = commandHandlers[cmd];
+    if (handler) {
+        handler(parts[1]);
+    } else {
+        output(getText('unknownCommand'));
     }
 }
 
-// Show help
+// Show help & rules - optimized with for...of
 function showHelp() {
-    for (const line of getText('helpText')) {
-        output(line);
-    }
+    for (const line of getText('helpText')) output(line);
 }
 
-// Show rules
 function showRules() {
-    for (const line of getText('rulesText')) {
-        output(line);
-    }
+    for (const line of getText('rulesText')) output(line);
 }
 
-// Place a bet
+// Place a bet - early returns for clarity
 function placeBet(amount) {
     if (game.gameInProgress) {
         output(getText('gameInProgress'));
+        return;
+    }
+    
+    if (game.money <= 0) {
+        output(getText('outOfMoney'));
         return;
     }
     
@@ -488,7 +404,7 @@ function placeBet(amount) {
     game.currentBet = bet;
     output(getText('betPlaced', bet));
     
-    // Auto-start the game unless it's the first game
+    // Auto-start unless first game
     if (!game.firstGame) {
         startGame();
     } else {
@@ -497,23 +413,21 @@ function placeBet(amount) {
     }
 }
 
-// Create a new shuffled deck
+// Create a new shuffled deck - optimized with flatMap
 function createDeck() {
-    const newDeck = [];
-    for (const suit of suits) {
-        for (const value of values) {
-            newDeck.push({ suit, value });
-        }
-    }
-    // Shuffle the deck (Fisher-Yates algorithm)
-    for (let i = newDeck.length - 1; i > 0; i--) {
+    // Create all cards and shuffle
+    const deck = suits.flatMap(suit => values.map(value => ({ suit, value })));
+    
+    // Fisher-Yates shuffle
+    for (let i = deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+        [deck[i], deck[j]] = [deck[j], deck[i]];
     }
-    return newDeck;
+    
+    return deck;
 }
 
-// Start a new game
+// Start a new game - optimized flow
 function startGame() {
     if (game.gameInProgress) {
         output(getText('gameInProgress'));
@@ -525,11 +439,21 @@ function startGame() {
         return;
     }
     
-    // Clear the screen and preserve just the important status
-    const currentMoney = game.money;
+    // Clear and reset game state
     terminal.innerHTML = '';
+    resetGameState();
     
-    // Initialize game state
+    // Deal initial cards
+    dealInitialCards();
+    
+    // Display game and check for blackjack
+    displayGameState();
+    showOptions();
+    checkForBlackjack();
+}
+
+// Reset game state
+function resetGameState() {
     game.deck = createDeck();
     game.playerHand = [];
     game.playerHands = [];
@@ -539,8 +463,10 @@ function startGame() {
     game.gameInProgress = true;
     game.handSplit = false;
     game.insuranceBet = 0;
-    
-    // Deal initial cards
+}
+
+// Deal initial cards
+function dealInitialCards() {
     game.playerHand.push(dealCard());
     game.dealerHand.push(dealCard());
     game.playerHand.push(dealCard());
@@ -552,17 +478,14 @@ function startGame() {
     
     // Set available actions
     game.canDouble = game.money >= game.currentBet;
-    game.canSplit = (game.playerHand[0].value === game.playerHand[1].value || 
-                getCardValue(game.playerHand[0]) === getCardValue(game.playerHand[1])) && 
-                game.money >= game.currentBet;
+    game.canSplit = (getCardValue(game.playerHand[0]) === getCardValue(game.playerHand[1])) && 
+                    game.money >= game.currentBet;
     game.canInsurance = game.dealerHand[0].value === 'A' && game.money >= Math.ceil(game.currentBet / 2);
     game.canSurrender = true;
-    
-    // Display game state
-    displayGameState();
-    showOptions();
-    
-    // Check for blackjack
+}
+
+// Check for blackjack
+function checkForBlackjack() {
     if (game.playerScore === 21) {
         if (game.dealerScore === 21) {
             // Push - both have blackjack
@@ -588,19 +511,17 @@ function startGame() {
     }
 }
 
-// Card value for splitting logic
+// Card value - optimized using object lookup
 function getCardValue(card) {
-    if (['J', 'Q', 'K'].includes(card.value)) return 10;
-    if (card.value === 'A') return 11;
-    return parseInt(card.value);
+    return cardValues[card.value] || parseInt(card.value);
 }
 
 // Show available options
 function showOptions() {
     if (!game.playerTurn) return;
     
-    // Always use English commands in the options
-    let options = ['hit', 'stand'];
+    // Always use English commands
+    const options = ['hit', 'stand'];
     if (game.canDouble) options.push('double');
     if (game.canSplit) options.push('split');
     if (game.canInsurance) options.push('insurance');
@@ -614,20 +535,17 @@ function dealCard() {
     return game.deck.pop();
 }
 
-// Calculate the value of a hand
+// Calculate the value of a hand - optimized using object lookup
 function calculateHandValue(hand) {
     let value = 0;
     let aceCount = 0;
     
-    // Sum up card values
     for (const card of hand) {
         if (card.value === 'A') {
             aceCount++;
             value += 11;
-        } else if (['K', 'Q', 'J'].includes(card.value)) {
-            value += 10;
         } else {
-            value += parseInt(card.value);
+            value += cardValues[card.value] || parseInt(card.value);
         }
     }
     
@@ -642,49 +560,23 @@ function calculateHandValue(hand) {
 
 // Display ASCII card
 function cardToAscii(card, hidden = false) {
-    if (hidden) {
-        return [
-            "+-----+",
-            "|     |",
-            "|     |",
-            "|     |",
-            "+-----+"
-        ];
-    }
+    if (hidden) return ["+-----+", "|     |", "|     |", "|     |", "+-----+"];
     
-    // Extract value and suit
     const value = card.value;
     const suit = card.suit;
     
     // Adjust for double-digit values (10)
-    if (value.length > 1) {
-        return [
-            "+-----+",
-            `|${value}   |`,
-            `|  ${suit}  |`,
-            `|   ${value}|`,
-            "+-----+"
-        ];
-    } else {
-        return [
-            "+-----+",
-            `|${value}    |`,
-            `|  ${suit}  |`,
-            `|    ${value}|`,
-            "+-----+"
-        ];
-    }
+    return value.length > 1 ? 
+        ["+-----+", `|${value}   |`, `|  ${suit}  |`, `|   ${value}|`, "+-----+"] :
+        ["+-----+", `|${value}    |`, `|  ${suit}  |`, `|    ${value}|`, "+-----+"];
 }
 
-// Format hand as ASCII art
+// Format hand as ASCII art - simplified
 function handToAscii(hand, hideSecond = false) {
-    if (hand.length === 0) return ["", "", "", "", ""];
+    if (!hand.length) return ["", "", "", "", ""];
     
     // Create card representations
-    const cardLines = [];
-    for (let i = 0; i < hand.length; i++) {
-        cardLines.push(cardToAscii(hand[i], hideSecond && i === 1));
-    }
+    const cardLines = hand.map((card, i) => cardToAscii(card, hideSecond && i === 1));
     
     // Combine horizontally with proper spacing
     const result = ["", "", "", "", ""];
@@ -697,70 +589,17 @@ function handToAscii(hand, hideSecond = false) {
     return result;
 }
 
-// Display game state
+// Display game state - streamlined
 function displayGameState() {
-    // Clear the terminal before displaying a new table
     terminal.innerHTML = '';
     
-    let betInfo = '';
+    // Get bet info
+    let betInfo = game.handSplit ?
+        `${getText('uiLabels.totalBet')} ${game.playerHands.reduce((sum, h) => sum + h.bet, 0).toString().padStart(3)}` :
+        `${getText('uiLabels.bet')} ${game.currentBet.toString().padStart(3)}`;
     
-    if (game.handSplit) {
-        // Show multiple bet amounts for split hands
-        let totalBet = 0;
-        game.playerHands.forEach(hand => totalBet += hand.bet);
-        betInfo = `${getText('uiLabels.totalBet')} ${totalBet.toString().padStart(3)}`;
-    } else {
-        betInfo = `${getText('uiLabels.bet')} ${game.currentBet.toString().padStart(3)}`;
-    }
-    
-    // Create ASCII table header
-    let tableArt = 
-`+---------------------------------------------------------------+
-|                         BLACKJACK                             |
-+---------------------------------------------------------------+
-|                                                               |
-| ${getText('uiLabels.dealer')}${' '.repeat(55)}|
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |
-+---------------------------------------------------------------+`;
-
-    // Add player section
-    if (game.handSplit) {
-        tableArt += `
-|                                                               |
-| ${getText('uiLabels.playerHands')}${' '.repeat(46)}|`;
-        
-        // Space for each hand
-        for (let h = 0; h < game.playerHands.length; h++) {
-            tableArt += `
-|                                                               |
-| ${getText('uiLabels.hand', h + 1)}${' '.repeat(52)}|
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |`;
-        }
-    } else {
-        tableArt += `
-|                                                               |
-| ${getText('uiLabels.player')}${' '.repeat(53)}|
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |`;
-    }
-    
-    // Add footer
-    tableArt += `
-| ${betInfo.padEnd(33)} ${getText('uiLabels.money')} ${game.money.toString().padStart(3)}${' '.repeat(18)}|
-+---------------------------------------------------------------+`;
-
-    const tableLines = tableArt.split('\n');
+    // Create base table
+    let tableLines = createTableTemplate(betInfo);
     
     // Add dealer cards
     const dealerCardLines = handToAscii(game.dealerHand, game.playerTurn);
@@ -773,119 +612,175 @@ function displayGameState() {
         tableLines[9] = `| ${getText('uiLabels.score')} ${game.dealerScore.toString().padEnd(55)}|`;
     }
     
+    // Add player hands
     if (game.handSplit) {
-        // Add each player hand
-        let lineOffset = 12;
-        for (let h = 0; h < game.playerHands.length; h++) {
-            const hand = game.playerHands[h];
-            const handCardLines = handToAscii(hand.cards);
-            
-            // Highlight active hand
-            const handPrefix = (h === game.activeHandIndex && game.playerTurn) ? '> ' : '  ';
-            
-            // Update hand title with bet and score
-            tableLines[lineOffset + 1] = `| ${getText('uiLabels.hand', h + 1)} ${handPrefix}${getText('uiLabels.bet')} ${hand.bet}  ${getText('uiLabels.score')} ${hand.score}${h === game.activeHandIndex && game.playerTurn ? ' (active)' : ''}`.padEnd(62) + '|';
-            
-            // Add cards
-            for (let i = 0; i < handCardLines.length; i++) {
-                tableLines[lineOffset + 2 + i] = `| ${handCardLines[i].padEnd(62)}|`;
-            }
-            
-            lineOffset += 7; // Move to next hand section
-        }
+        addSplitHandsToTable(tableLines);
     } else {
-        // Standard player hand display
-        const playerCardLines = handToAscii(game.playerHand);
-        for (let i = 0; i < playerCardLines.length; i++) {
-            tableLines[12 + i] = `| ${playerCardLines[i].padEnd(62)}|`;
-        }
-        
-        // Add player score
-        tableLines[17] = `| ${getText('uiLabels.score')} ${game.playerScore.toString().padEnd(55)}|`;
+        addSingleHandToTable(tableLines);
     }
     
     // Output the table
     output(tableLines.join('\n'), true);
 }
 
-// Player takes another card
+// Create the base table template
+function createTableTemplate(betInfo) {
+    const dealerLabel = getText('uiLabels.dealer');
+    const playerLabel = game.handSplit ? getText('uiLabels.playerHands') : getText('uiLabels.player');
+    const moneyLabel = getText('uiLabels.money');
+    
+    let tableArt = 
+`+---------------------------------------------------------------+
+|                         BLACKJACK                             |
++---------------------------------------------------------------+
+|                                                               |
+| ${dealerLabel}${' '.repeat(55)}|
+|                                                               |
+|                                                               |
+|                                                               |
+|                                                               |
+|                                                               |
++---------------------------------------------------------------+
+|                                                               |
+| ${playerLabel}${' '.repeat(game.handSplit ? 46 : 53)}|`;
+
+    // Add player section(s)
+    if (game.handSplit) {
+        for (let h = 0; h < game.playerHands.length; h++) {
+            const handLabel = getText('uiLabels.hand', h + 1);
+            tableArt += `
+|                                                               |
+| ${handLabel}${' '.repeat(52)}|
+|                                                               |
+|                                                               |
+|                                                               |
+|                                                               |
+|                                                               |`;
+        }
+    } else {
+        tableArt += `
+|                                                               |
+|                                                               |
+|                                                               |
+|                                                               |
+|                                                               |`;
+    }
+    
+    // Add footer
+    tableArt += `
+| ${betInfo.padEnd(33)} ${moneyLabel} ${game.money.toString().padStart(3)}${' '.repeat(18)}|
++---------------------------------------------------------------+`;
+
+    return tableArt.split('\n');
+}
+
+// Add split hands to the table
+function addSplitHandsToTable(tableLines) {
+    let lineOffset = 12;
+    
+    for (let h = 0; h < game.playerHands.length; h++) {
+        const hand = game.playerHands[h];
+        const handCardLines = handToAscii(hand.cards);
+        
+        // Highlight active hand
+        const handPrefix = (h === game.activeHandIndex && game.playerTurn) ? '> ' : '  ';
+        const activeText = h === game.activeHandIndex && game.playerTurn ? ' (active)' : '';
+        
+        // Update hand title
+        tableLines[lineOffset + 1] = 
+            `| ${getText('uiLabels.hand', h + 1)} ${handPrefix}${getText('uiLabels.bet')} ${hand.bet}  ` +
+            `${getText('uiLabels.score')} ${hand.score}${activeText}`.padEnd(62) + '|';
+        
+        // Add cards
+        for (let i = 0; i < handCardLines.length; i++) {
+            tableLines[lineOffset + 2 + i] = `| ${handCardLines[i].padEnd(62)}|`;
+        }
+        
+        lineOffset += 7; // Move to next hand
+    }
+}
+
+// Add a single hand to the table
+function addSingleHandToTable(tableLines) {
+    const playerCardLines = handToAscii(game.playerHand);
+    
+    for (let i = 0; i < playerCardLines.length; i++) {
+        tableLines[12 + i] = `| ${playerCardLines[i].padEnd(62)}|`;
+    }
+    
+    // Add player score
+    tableLines[17] = `| ${getText('uiLabels.score')} ${game.playerScore.toString().padEnd(55)}|`;
+}
+
+// Player takes another card - streamlined
 function hit() {
     if (!game.gameInProgress || !game.playerTurn) {
         output(getText('cantHit'));
         return;
     }
     
-    // After first hit, player can no longer double, surrender, or take insurance
+    // Disable special moves after first hit
     game.canDouble = false;
     game.canSurrender = false;
     game.canInsurance = false;
     
-    // Deal a card to player's current hand
+    // Execute appropriate hit logic
     if (game.handSplit) {
-        // When playing split hands
-        const currentHand = game.playerHands[game.activeHandIndex];
-        currentHand.cards.push(dealCard());
-        currentHand.score = calculateHandValue(currentHand.cards);
-        
-        // Display updated game state
-        displayGameState();
-        
-        // Check for bust or 21
-        if (currentHand.score > 21) {
-            output(getText('handBust', game.activeHandIndex + 1));
-            game.money -= currentHand.bet;
-            
-            // Move to next hand or end game
-            if (game.activeHandIndex < game.playerHands.length - 1) {
-                game.activeHandIndex++;
-                output(getText('playingHand', game.activeHandIndex + 1));
-                // Reset options for new hand
-                game.canDouble = true;
-                displayGameState();
-                showOptions();
-            } else {
-                // All hands are done, dealer's turn
-                game.playerTurn = false;
-                dealerPlay();
-            }
-        } else if (currentHand.score === 21) {
-            output(getText('hand21', game.activeHandIndex + 1));
-            
-            // Move to next hand or end game
-            if (game.activeHandIndex < game.playerHands.length - 1) {
-                game.activeHandIndex++;
-                output(getText('playingHand', game.activeHandIndex + 1));
-                // Reset options for new hand
-                game.canDouble = true;
-                displayGameState();
-                showOptions();
-            } else {
-                // All hands are done, dealer's turn
-                game.playerTurn = false;
-                dealerPlay();
-            }
-        } else {
-            showOptions();
-        }
+        hitSplitHand();
     } else {
-        // Standard single hand play
-        game.playerHand.push(dealCard());
-        game.playerScore = calculateHandValue(game.playerHand);
-        
-        // Display updated game state
+        hitSingleHand();
+    }
+}
+
+// Hit on a single hand
+function hitSingleHand() {
+    game.playerHand.push(dealCard());
+    game.playerScore = calculateHandValue(game.playerHand);
+    displayGameState();
+    
+    if (game.playerScore > 21) {
+        output(getText('bust'));
+        game.money -= game.currentBet;
+        endGame();
+    } else if (game.playerScore === 21) {
+        output(getText('have21'));
+        stand();
+    } else {
+        showOptions();
+    }
+}
+
+// Hit on a split hand
+function hitSplitHand() {
+    const currentHand = game.playerHands[game.activeHandIndex];
+    currentHand.cards.push(dealCard());
+    currentHand.score = calculateHandValue(currentHand.cards);
+    displayGameState();
+    
+    if (currentHand.score > 21) {
+        output(getText('handBust', game.activeHandIndex + 1));
+        game.money -= currentHand.bet;
+        moveToNextHandOrDealer();
+    } else if (currentHand.score === 21) {
+        output(getText('hand21', game.activeHandIndex + 1));
+        moveToNextHandOrDealer();
+    } else {
+        showOptions();
+    }
+}
+
+// Move to next hand or dealer play
+function moveToNextHandOrDealer() {
+    if (game.activeHandIndex < game.playerHands.length - 1) {
+        game.activeHandIndex++;
+        output(getText('playingHand', game.activeHandIndex + 1));
+        game.canDouble = true;
         displayGameState();
-        
-        // Check for bust or 21
-        if (game.playerScore > 21) {
-            output(getText('bust'));
-            game.money -= game.currentBet;
-            endGame();
-        } else if (game.playerScore === 21) {
-            output(getText('have21'));
-            stand();
-        } else {
-            showOptions();
-        }
+        showOptions();
+    } else {
+        game.playerTurn = false;
+        output(getText('allHandsComplete'));
+        dealerPlay();
     }
 }
 
@@ -897,37 +792,17 @@ function stand() {
     }
     
     if (game.handSplit) {
-        // When playing split hands
         output(getText('standingOnHand', game.activeHandIndex + 1));
-        
-        // Move to next hand or end game
-        if (game.activeHandIndex < game.playerHands.length - 1) {
-            game.activeHandIndex++;
-            output(getText('playingHand', game.activeHandIndex + 1));
-            // Reset options for new hand
-            game.canDouble = true;
-            displayGameState();
-            showOptions();
-        } else {
-            // All hands are done, dealer's turn
-            game.playerTurn = false;
-            output(getText('allHandsComplete'));
-            dealerPlay();
-        }
+        moveToNextHandOrDealer();
     } else {
-        // Standard single hand play
         game.playerTurn = false;
         output(getText('youStand'));
-        
-        // Reveal dealer's hand
         displayGameState();
-        
-        // Dealer plays
         dealerPlay();
     }
 }
 
-// Double Down
+// Double down - streamlined
 function doubleDown() {
     if (!game.gameInProgress || !game.playerTurn || !game.canDouble) {
         output(getText('cantDouble'));
@@ -935,92 +810,71 @@ function doubleDown() {
     }
     
     if (game.handSplit) {
-        // When playing split hands
-        const currentHand = game.playerHands[game.activeHandIndex];
-        
-        // Double the bet for this hand
-        if (game.money < currentHand.bet) {
-            output(getText('notEnoughMoney'));
-            return;
-        }
-        
-        output(getText('doublingDown', game.activeHandIndex + 1));
-        currentHand.bet *= 2;
-        
-        // Take exactly one more card
-        currentHand.cards.push(dealCard());
-        currentHand.score = calculateHandValue(currentHand.cards);
-        
-        // Display updated game state
-        displayGameState();
-        
-        // Check result
-        if (currentHand.score > 21) {
-            output(getText('handBust', game.activeHandIndex + 1));
-            game.money -= currentHand.bet;
-        }
-        
-        // Move to next hand or end game
-        if (game.activeHandIndex < game.playerHands.length - 1) {
-            game.activeHandIndex++;
-            output(getText('playingHand', game.activeHandIndex + 1));
-            // Reset options for new hand
-            game.canDouble = true;
-            displayGameState();
-            showOptions();
-        } else {
-            // All hands are done, dealer's turn
-            game.playerTurn = false;
-            dealerPlay();
-        }
+        doubleDownSplitHand();
     } else {
-        // Standard single hand play
-        // Double the bet
-        if (game.money < game.currentBet) {
-            output(getText('notEnoughMoney'));
-            return;
-        }
-        
-        output(getText('doubleDownBet', game.currentBet * 2));
-        game.currentBet *= 2;
-        
-        // Take exactly one more card and stand
-        game.playerHand.push(dealCard());
-        game.playerScore = calculateHandValue(game.playerHand);
-        
-        // Display updated game state
-        displayGameState();
-        
-        // Check result
-        if (game.playerScore > 21) {
-            output(getText('bust'));
-            game.money -= game.currentBet;
-            endGame();
-        } else {
-            // Automatically stand after doubling
-            game.playerTurn = false;
-            output(getText('standingAfterDouble'));
-            dealerPlay();
-        }
+        doubleDownSingleHand();
     }
 }
 
-// Split Hand
+// Double down on split hand
+function doubleDownSplitHand() {
+    const currentHand = game.playerHands[game.activeHandIndex];
+    
+    if (game.money < currentHand.bet) {
+        output(getText('notEnoughMoney'));
+        return;
+    }
+    
+    output(getText('doublingDown', game.activeHandIndex + 1));
+    currentHand.bet *= 2;
+    
+    // Take exactly one more card
+    currentHand.cards.push(dealCard());
+    currentHand.score = calculateHandValue(currentHand.cards);
+    displayGameState();
+    
+    if (currentHand.score > 21) {
+        output(getText('handBust', game.activeHandIndex + 1));
+        game.money -= currentHand.bet;
+    }
+    
+    moveToNextHandOrDealer();
+}
+
+// Double down on single hand
+function doubleDownSingleHand() {
+    if (game.money < game.currentBet) {
+        output(getText('notEnoughMoney'));
+        return;
+    }
+    
+    output(getText('doubleDownBet', game.currentBet * 2));
+    game.currentBet *= 2;
+    
+    // Take one more card and stand
+    game.playerHand.push(dealCard());
+    game.playerScore = calculateHandValue(game.playerHand);
+    displayGameState();
+    
+    if (game.playerScore > 21) {
+        output(getText('bust'));
+        game.money -= game.currentBet;
+        endGame();
+    } else {
+        game.playerTurn = false;
+        output(getText('standingAfterDouble'));
+        dealerPlay();
+    }
+}
+
+// Split hand - streamlined
 function splitHand() {
-    if (!game.gameInProgress || !game.playerTurn || !game.canSplit) {
-        output(getText('cantSplit'));
+    if (!game.gameInProgress || !game.playerTurn || !game.canSplit || 
+        game.playerHand.length !== 2 || getCardValue(game.playerHand[0]) !== getCardValue(game.playerHand[1])) {
+        output(getText(game.canSplit ? 'splitOnlyTwoCards' : 'cantSplit'));
         return;
     }
     
-    // Need exactly two cards of same value
-    if (game.playerHand.length !== 2 || 
-        (game.playerHand[0].value !== game.playerHand[1].value && 
-         getCardValue(game.playerHand[0]) !== getCardValue(game.playerHand[1]))) {
-        output(getText('splitOnlyTwoCards'));
-        return;
-    }
-    
-    // Check if player has enough money for the additional bet
     if (game.money < game.currentBet) {
         output(getText('notEnoughMoney'));
         return;
@@ -1031,16 +885,8 @@ function splitHand() {
     // Set up split hands
     game.handSplit = true;
     game.playerHands = [
-        {
-            cards: [game.playerHand[0]],
-            bet: game.currentBet,
-            score: 0
-        },
-        {
-            cards: [game.playerHand[1]],
-            bet: game.currentBet,
-            score: 0
-        }
+        { cards: [game.playerHand[0]], bet: game.currentBet, score: 0 },
+        { cards: [game.playerHand[1]], bet: game.currentBet, score: 0 }
     ];
     
     // Deal one more card to each hand
@@ -1051,10 +897,8 @@ function splitHand() {
     game.playerHands[0].score = calculateHandValue(game.playerHands[0].cards);
     game.playerHands[1].score = calculateHandValue(game.playerHands[1].cards);
     
-    // Set active hand to first one
+    // Reset game state
     game.activeHandIndex = 0;
-    
-    // Reset options
     game.canSplit = false;
     game.canSurrender = false;
     game.canInsurance = false;
@@ -1065,20 +909,14 @@ function splitHand() {
     showOptions();
 }
 
-// Take Insurance
+// Take insurance - streamlined
 function takeInsurance() {
-    if (!game.gameInProgress || !game.playerTurn || !game.canInsurance) {
-        output(getText('cantInsurance'));
+    if (!game.gameInProgress || !game.playerTurn || !game.canInsurance || 
+        game.dealerHand[0].value !== 'A') {
+        output(getText(game.canInsurance ? 'aceNeededForInsurance' : 'cantInsurance'));
         return;
     }
     
-    // Dealer's up card must be an Ace
-    if (game.dealerHand[0].value !== 'A') {
-        output(getText('aceNeededForInsurance'));
-        return;
-    }
-    
-    // Insurance costs half the original bet
     const insuranceCost = Math.ceil(game.currentBet / 2);
     
     if (game.money < insuranceCost) {
@@ -1098,13 +936,12 @@ function takeInsurance() {
     } else {
         output(getText('noBlackjackLoseInsurance'));
         game.money -= game.insuranceBet;
-        // Game continues
         game.canInsurance = false;
         showOptions();
     }
 }
 
-// Surrender
+// Surrender - streamlined
 function surrender() {
     if (!game.gameInProgress || !game.playerTurn || !game.canSurrender) {
         output(getText('cantSurrender'));
@@ -1116,7 +953,7 @@ function surrender() {
     endGame();
 }
 
-// Dealer's turn
+// Dealer's turn - streamlined with consolidated logic
 function dealerPlay() {
     // Dealer hits until reaching 17 or higher
     while (game.dealerScore < 17) {
@@ -1126,54 +963,59 @@ function dealerPlay() {
         displayGameState();
     }
     
-    if (game.handSplit) {
-        // For split hands, compare dealer with each hand
-        let totalWinnings = 0;
+    // Resolve game based on hands
+    game.handSplit ? resolveSplitHands() : resolveSingleHand();
+}
+
+// Resolve split hands
+function resolveSplitHands() {
+    let totalWinnings = 0;
+    const dealerBusted = game.dealerScore > 21;
+    
+    for (let i = 0; i < game.playerHands.length; i++) {
+        const hand = game.playerHands[i];
         
-        for (let i = 0; i < game.playerHands.length; i++) {
-            const hand = game.playerHands[i];
-            
-            // Skip busted hands
-            if (hand.score > 21) {
-                output(getText('handBusted', i + 1));
-                continue;
-            }
-            
-            if (game.dealerScore > 21) {
-                output(getText('dealerBustsHand', i + 1, hand.bet));
-                totalWinnings += hand.bet;
-            } else if (hand.score > game.dealerScore) {
-                output(getText('handWins', i + 1, hand.score, game.dealerScore, hand.bet));
-                totalWinnings += hand.bet;
-            } else if (hand.score < game.dealerScore) {
-                output(getText('handLoses', i + 1, hand.score, game.dealerScore, hand.bet));
-                totalWinnings -= hand.bet;
-            } else {
-                output(getText('handTies', i + 1, hand.score));
-            }
+        // Skip busted hands
+        if (hand.score > 21) {
+            output(getText('handBusted', i + 1));
+            continue;
         }
         
-        game.money += totalWinnings;
-        endGame();
-    } else {
-        // Standard single hand resolution
-        if (game.dealerScore > 21) {
-            output(getText('dealerBusts'));
-            game.money += game.currentBet;
-            endGame();
-        } else if (game.dealerScore > game.playerScore) {
-            output(getText('dealerWins', game.dealerScore));
-            game.money -= game.currentBet;
-            endGame();
-        } else if (game.dealerScore < game.playerScore) {
-            output(getText('playerWins', game.playerScore));
-            game.money += game.currentBet;
-            endGame();
+        if (dealerBusted) {
+            output(getText('dealerBustsHand', i + 1, hand.bet));
+            totalWinnings += hand.bet;
+        } else if (hand.score > game.dealerScore) {
+            output(getText('handWins', i + 1, hand.score, game.dealerScore, hand.bet));
+            totalWinnings += hand.bet;
+        } else if (hand.score < game.dealerScore) {
+            output(getText('handLoses', i + 1, hand.score, game.dealerScore, hand.bet));
+            totalWinnings -= hand.bet;
         } else {
-            output(getText('tie'));
-            endGame(true); // Push
+            output(getText('handTies', i + 1, hand.score));
         }
     }
+    
+    game.money += totalWinnings;
+    endGame();
+}
+
+// Resolve single hand
+function resolveSingleHand() {
+    if (game.dealerScore > 21) {
+        output(getText('dealerBusts'));
+        game.money += game.currentBet;
+    } else if (game.dealerScore > game.playerScore) {
+        output(getText('dealerWins', game.dealerScore));
+        game.money -= game.currentBet;
+    } else if (game.dealerScore < game.playerScore) {
+        output(getText('playerWins', game.playerScore));
+        game.money += game.currentBet;
+    } else {
+        output(getText('tie'));
+        endGame(true); // Push
+        return;
+    }
+    endGame();
 }
 
 // End the game
@@ -1186,6 +1028,7 @@ function endGame(push = false) {
     
     if (game.money <= 0) {
         output(getText('outOfMoney'));
+        game.currentBet = 0; // Reset bet when out of money to prevent further play
         return;
     }
     
@@ -1204,17 +1047,12 @@ function clearTerminal() {
 }
 
 // Event listener for command input
-commandInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        const command = commandInput.value.trim();
-        if (command !== '') {
-            processCommand(command);
-            commandInput.value = '';
-        }
+commandInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && commandInput.value.trim()) {
+        processCommand(commandInput.value.trim());
+        commandInput.value = '';
     }
 });
 
 // Initialize the game on load
-document.addEventListener('DOMContentLoaded', function() {
-    initGame();
-});
+document.addEventListener('DOMContentLoaded', initGame);
