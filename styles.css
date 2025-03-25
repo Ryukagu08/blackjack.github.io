@@ -2,11 +2,12 @@ body {
     background-color: #000;
     color: #0f0;
     font-family: 'Courier New', monospace;
-    padding: 20px;
+    padding: 0;
     margin: 0;
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent body scrolling */
 }
 
 #terminal {
@@ -14,17 +15,45 @@ body {
     overflow-y: auto;
     padding: 10px;
     white-space: pre-wrap;
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #0f0 #000; /* Firefox */
+}
+
+/* Webkit Browsers (Chrome, Safari, newer Edge) */
+#terminal::-webkit-scrollbar {
+    width: 8px; /* Narrower scrollbar */
+}
+
+#terminal::-webkit-scrollbar-track {
+    background: #000; /* Fully black background */
+    border-left: 1px solid #0a0; /* Dark green border */
+}
+
+#terminal::-webkit-scrollbar-thumb {
+    background: #0f0; /* Bright green */
+    border-radius: 0; /* Sharp, blocky corners */
+}
+
+#terminal::-webkit-scrollbar-thumb:hover {
+    background: #0fa; /* Slightly brighter green on hover */
 }
 
 #input-line {
     display: flex;
-    padding: 10px 0;
+    padding: 10px;
     border-top: 1px solid #0f0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #000;
+    z-index: 1000;
 }
 
 #prompt {
     color: #0f0;
     margin-right: 10px;
+    white-space: nowrap;
 }
 
 #command-input {
@@ -35,9 +64,15 @@ body {
     font-size: 16px;
     flex: 1;
     outline: none;
+    width: 100%;
 }
 
 .ascii-art {
     white-space: pre;
     line-height: 1.2;
+}
+
+/* Adjust terminal padding to account for fixed input line */
+body {
+    padding-bottom: 50px;
 }
