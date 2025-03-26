@@ -18,7 +18,8 @@ const game = {
     gameInProgress: false, playerTurn: true, canSplit: false, canDouble: false,
     canInsurance: false, canSurrender: false, handSplit: false, language: 'en',
     colorTheme: 'green', firstGame: true, waitingForUsername: false, highScore: 0,
-    maxMoney: 100 // Track highest money amount
+    maxMoney: 100, // Track highest money amount
+    leaderboardPosition: 0 // Track position in leaderboard
 };
 
 // Card definitions
@@ -32,6 +33,7 @@ const translations = {
         welcome: "Welcome to Command Line Blackjack!",
         helpPrompt: "Type 'help' for commands, 'rules' for game rules, 'language es' for Spanish, 'color' to change colors.",
         highScore: "Congratulations! You got a high score!",
+        positionEarned: (position) => `You earned position #${position}!`,
         enterUsername: "Enter your name (15 chars max):",
         leaderboardTitle: "LEADERBOARD",
         noHighScores: "No high scores yet!",
@@ -155,8 +157,9 @@ const translations = {
     es: {
         welcome: "¡Bienvenido al Blackjack de Línea de Comandos!",
         helpPrompt: "Escribe 'help' para comandos, 'rules' para reglas del juego, 'language en' para inglés, 'color' para cambiar colores.",
-        highScore: "¡Felicidades! ¡Has conseguido una puntuación alta!",
-        enterUsername: "Ingresa tu nombre (máx. 15 caracteres):",
+        highScore: "¡Felicidades!",
+        positionEarned: (position) => `¡Has obtenido la posición #${position}!`,
+        enterUsername: "Ingresa tu nombre (máx. 15 caracteres)",
         leaderboardTitle: "TABLA DE CLASIFICACIÓN",
         noHighScores: "¡Aún no hay puntuaciones altas!",
         highScoreAdded: "¡Tu puntuación ha sido añadida a la tabla!",
@@ -626,127 +629,130 @@ function handToAscii(hand, hideSecond = false) {
     return result;
 }
 
-// Display game state - streamlined
+// Display game state - improved with fixed width and better padding
 function displayGameState() {
     terminal.innerHTML = '';
+    
+    // Fixed width for the game table
+    const TABLE_WIDTH = 63; // Total width including borders
+    const CONTENT_WIDTH = TABLE_WIDTH - 2; // Width of content area (excluding borders)
     
     // Get bet info
     let betInfo = game.handSplit ?
         `${getText('uiLabels.totalBet')} ${game.playerHands.reduce((sum, h) => sum + h.bet, 0).toString().padStart(3)}` :
         `${getText('uiLabels.bet')} ${game.currentBet.toString().padStart(3)}`;
     
-    // Create base table
-    let tableLines = createTableTemplate(betInfo);
-    
-    // Add dealer cards
-    const dealerCardLines = handToAscii(game.dealerHand, game.playerTurn);
-    for (let i = 0; i < dealerCardLines.length; i++) {
-        tableLines[4 + i] = `| ${dealerCardLines[i].padEnd(62)}|`;
-    }
-    
-    // Add dealer score if visible
-    if (!game.playerTurn) {
-        tableLines[9] = `| ${getText('uiLabels.score')} ${game.dealerScore.toString().padEnd(55)}|`;
-    }
-    
-    // Add player hands
-    if (game.handSplit) {
-        addSplitHandsToTable(tableLines);
-    } else {
-        addSingleHandToTable(tableLines);
-    }
-    
-    // Output the table
-    output(tableLines.join('\n'), true);
-}
-
-// Create the base table template
-function createTableTemplate(betInfo) {
+    // Get label texts - to ensure we have correct widths with different languages
     const dealerLabel = getText('uiLabels.dealer');
     const playerLabel = game.handSplit ? getText('uiLabels.playerHands') : getText('uiLabels.player');
     const moneyLabel = getText('uiLabels.money');
     
-    let tableArt = 
-`+---------------------------------------------------------------+
-|                         BLACKJACK                             |
-+---------------------------------------------------------------+
-|                                                               |
-| ${dealerLabel}${' '.repeat(55)}|
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |
-+---------------------------------------------------------------+
-|                                                               |
-| ${playerLabel}${' '.repeat(game.handSplit ? 46 : 53)}|`;
-
+    // Create the header of the table
+    let tableLines = [
+        `+${'-'.repeat(CONTENT_WIDTH)}+`,
+        `|${' BLACKJACK '.padStart(Math.floor(CONTENT_WIDTH/2) + 5).padEnd(CONTENT_WIDTH)}|`,
+        `+${'-'.repeat(CONTENT_WIDTH)}+`,
+        `|${' '.repeat(CONTENT_WIDTH)}|`,
+        `| ${dealerLabel}${' '.repeat(CONTENT_WIDTH - dealerLabel.length - 1)}|`
+    ];
+    
+    // Add empty lines for dealer area
+    for (let i = 0; i < 5; i++) {
+        tableLines.push(`|${' '.repeat(CONTENT_WIDTH)}|`);
+    }
+    
+    // Add separator and player section header
+    tableLines.push(
+        `+${'-'.repeat(CONTENT_WIDTH)}+`,
+        `|${' '.repeat(CONTENT_WIDTH)}|`,
+        `| ${playerLabel}${' '.repeat(CONTENT_WIDTH - playerLabel.length - 1)}|`
+    );
+    
     // Add player section(s)
     if (game.handSplit) {
         for (let h = 0; h < game.playerHands.length; h++) {
             const handLabel = getText('uiLabels.hand', h + 1);
-            tableArt += `
-|                                                               |
-| ${handLabel}${' '.repeat(52)}|
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |`;
+            // Add empty line before each hand except the first one
+            if (h > 0) tableLines.push(`|${' '.repeat(CONTENT_WIDTH)}|`);
+            
+            tableLines.push(`|${' '.repeat(CONTENT_WIDTH)}|`);
+            tableLines.push(`| ${handLabel}${' '.repeat(CONTENT_WIDTH - handLabel.length - 1)}|`);
+            
+            // Add 5 empty lines for cards
+            for (let i = 0; i < 5; i++) {
+                tableLines.push(`|${' '.repeat(CONTENT_WIDTH)}|`);
+            }
         }
     } else {
-        tableArt += `
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |
-|                                                               |`;
+        // Add 5 empty lines for cards
+        for (let i = 0; i < 5; i++) {
+            tableLines.push(`|${' '.repeat(CONTENT_WIDTH)}|`);
+        }
     }
     
-    // Add footer
-    tableArt += `
-| ${betInfo.padEnd(33)} ${moneyLabel} ${game.money.toString().padStart(3)}${' '.repeat(18)}|
-+---------------------------------------------------------------+`;
-
-    return tableArt.split('\n');
-}
-
-// Add split hands to the table
-function addSplitHandsToTable(tableLines) {
-    let lineOffset = 12;
+    // Add footer with bet and money info
+    const footerText = `${betInfo.padEnd(33)} ${moneyLabel} ${game.money.toString().padStart(3)}`;
+    tableLines.push(
+        `| ${footerText}${' '.repeat(CONTENT_WIDTH - footerText.length - 1)}|`,
+        `+${'-'.repeat(CONTENT_WIDTH)}+`
+    );
     
-    for (let h = 0; h < game.playerHands.length; h++) {
-        const hand = game.playerHands[h];
-        const handCardLines = handToAscii(hand.cards);
+    // Add dealer cards
+    const dealerCardLines = handToAscii(game.dealerHand, game.playerTurn);
+    for (let i = 0; i < dealerCardLines.length; i++) {
+        // Make sure the line doesn't exceed the content width
+        const cardText = dealerCardLines[i].substring(0, CONTENT_WIDTH - 2);
+        tableLines[5 + i] = `| ${cardText.padEnd(CONTENT_WIDTH - 2)}|`;
+    }
+    
+    // Add dealer score if visible
+    if (!game.playerTurn) {
+        const scoreText = `${getText('uiLabels.score')} ${game.dealerScore}`;
+        tableLines[10] = `| ${scoreText.padEnd(CONTENT_WIDTH - 2)}|`;
+    }
+    
+    // Add player hands
+    if (game.handSplit) {
+        let lineOffset = 13;
         
-        // Highlight active hand
-        const handPrefix = (h === game.activeHandIndex && game.playerTurn) ? '> ' : '  ';
-        const activeText = h === game.activeHandIndex && game.playerTurn ? ' (active)' : '';
+        for (let h = 0; h < game.playerHands.length; h++) {
+            const hand = game.playerHands[h];
+            const handCardLines = handToAscii(hand.cards);
+            
+            // Highlight active hand
+            const handPrefix = (h === game.activeHandIndex && game.playerTurn) ? '> ' : '  ';
+            const activeText = h === game.activeHandIndex && game.playerTurn ? ' (active)' : '';
+            
+            // Update hand title
+            const handTitle = `${getText('uiLabels.hand', h + 1)} ${handPrefix}${getText('uiLabels.bet')} ${hand.bet}  ` +
+                             `${getText('uiLabels.score')} ${hand.score}${activeText}`;
+            tableLines[lineOffset + 1] = `| ${handTitle.padEnd(CONTENT_WIDTH - 2)}|`;
+            
+            // Add cards
+            for (let i = 0; i < handCardLines.length; i++) {
+                // Make sure the line doesn't exceed the content width
+                const cardText = handCardLines[i].substring(0, CONTENT_WIDTH - 2);
+                tableLines[lineOffset + 2 + i] = `| ${cardText.padEnd(CONTENT_WIDTH - 2)}|`;
+            }
+            
+            lineOffset += 7; // Move to next hand
+        }
+    } else {
+        const playerCardLines = handToAscii(game.playerHand);
         
-        // Update hand title
-        tableLines[lineOffset + 1] = 
-            `| ${getText('uiLabels.hand', h + 1)} ${handPrefix}${getText('uiLabels.bet')} ${hand.bet}  ` +
-            `${getText('uiLabels.score')} ${hand.score}${activeText}`.padEnd(62) + '|';
-        
-        // Add cards
-        for (let i = 0; i < handCardLines.length; i++) {
-            tableLines[lineOffset + 2 + i] = `| ${handCardLines[i].padEnd(62)}|`;
+        for (let i = 0; i < playerCardLines.length; i++) {
+            // Make sure the line doesn't exceed the content width
+            const cardText = playerCardLines[i].substring(0, CONTENT_WIDTH - 2);
+            tableLines[13 + i] = `| ${cardText.padEnd(CONTENT_WIDTH - 2)}|`;
         }
         
-        lineOffset += 7; // Move to next hand
-    }
-}
-
-// Add a single hand to the table
-function addSingleHandToTable(tableLines) {
-    const playerCardLines = handToAscii(game.playerHand);
-    
-    for (let i = 0; i < playerCardLines.length; i++) {
-        tableLines[12 + i] = `| ${playerCardLines[i].padEnd(62)}|`;
+        // Add player score
+        const scoreText = `${getText('uiLabels.score')} ${game.playerScore}`;
+        tableLines[18] = `| ${scoreText.padEnd(CONTENT_WIDTH - 2)}|`;
     }
     
-    // Add player score
-    tableLines[17] = `| ${getText('uiLabels.score')} ${game.playerScore.toString().padEnd(55)}|`;
+    // Output the table
+    output(tableLines.join('\n'), true);
 }
 
 // Player takes another card - streamlined
