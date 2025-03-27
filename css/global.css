@@ -1,0 +1,261 @@
+/* Global Reset and Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    /* Enhanced theme color variables */
+    --bg-primary: var(--black-bg);
+    --bg-secondary: #111111;
+    --text-primary: var(--green-color);
+    --accent-color: var(--green-color);
+    --terminal-header: #1a1a1a;
+    --terminal-border: #333333;
+    --button-bg: transparent;
+    --button-hover-bg: rgba(0, 255, 0, 0.2);
+    --card-border: var(--green-color);
+    --card-hover-bg: rgba(0, 255, 0, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(0, 255, 0, 0.2);
+    
+    /* Text colors */
+    --green-color: #00ff00;
+    --blue-color: #00bfff;
+    --amber-color: #ffbf00;
+    --white-color: #ffffff;
+    --red-color: #ff4040;
+    --purple-color: #b066ff;
+    --cyan-color: #00ffff;
+    --orange-color: #ff8c00;
+    --pink-color: #ff69b4;
+    
+    /* Background colors */
+    --black-bg: #000000;
+    --dark-gray-bg: #1a1a1a;
+    --navy-bg: #001933;
+    --dark-green-bg: #002b00;
+    --dark-brown-bg: #2b1600;
+    --dark-purple-bg: #1b002b;
+    
+    /* Spacing */
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    
+    /* Font Sizes */
+    --font-sm: 14px;
+    --font-md: 16px;
+    --font-lg: 18px;
+    --font-xl: 24px;
+}
+
+/* Enhanced theme classes */
+.theme-green {
+    --text-primary: var(--green-color);
+    --accent-color: var(--green-color);
+    --card-border: var(--green-color);
+    --terminal-border: #005500;
+    --button-hover-bg: rgba(0, 255, 0, 0.2);
+    --card-hover-bg: rgba(0, 255, 0, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(0, 255, 0, 0.2);
+}
+
+.theme-blue {
+    --text-primary: var(--blue-color);
+    --accent-color: var(--blue-color);
+    --card-border: var(--blue-color);
+    --terminal-border: #005588;
+    --button-hover-bg: rgba(0, 191, 255, 0.2);
+    --card-hover-bg: rgba(0, 191, 255, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(0, 191, 255, 0.2);
+}
+
+.theme-amber {
+    --text-primary: var(--amber-color);
+    --accent-color: var(--amber-color);
+    --card-border: var(--amber-color);
+    --terminal-border: #885500;
+    --button-hover-bg: rgba(255, 191, 0, 0.2);
+    --card-hover-bg: rgba(255, 191, 0, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(255, 191, 0, 0.2);
+}
+
+.theme-white {
+    --text-primary: var(--white-color);
+    --accent-color: var(--white-color);
+    --card-border: var(--white-color);
+    --terminal-border: #888888;
+    --button-hover-bg: rgba(255, 255, 255, 0.2);
+    --card-hover-bg: rgba(255, 255, 255, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+}
+
+.theme-red {
+    --text-primary: var(--red-color);
+    --accent-color: var(--red-color);
+    --card-border: var(--red-color);
+    --terminal-border: #880000;
+    --button-hover-bg: rgba(255, 64, 64, 0.2);
+    --card-hover-bg: rgba(255, 64, 64, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(255, 64, 64, 0.2);
+}
+
+.theme-purple {
+    --text-primary: var(--purple-color);
+    --accent-color: var(--purple-color);
+    --card-border: var(--purple-color);
+    --terminal-border: #550088;
+    --button-hover-bg: rgba(176, 102, 255, 0.2);
+    --card-hover-bg: rgba(176, 102, 255, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(176, 102, 255, 0.2);
+}
+
+.theme-cyan {
+    --text-primary: var(--cyan-color);
+    --accent-color: var(--cyan-color);
+    --card-border: var(--cyan-color);
+    --terminal-border: #008888;
+    --button-hover-bg: rgba(0, 255, 255, 0.2);
+    --card-hover-bg: rgba(0, 255, 255, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
+}
+
+.theme-orange {
+    --text-primary: var(--orange-color);
+    --accent-color: var(--orange-color);
+    --card-border: var(--orange-color);
+    --terminal-border: #884400;
+    --button-hover-bg: rgba(255, 140, 0, 0.2);
+    --card-hover-bg: rgba(255, 140, 0, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(255, 140, 0, 0.2);
+}
+
+.theme-pink {
+    --text-primary: var(--pink-color);
+    --accent-color: var(--pink-color);
+    --card-border: var(--pink-color);
+    --terminal-border: #880055;
+    --button-hover-bg: rgba(255, 105, 180, 0.2);
+    --card-hover-bg: rgba(255, 105, 180, 0.05);
+    --card-hover-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
+}
+
+/* Background theme classes */
+.bg-black {
+    --bg-primary: var(--black-bg);
+}
+
+.bg-dark-gray {
+    --bg-primary: var(--dark-gray-bg);
+}
+
+.bg-navy {
+    --bg-primary: var(--navy-bg);
+}
+
+.bg-dark-green {
+    --bg-primary: var(--dark-green-bg);
+}
+
+.bg-dark-brown {
+    --bg-primary: var(--dark-brown-bg);
+}
+
+.bg-dark-purple {
+    --bg-primary: var(--dark-purple-bg);
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#app {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Screen Management */
+[class$="-screen"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 0;
+    transform: translateY(20px);
+    visibility: hidden;
+}
+
+.active-screen {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    z-index: 10;
+}
+
+/* Common Button Styles */
+.btn {
+    background-color: transparent;
+    border: 1px solid var(--text-primary);
+    color: var(--text-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    background-color: var(--button-hover-bg);
+    color: var(--bg-primary);
+}
+
+.btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--text-primary);
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+
+/* Responsive Design Base */
+@media screen and (max-width: 768px) {
+    :root {
+        --spacing-md: 12px;
+        --spacing-lg: 18px;
+        --font-md: 14px;
+        --font-lg: 16px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    :root {
+        --spacing-sm: 6px;
+        --spacing-md: 10px;
+        --font-sm: 12px;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}

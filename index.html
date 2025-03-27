@@ -3,59 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Command Line Blackjack</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="mobile.css" media="screen and (max-width: 600px)">
+    <title>Terminal Arcade</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/home.css">
+    <link rel="stylesheet" href="css/terminal.css">
 </head>
 <body>
-    <div id="terminal"></div>
-    <div id="input-line">
-        <span id="prompt">></span>
-        <input type="text" id="command-input" autofocus>
+    <div id="app">
+        <div id="home-screen" class="active-screen">
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="terminal-controls">
+                        <span class="control close"></span>
+                        <span class="control minimize"></span>
+                        <span class="control maximize"></span>
+                    </div>
+                    <div class="terminal-title">Terminal Arcade</div>
+                </div>
+                <div class="terminal-content">
+                    <div class="ascii-logo">
+                        <!-- ASCII Art Logo -->
+                        <pre>
+ _____                   _             _    ___                    _      
+|_   _|__ _ __ _ __ ___ (_)_ __   __ _| |  / _ \\ _ __ ___ __ _  __| | ___ 
+  | |/ _ \\ '__| '_ ` _ \\| | '_ \\ / _` | | / /_\\/ | '__/ __/ _` |/ _` |/ _ \\
+  | |  __/ |  | | | | | | | | | | (_| | |/ /_\\\\| | | | (_| (_| | (_| |  __/
+  |_|\\___|_|  |_| |_| |_|_|_| |_|\\__,_|_/\\____/|_|  \\___\\__,_|\\__,_|\\___|
+                        </pre>
+                    </div>
+                    
+                    <div class="welcome-message">
+                        <p>Welcome to Terminal Arcade! Select a game to play:</p>
+                    </div>
+                    
+                    <div class="game-grid">
+                        <div class="game-card" data-game="blackjack">
+                            <div class="game-icon">♠️ ♥️ ♦️ ♣️</div>
+                            <h3>Blackjack</h3>
+                            <p>Try your luck at this classic card game!</p>
+                        </div>
+                        
+                        <!-- Template for future games -->
+                        <div class="game-card coming-soon">
+                            <div class="game-icon">?</div>
+                            <h3>Coming Soon</h3>
+                            <p>More games on the way!</p>
+                        </div>
+                    </div>
+                    
+                    <div class="site-footer">
+                        <p>Use arrow keys to navigate, Enter to select</p>
+                        <p class="version">v2.0.0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game containers will be inserted here dynamically -->
+        <div id="game-container"></div>
     </div>
     
-<!-- Firebase SDK & Config -->
-<script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-    import { getDatabase, ref, onValue, push, set, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+    <!-- Firebase SDK -->
+    <script type="module" src="js/firebase-config.js"></script>
     
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyALIuEucPEd5RRAlUaR2QrS91FhDBQreKs",
-      authDomain: "smr-leaderboard.firebaseapp.com",
-      projectId: "smr-leaderboard",
-      storageBucket: "smr-leaderboard.firebasestorage.app",
-      messagingSenderId: "430300229787",
-      appId: "1:430300229787:web:e1fe27358deffe2f64563e",
-      databaseURL: "https://smr-leaderboard-default-rtdb.europe-west1.firebasedatabase.app"
-    };
+    <!-- Core Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/app.js"></script>
     
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-    
-    // Make Firebase functionality available globally
-    window.firebaseDB = {
-      database,
-      getRef: (path) => ref(database, path),
-      query,
-      orderByChild,
-      limitToLast,
-      onValue,
-      push,
-      set,
-      remove
-    };
-    
-    console.log("Firebase initialized successfully");
-  </script>
-  
-  <!-- Game Scripts -->
-  <script src="main.js"></script>
-  <script src="mobile-input.js"></script>
-  
-  <!-- Leaderboard Script -->
-  <script src="leaderboard.js"></script>
+    <!-- Fallback for Firebase initialization -->
+    <script>
+        // Check if Firebase failed to initialize after 3 seconds
+        setTimeout(() => {
+            if (!window.firebaseDB) {
+                console.warn('Firebase initialization timeout - creating fallback');
+                window.firebaseDB = {
+                    getRef: () => null,
+                    query: () => null,
+                    orderByChild: () => null,
+                    limitToLast: () => null,
+                    onValue: (_, callback) => callback({ val: () => ({}) }),
+                    push: () => ({ key: 'offline-key' }),
+                    set: () => Promise.resolve(),
+                    remove: () => Promise.resolve()
+                };
+            }
+        }, 3000);
+    </script>
 </body>
 </html>

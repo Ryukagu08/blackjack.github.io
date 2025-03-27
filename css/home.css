@@ -1,0 +1,200 @@
+/* Home Screen Specific Styles */
+
+.terminal-container {
+    width: 90%;
+    max-width: 900px;
+    height: 90%;
+    margin: 2% auto;
+    border: 1px solid var(--terminal-border);
+    border-radius: 5px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.terminal-header {
+    background-color: var(--terminal-header);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--terminal-border);
+}
+
+.terminal-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.control {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.control.close { background-color: #ff5f56; }
+.control.minimize { background-color: #ffbd2e; }
+.control.maximize { background-color: #27c93f; }
+
+.terminal-title {
+    flex-grow: 1;
+    text-align: center;
+    font-size: var(--font-md);
+    user-select: none;
+}
+
+.terminal-content {
+    flex: 1;
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ASCII Logo */
+.ascii-logo {
+    margin: var(--spacing-md) 0;
+    text-align: center;
+    overflow-x: auto;
+}
+
+.ascii-logo pre {
+    display: inline-block;
+    white-space: pre;
+    font-size: 14px;
+    line-height: 1.2;
+    color: var(--accent-color);
+}
+
+/* Welcome Message */
+.welcome-message {
+    text-align: center;
+    margin: var(--spacing-md) 0;
+    font-size: var(--font-md);
+}
+
+/* Updated Game Grid to better handle 3+ options */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+    flex: 1;
+    justify-content: center;
+}
+
+/* Ensure cards have consistent sizing */
+.game-card {
+    border: 1px solid var(--card-border);
+    padding: var(--spacing-md);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 180px;
+    max-width: 280px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-card:hover, .game-card:focus, .game-card.selected {
+    background-color: var(--card-hover-bg);
+    transform: translateY(-5px);
+    box-shadow: var(--card-hover-shadow);
+}
+
+.game-card.coming-soon {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.game-card.coming-soon:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.game-icon {
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+    line-height: 1;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-card h3 {
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-lg);
+}
+
+.game-card p {
+    font-size: var(--font-sm);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Footer */
+.site-footer {
+    margin-top: auto;
+    padding-top: var(--spacing-lg);
+    text-align: center;
+    font-size: var(--font-sm);
+    opacity: 0.7;
+}
+
+.version {
+    margin-top: var(--spacing-sm);
+    font-size: 12px;
+}
+
+/* Game Container */
+#game-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    display: none;
+}
+
+#game-container.active {
+    display: block;
+}
+
+/* Make sure smaller screens still show cards properly */
+@media screen and (max-width: 768px) {
+    .terminal-container {
+        width: 95%;
+        height: 95%;
+        margin: 2.5% auto;
+    }
+    
+    .game-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .game-card {
+        min-height: 160px;
+    }
+    
+    .ascii-logo pre {
+        font-size: 10px;
+    }
+}
+
+/* Very small screens get 1 card per row */
+@media screen and (max-width: 480px) {
+    .game-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ascii-logo pre {
+        font-size: 8px;
+    }
+}
