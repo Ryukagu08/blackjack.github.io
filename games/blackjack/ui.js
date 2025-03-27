@@ -25,6 +25,10 @@ blackjackUI.translations = {
         leaderboardTitle: "LEADERBOARD",
         noHighScores: "No high scores yet!",
         highScoreAdded: "Your score has been added to the leaderboard!",
+        moneyReset: (amount) => `You're out of money! Starting over with ${amount}.`,
+        betAdjustedDown: (amount) => `Your bet has been adjusted to ${amount} (maximum available).`,
+        notEnoughMoneyForDouble: "You need at least twice your bet amount to double down.",
+        notEnoughMoneyForSplit: "You need at least twice your bet amount to split your hand.",
         rulesText: [
             "BLACKJACK RULES:",
             "---------------------",
@@ -151,6 +155,10 @@ blackjackUI.translations = {
         leaderboardTitle: "TABLA DE CLASIFICACIÓN",
         noHighScores: "¡Aún no hay puntuaciones altas!",
         highScoreAdded: "¡Tu puntuación ha sido añadida a la tabla!",
+        moneyReset: (amount) => `¡Te quedaste sin dinero! Comenzando de nuevo con ${amount}.`,
+        betAdjustedDown: (amount) => `Tu apuesta ha sido ajustada a ${amount} (máximo disponible).`,
+        notEnoughMoneyForDouble: "Necesitas al menos el doble de tu apuesta para doblar.",
+        notEnoughMoneyForSplit: "Necesitas al menos el doble de tu apuesta para dividir tu mano.",
         rulesText: [
             "REGLAS DEL BLACKJACK:",
             "---------------------",
@@ -435,25 +443,37 @@ blackjackUI.createSettingsModal = function(container) {
         
         // Make the option clickable
         langOption.addEventListener('click', () => {
+            // Store current game state to prevent it from being lost
+            const wasGameInProgress = blackjackGame.state.gameInProgress;
+            const wasPlayerTurn = blackjackGame.state.playerTurn;
+            const currentBet = blackjackGame.state.currentBet;
+            
             // Remove selected class from all options
             languageOptions.querySelectorAll('.settings-option').forEach(option => {
                 option.classList.remove('selected');
+                option.style.borderColor = ''; // Clear the inline style
             });
             
             // Add selected class to this option
             langOption.classList.add('selected');
             
-            // Update the game state
+            // Update ONLY the language setting, preserve all other game state
             const newLanguage = lang.value;
             blackjackGame.state.language = newLanguage;
             
-            // Save state
-            blackjackGame.saveState();
+            // Save only the language setting
+            localStorage.setItem('blackjackLanguage', newLanguage);
             
-            // Update UI with new language
-            if (blackjackGame.state.gameInProgress) {
-                blackjackUI.displayGameState();
+            // Update minimal UI text without affecting game state
+            if (wasGameInProgress) {
+                blackjackUI.output(blackjackUI.getText('languageChanged'));
+                
+                // Show available actions without redrawing the board
+                if (wasPlayerTurn) {
+                    blackjackUI.updateLanguageText();
+                }
             } else {
+                // Only full redraw if not in a game
                 blackjackUI.displayWelcomeMessage();
             }
         });
@@ -522,6 +542,7 @@ blackjackUI.createSettingsModal = function(container) {
             // Remove selected class from all text color options
             textColorOptions.querySelectorAll('.settings-option').forEach(option => {
                 option.classList.remove('selected');
+                option.style.borderColor = ''; // Clear the inline style
             });
             
             // Add selected class to this option
@@ -595,6 +616,7 @@ blackjackUI.createSettingsModal = function(container) {
             // Remove selected class from all background color options
             bgColorOptions.querySelectorAll('.settings-option').forEach(option => {
                 option.classList.remove('selected');
+                option.style.borderColor = ''; // Clear the inline style
             });
             
             // Add selected class to this option
@@ -664,6 +686,8 @@ blackjackUI.showSettingsModal = function() {
         languageOptions.forEach(option => {
             if (!option.dataset.type) { // Language options don't have a type
                 option.classList.toggle('selected', option.dataset.value === blackjackGame.state.language);
+                // Clear border color style
+                option.style.borderColor = '';
             }
         });
         
@@ -671,12 +695,16 @@ blackjackUI.showSettingsModal = function() {
         const textColorOptions = modal.querySelectorAll('.settings-option[data-type="text-color"]');
         textColorOptions.forEach(option => {
             option.classList.toggle('selected', option.dataset.value === blackjackGame.state.colorTheme);
+            // Clear border color style
+            option.style.borderColor = '';
         });
         
         // Background color
         const bgColorOptions = modal.querySelectorAll('.settings-option[data-type="bg-color"]');
         bgColorOptions.forEach(option => {
             option.classList.toggle('selected', option.dataset.value === (blackjackGame.state.backgroundTheme || 'black'));
+            // Clear border color style
+            option.style.borderColor = '';
         });
         
         modal.classList.add('active');
@@ -759,12 +787,45 @@ blackjackUI.applyColorTheme = function(theme) {
     if (elements.prompt) {
         elements.prompt.style.color = 'var(--text-primary)';
     }
+};
+
+/**
+ * Clear the terminal output completely
+ */
+blackjackUI.clearOutput = function() {
+    const outputElement = blackjackUI.elements.output;
+    if (!outputElement) return;
     
-    // Update any selected options borders
-    const selectedOptions = document.querySelectorAll('.settings-option.selected');
-    selectedOptions.forEach(option => {
-        option.style.borderColor = 'var(--text-primary)';
-    });
+    // Just clear the output without adding any welcome message
+    outputElement.innerHTML = '';
+};
+
+/**
+ * Update language text without redrawing the UI completely
+ */
+blackjackUI.updateLanguageText = function() {
+    const state = blackjackGame.state;
+    
+    // IMPORTANT: DO NOT output language changed message here (it's handled where language is changed)
+    // DO NOT redraw the game board, ONLY update minimal text elements
+    
+    // If there's an active game, update options without affecting game state
+    if (state.gameInProgress && state.playerTurn) {
+        // Just show available options in new language without any state changes
+        let options = [];
+        if (state.canDouble) options.push('double');
+        if (state.canSplit) options.push('split');
+        if (state.canInsurance) options.push('insurance');
+        if (state.canSurrender) options.push('surrender');
+        
+        // Always have these options
+        options.unshift('hit', 'stand');
+        
+        // Just output text, don't make any state changes
+        blackjackUI.output(blackjackUI.getText('availableActions', options.join(", ")));
+    }
+    
+    // Do NOT save game state here, as it might overwrite important game variables
 };
 
 /**
@@ -886,7 +947,7 @@ blackjackUI.displayGameState = function() {
         `+${'-'.repeat(CONTENT_WIDTH)}+`
     );
     
-    // Add dealer cards
+    // Add dealer cards - with fixed showing of cards
     const dealerCardLines = blackjackUI.handToAscii(state.dealerHand, state.playerTurn);
     for (let i = 0; i < dealerCardLines.length; i++) {
         // Make sure the line doesn't exceed the content width
@@ -953,8 +1014,18 @@ blackjackUI.displayGameState = function() {
 blackjackUI.handToAscii = function(hand, hideSecond = false) {
     if (!hand || !hand.length) return ["", "", "", "", ""];
     
-    // Create card representations
-    const cardLines = hand.map((card, i) => window.utils.cardToAscii(card, hideSecond && i === 1));
+    // Get game state to determine if dealer cards should be shown
+    const state = blackjackGame.state;
+    
+    // Only hide the second card if:
+    // 1. hideSecond parameter is true (indicating this is dealer's hand)
+    // 2. The game is in progress
+    // 3. It's still the player's turn
+    const shouldHideSecond = hideSecond && state.gameInProgress && state.playerTurn;
+    
+    // Create card representations with the corrected hiding logic
+    const cardLines = hand.map((card, i) => 
+        window.utils.cardToAscii(card, shouldHideSecond && i === 1));
     
     // Combine horizontally with proper spacing
     return window.utils.combineCardAscii(cardLines);
@@ -978,25 +1049,33 @@ blackjackUI.showOptions = function() {
 };
 
 /**
- * Get translated text based on current language
+ * Get translated text based on current language with improved error handling
  * @param {string} key - Translation key
  * @param  {...any} args - Arguments for translation function
  * @returns {string} Translated text
  */
 blackjackUI.getText = function(key, ...args) {
-    const language = blackjackGame.state.language || 'en';
+    // Default to English if language is invalid
+    const language = (blackjackGame.state.language === 'en' || blackjackGame.state.language === 'es') 
+                  ? blackjackGame.state.language 
+                  : 'en';
+    
     const langData = blackjackUI.translations[language] || blackjackUI.translations.en;
     
+    // Handle keys with dot notation (e.g., 'uiLabels.bet')
     if (key.includes('.')) {
         const parts = key.split('.');
         let value = langData;
         for (const part of parts) {
-            if (!value) return key;
+            if (!value) {
+                return key; // Key path not found, return key as fallback
+            }
             value = value[part];
         }
         return typeof value === 'function' ? value(...args) : (value || key);
     }
     
+    // For simple keys, directly look up and handle functions/missing keys
     const text = langData[key];
     return typeof text === 'function' ? text(...args) : (text || key);
 };
