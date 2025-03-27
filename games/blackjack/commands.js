@@ -144,7 +144,11 @@ blackjackCommands.processCommand = function(command) {
             blackjackCommands.checkMoney();
             break;
         case 'clear':
+<<<<<<< HEAD
             blackjackUI.clearOutput();
+=======
+            blackjackUI.displayWelcomeMessage();
+>>>>>>> 5b04e5d (Site Refactor)
             break;
         case 'language':
             blackjackCommands.changeLanguage(arg);
@@ -202,7 +206,10 @@ blackjackCommands.placeBet = function(amountStr) {
         return;
     }
     
+<<<<<<< HEAD
     // Parse the bet - ensure it's a positive integer
+=======
+>>>>>>> 5b04e5d (Site Refactor)
     const bet = parseInt(amountStr);
     if (isNaN(bet) || bet <= 0) {
         blackjackUI.output(blackjackUI.getText('invalidBet'));
@@ -239,6 +246,7 @@ blackjackCommands.checkMoney = function() {
  */
 blackjackCommands.changeLanguage = function(lang) {
     if (lang && (lang === 'en' || lang === 'es')) {
+<<<<<<< HEAD
         // Temporarily store whether a game is in progress before changing anything
         const wasGameInProgress = blackjackGame.state.gameInProgress;
         const wasPlayerTurn = blackjackGame.state.playerTurn;
@@ -259,6 +267,11 @@ blackjackCommands.changeLanguage = function(lang) {
             // Only redraw welcome if not in a game
             blackjackUI.displayWelcomeMessage();
         }
+=======
+        blackjackGame.state.language = lang;
+        blackjackUI.output(blackjackUI.getText('languageChanged'));
+        blackjackGame.saveState();
+>>>>>>> 5b04e5d (Site Refactor)
     } else {
         blackjackUI.output(blackjackUI.getText('languageOptions'));
     }

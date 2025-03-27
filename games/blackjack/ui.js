@@ -25,10 +25,13 @@ blackjackUI.translations = {
         leaderboardTitle: "LEADERBOARD",
         noHighScores: "No high scores yet!",
         highScoreAdded: "Your score has been added to the leaderboard!",
+<<<<<<< HEAD
         moneyReset: (amount) => `You're out of money! Starting over with ${amount}.`,
         betAdjustedDown: (amount) => `Your bet has been adjusted to ${amount} (maximum available).`,
         notEnoughMoneyForDouble: "You need at least twice your bet amount to double down.",
         notEnoughMoneyForSplit: "You need at least twice your bet amount to split your hand.",
+=======
+>>>>>>> 5b04e5d (Site Refactor)
         rulesText: [
             "BLACKJACK RULES:",
             "---------------------",
@@ -155,10 +158,13 @@ blackjackUI.translations = {
         leaderboardTitle: "TABLA DE CLASIFICACIÓN",
         noHighScores: "¡Aún no hay puntuaciones altas!",
         highScoreAdded: "¡Tu puntuación ha sido añadida a la tabla!",
+<<<<<<< HEAD
         moneyReset: (amount) => `¡Te quedaste sin dinero! Comenzando de nuevo con ${amount}.`,
         betAdjustedDown: (amount) => `Tu apuesta ha sido ajustada a ${amount} (máximo disponible).`,
         notEnoughMoneyForDouble: "Necesitas al menos el doble de tu apuesta para doblar.",
         notEnoughMoneyForSplit: "Necesitas al menos el doble de tu apuesta para dividir tu mano.",
+=======
+>>>>>>> 5b04e5d (Site Refactor)
         rulesText: [
             "REGLAS DEL BLACKJACK:",
             "---------------------",
@@ -443,6 +449,7 @@ blackjackUI.createSettingsModal = function(container) {
         
         // Make the option clickable
         langOption.addEventListener('click', () => {
+<<<<<<< HEAD
             // Store current game state to prevent it from being lost
             const wasGameInProgress = blackjackGame.state.gameInProgress;
             const wasPlayerTurn = blackjackGame.state.playerTurn;
@@ -452,11 +459,17 @@ blackjackUI.createSettingsModal = function(container) {
             languageOptions.querySelectorAll('.settings-option').forEach(option => {
                 option.classList.remove('selected');
                 option.style.borderColor = ''; // Clear the inline style
+=======
+            // Remove selected class from all options
+            languageOptions.querySelectorAll('.settings-option').forEach(option => {
+                option.classList.remove('selected');
+>>>>>>> 5b04e5d (Site Refactor)
             });
             
             // Add selected class to this option
             langOption.classList.add('selected');
             
+<<<<<<< HEAD
             // Update ONLY the language setting, preserve all other game state
             const newLanguage = lang.value;
             blackjackGame.state.language = newLanguage;
@@ -474,6 +487,19 @@ blackjackUI.createSettingsModal = function(container) {
                 }
             } else {
                 // Only full redraw if not in a game
+=======
+            // Update the game state
+            const newLanguage = lang.value;
+            blackjackGame.state.language = newLanguage;
+            
+            // Save state
+            blackjackGame.saveState();
+            
+            // Update UI with new language
+            if (blackjackGame.state.gameInProgress) {
+                blackjackUI.displayGameState();
+            } else {
+>>>>>>> 5b04e5d (Site Refactor)
                 blackjackUI.displayWelcomeMessage();
             }
         });
@@ -542,7 +568,10 @@ blackjackUI.createSettingsModal = function(container) {
             // Remove selected class from all text color options
             textColorOptions.querySelectorAll('.settings-option').forEach(option => {
                 option.classList.remove('selected');
+<<<<<<< HEAD
                 option.style.borderColor = ''; // Clear the inline style
+=======
+>>>>>>> 5b04e5d (Site Refactor)
             });
             
             // Add selected class to this option
@@ -616,7 +645,10 @@ blackjackUI.createSettingsModal = function(container) {
             // Remove selected class from all background color options
             bgColorOptions.querySelectorAll('.settings-option').forEach(option => {
                 option.classList.remove('selected');
+<<<<<<< HEAD
                 option.style.borderColor = ''; // Clear the inline style
+=======
+>>>>>>> 5b04e5d (Site Refactor)
             });
             
             // Add selected class to this option
@@ -686,8 +718,11 @@ blackjackUI.showSettingsModal = function() {
         languageOptions.forEach(option => {
             if (!option.dataset.type) { // Language options don't have a type
                 option.classList.toggle('selected', option.dataset.value === blackjackGame.state.language);
+<<<<<<< HEAD
                 // Clear border color style
                 option.style.borderColor = '';
+=======
+>>>>>>> 5b04e5d (Site Refactor)
             }
         });
         
@@ -695,16 +730,22 @@ blackjackUI.showSettingsModal = function() {
         const textColorOptions = modal.querySelectorAll('.settings-option[data-type="text-color"]');
         textColorOptions.forEach(option => {
             option.classList.toggle('selected', option.dataset.value === blackjackGame.state.colorTheme);
+<<<<<<< HEAD
             // Clear border color style
             option.style.borderColor = '';
+=======
+>>>>>>> 5b04e5d (Site Refactor)
         });
         
         // Background color
         const bgColorOptions = modal.querySelectorAll('.settings-option[data-type="bg-color"]');
         bgColorOptions.forEach(option => {
             option.classList.toggle('selected', option.dataset.value === (blackjackGame.state.backgroundTheme || 'black'));
+<<<<<<< HEAD
             // Clear border color style
             option.style.borderColor = '';
+=======
+>>>>>>> 5b04e5d (Site Refactor)
         });
         
         modal.classList.add('active');
@@ -787,6 +828,7 @@ blackjackUI.applyColorTheme = function(theme) {
     if (elements.prompt) {
         elements.prompt.style.color = 'var(--text-primary)';
     }
+<<<<<<< HEAD
 };
 
 /**
@@ -826,6 +868,14 @@ blackjackUI.updateLanguageText = function() {
     }
     
     // Do NOT save game state here, as it might overwrite important game variables
+=======
+    
+    // Update any selected options borders
+    const selectedOptions = document.querySelectorAll('.settings-option.selected');
+    selectedOptions.forEach(option => {
+        option.style.borderColor = 'var(--text-primary)';
+    });
+>>>>>>> 5b04e5d (Site Refactor)
 };
 
 /**
@@ -947,7 +997,11 @@ blackjackUI.displayGameState = function() {
         `+${'-'.repeat(CONTENT_WIDTH)}+`
     );
     
+<<<<<<< HEAD
     // Add dealer cards - with fixed showing of cards
+=======
+    // Add dealer cards
+>>>>>>> 5b04e5d (Site Refactor)
     const dealerCardLines = blackjackUI.handToAscii(state.dealerHand, state.playerTurn);
     for (let i = 0; i < dealerCardLines.length; i++) {
         // Make sure the line doesn't exceed the content width
@@ -1014,6 +1068,7 @@ blackjackUI.displayGameState = function() {
 blackjackUI.handToAscii = function(hand, hideSecond = false) {
     if (!hand || !hand.length) return ["", "", "", "", ""];
     
+<<<<<<< HEAD
     // Get game state to determine if dealer cards should be shown
     const state = blackjackGame.state;
     
@@ -1026,6 +1081,10 @@ blackjackUI.handToAscii = function(hand, hideSecond = false) {
     // Create card representations with the corrected hiding logic
     const cardLines = hand.map((card, i) => 
         window.utils.cardToAscii(card, shouldHideSecond && i === 1));
+=======
+    // Create card representations
+    const cardLines = hand.map((card, i) => window.utils.cardToAscii(card, hideSecond && i === 1));
+>>>>>>> 5b04e5d (Site Refactor)
     
     // Combine horizontally with proper spacing
     return window.utils.combineCardAscii(cardLines);
@@ -1049,12 +1108,17 @@ blackjackUI.showOptions = function() {
 };
 
 /**
+<<<<<<< HEAD
  * Get translated text based on current language with improved error handling
+=======
+ * Get translated text based on current language
+>>>>>>> 5b04e5d (Site Refactor)
  * @param {string} key - Translation key
  * @param  {...any} args - Arguments for translation function
  * @returns {string} Translated text
  */
 blackjackUI.getText = function(key, ...args) {
+<<<<<<< HEAD
     // Default to English if language is invalid
     const language = (blackjackGame.state.language === 'en' || blackjackGame.state.language === 'es') 
                   ? blackjackGame.state.language 
@@ -1063,19 +1127,31 @@ blackjackUI.getText = function(key, ...args) {
     const langData = blackjackUI.translations[language] || blackjackUI.translations.en;
     
     // Handle keys with dot notation (e.g., 'uiLabels.bet')
+=======
+    const language = blackjackGame.state.language || 'en';
+    const langData = blackjackUI.translations[language] || blackjackUI.translations.en;
+    
+>>>>>>> 5b04e5d (Site Refactor)
     if (key.includes('.')) {
         const parts = key.split('.');
         let value = langData;
         for (const part of parts) {
+<<<<<<< HEAD
             if (!value) {
                 return key; // Key path not found, return key as fallback
             }
+=======
+            if (!value) return key;
+>>>>>>> 5b04e5d (Site Refactor)
             value = value[part];
         }
         return typeof value === 'function' ? value(...args) : (value || key);
     }
     
+<<<<<<< HEAD
     // For simple keys, directly look up and handle functions/missing keys
+=======
+>>>>>>> 5b04e5d (Site Refactor)
     const text = langData[key];
     return typeof text === 'function' ? text(...args) : (text || key);
 };
