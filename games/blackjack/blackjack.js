@@ -58,13 +58,6 @@ blackjackGame.init = function(container, exitCallback) {
     state.containerElement = container;
     state.exitCallback = exitCallback;
     
-<<<<<<< HEAD
-    // IMPORTANT: Always reset money to default on game initialization
-    state.money = 100;
-    state.maxMoney = 100;
-    
-=======
->>>>>>> 5b04e5d (Site Refactor)
     // Create game UI
     blackjackUI.createGameUI(container);
     
@@ -79,19 +72,12 @@ blackjackGame.init = function(container, exitCallback) {
     if (savedState) {
         try {
             const parsed = JSON.parse(savedState);
-<<<<<<< HEAD
-            // Only restore settings, NOT money or game progress
-            state.language = parsed.language || 'en';
-            state.colorTheme = parsed.colorTheme || 'green';
-            state.backgroundTheme = parsed.backgroundTheme || 'black';
-=======
             // Restore settings and money
             state.money = parsed.money || 100;
             state.language = parsed.language || 'en';
             state.colorTheme = parsed.colorTheme || 'green';
             state.backgroundTheme = parsed.backgroundTheme || 'black';
             state.maxMoney = parsed.maxMoney || 100;
->>>>>>> 5b04e5d (Site Refactor)
             
             // Don't restore full game state, but note if we had a game in progress
             if (parsed.hadGameInProgress) {
@@ -138,12 +124,6 @@ blackjackGame.resume = function() {
         return;
     }
     
-<<<<<<< HEAD
-    // Reset money to default on resume as well
-    blackjackGame.state.money = 100;
-    
-=======
->>>>>>> 5b04e5d (Site Refactor)
     // Check if this is coming back from a refresh with a game in progress
     const savedState = localStorage.getItem('blackjackGameState');
     if (savedState) {
@@ -156,11 +136,7 @@ blackjackGame.resume = function() {
                 // Just show a message notifying the player
                 blackjackUI.displayWelcomeMessage();
                 blackjackUI.output('Game was interrupted. Start a new game when ready.');
-<<<<<<< HEAD
-                blackjackUI.output(`Your current balance: ${blackjackGame.state.money}`);
-=======
                 blackjackUI.output(`Your current balance: $${blackjackGame.state.money}`);
->>>>>>> 5b04e5d (Site Refactor)
                 return;
             }
         } catch (e) {
@@ -178,14 +154,6 @@ blackjackGame.resume = function() {
 blackjackGame.saveState = function() {
     const state = blackjackGame.state;
     const stateToSave = {
-<<<<<<< HEAD
-        // REMOVED money storage - each session starts fresh
-        language: state.language,
-        colorTheme: state.colorTheme,
-        backgroundTheme: state.backgroundTheme || 'black',
-        // REMOVED maxMoney storage - not needed between sessions
-        // Only save game in progress flag
-=======
         money: state.money,
         language: state.language,
         colorTheme: state.colorTheme,
@@ -196,7 +164,6 @@ blackjackGame.saveState = function() {
         currentBet: state.currentBet,
         // Only save the minimal game state - not the entire deck or hands
         // Just enough to know a game was in progress if we refresh
->>>>>>> 5b04e5d (Site Refactor)
         hadGameInProgress: state.gameInProgress
     };
     
@@ -285,16 +252,6 @@ blackjackGame.startGame = function() {
         return;
     }
     
-<<<<<<< HEAD
-    // Ensure bet doesn't exceed available money
-    if (state.currentBet > state.money) {
-        blackjackUI.output(blackjackUI.getText('betTooHigh'));
-        state.currentBet = state.money;
-        blackjackUI.output(blackjackUI.getText('betAdjustedDown', state.money));
-    }
-    
-=======
->>>>>>> 5b04e5d (Site Refactor)
     // Reset game state
     blackjackGame.resetGameState();
     
@@ -313,15 +270,6 @@ blackjackGame.startGame = function() {
 blackjackGame.resetGameState = function() {
     const state = blackjackGame.state;
     
-<<<<<<< HEAD
-    // If player is out of money, give them the starting amount
-    if (state.money <= 0) {
-        state.money = 100;
-        blackjackUI.output(blackjackUI.getText('moneyReset', 100));
-    }
-    
-=======
->>>>>>> 5b04e5d (Site Refactor)
     state.deck = blackjackGame.createDeck();
     state.playerHand = [];
     state.playerHands = [];
@@ -331,15 +279,6 @@ blackjackGame.resetGameState = function() {
     state.gameInProgress = true;
     state.handSplit = false;
     state.insuranceBet = 0;
-<<<<<<< HEAD
-    
-    // Ensure canDouble is reset properly
-    state.canDouble = false;
-    state.canSplit = false;
-    state.canInsurance = false;
-    state.canSurrender = false;
-=======
->>>>>>> 5b04e5d (Site Refactor)
 };
 
 /**
@@ -357,23 +296,6 @@ blackjackGame.dealInitialCards = function() {
     state.playerScore = blackjackGame.calculateHandValue(state.playerHand);
     state.dealerScore = blackjackGame.calculateHandValue(state.dealerHand);
     
-<<<<<<< HEAD
-    // CRITICAL FIX: Must have at least TWICE the bet amount to double down
-    // This ensures they can cover the original bet PLUS the doubled portion
-    state.canDouble = state.money >= state.currentBet * 2;
-    
-    // FIXED: Need twice the bet amount to split as well (since it creates two bets)
-    state.canSplit = (blackjackGame.getCardValue(state.playerHand[0]) === blackjackGame.getCardValue(state.playerHand[1])) && 
-                    state.money >= state.currentBet * 2;
-                    
-    state.canInsurance = state.dealerHand[0].value === 'A' && state.money >= Math.ceil(state.currentBet / 2);
-    state.canSurrender = true;
-    
-    // Debug info to console
-    console.log(`Can double: ${state.canDouble} (Money: ${state.money}, Bet: ${state.currentBet}, Required: ${state.currentBet * 2})`);
-    console.log(`Can split: ${state.canSplit} (Money: ${state.money}, Bet: ${state.currentBet}, Required: ${state.currentBet * 2})`);
-};
-=======
     // Set available actions
     state.canDouble = state.money >= state.currentBet;
     state.canSplit = (blackjackGame.getCardValue(state.playerHand[0]) === blackjackGame.getCardValue(state.playerHand[1])) && 
@@ -381,7 +303,6 @@ blackjackGame.dealInitialCards = function() {
     state.canInsurance = state.dealerHand[0].value === 'A' && state.money >= Math.ceil(state.currentBet / 2);
     state.canSurrender = true;
 }
->>>>>>> 5b04e5d (Site Refactor)
 
 /**
  * Get card value (for comparing face value)
@@ -401,32 +322,16 @@ blackjackGame.checkForBlackjack = function() {
     if (state.playerScore === 21) {
         if (state.dealerScore === 21) {
             // Push - both have blackjack
-<<<<<<< HEAD
-            state.playerTurn = false; // Set to false to reveal dealer cards
-            blackjackUI.displayGameState(); // Show dealer cards
-=======
->>>>>>> 5b04e5d (Site Refactor)
             blackjackUI.output(blackjackUI.getText('blackjackTie'));
             blackjackGame.endGame(true);
         } else {
             // Player has blackjack
-<<<<<<< HEAD
-            state.playerTurn = false; // Set to false to reveal dealer cards
-            blackjackUI.displayGameState(); // Show dealer cards
-=======
->>>>>>> 5b04e5d (Site Refactor)
             blackjackUI.output(blackjackUI.getText('blackjackWin'));
             state.money += Math.floor(state.currentBet * 1.5);
             blackjackGame.endGame();
         }
     } else if (state.dealerScore === 21) {
         // Dealer has blackjack
-<<<<<<< HEAD
-        state.playerTurn = false; // Set to false to reveal dealer cards
-        blackjackUI.displayGameState(); // Show dealer cards
-        
-=======
->>>>>>> 5b04e5d (Site Refactor)
         if (state.insuranceBet > 0) {
             blackjackUI.output(blackjackUI.getText('insurancePays'));
             state.money += state.insuranceBet * 2;
@@ -517,15 +422,7 @@ blackjackGame.moveToNextHandOrDealer = function() {
     if (state.activeHandIndex < state.playerHands.length - 1) {
         state.activeHandIndex++;
         blackjackUI.output(blackjackUI.getText('playingHand', state.activeHandIndex + 1));
-<<<<<<< HEAD
-        
-        // Only allow double if they have enough money for this hand's bet
-        const nextHand = state.playerHands[state.activeHandIndex];
-        state.canDouble = state.money >= nextHand.bet;
-        
-=======
         state.canDouble = true;
->>>>>>> 5b04e5d (Site Refactor)
         blackjackUI.displayGameState();
         blackjackUI.showOptions();
     } else {
@@ -563,38 +460,7 @@ blackjackGame.stand = function() {
 blackjackGame.doubleDown = function() {
     const state = blackjackGame.state;
     
-<<<<<<< HEAD
-    if (!state.gameInProgress || !state.playerTurn) {
-        blackjackUI.output(blackjackUI.getText('cantDouble'));
-        return;
-    }
-    
-    // ABSOLUTE FINAL VALIDATION: Player must have at least TWICE the bet amount available
-    let canActuallyDouble = false;
-    
-    if (state.handSplit) {
-        const currentHand = state.playerHands[state.activeHandIndex];
-        canActuallyDouble = state.money >= currentHand.bet * 2; // Need at least TWICE the bet amount
-        
-        if (!canActuallyDouble) {
-            state.canDouble = false;
-            blackjackUI.output(blackjackUI.getText('notEnoughMoneyForDouble'));
-            return;
-        }
-    } else {
-        canActuallyDouble = state.money >= state.currentBet * 2; // Need at least TWICE the bet amount
-        
-        if (!canActuallyDouble) {
-            state.canDouble = false;
-            blackjackUI.output(blackjackUI.getText('notEnoughMoneyForDouble'));
-            return;
-        }
-    }
-    
-    if (!state.canDouble) {
-=======
     if (!state.gameInProgress || !state.playerTurn || !state.canDouble) {
->>>>>>> 5b04e5d (Site Refactor)
         blackjackUI.output(blackjackUI.getText('cantDouble'));
         return;
     }
@@ -618,12 +484,6 @@ blackjackGame.doubleDownSplitHand = function() {
         return;
     }
     
-<<<<<<< HEAD
-    // IMPORTANT: Immediately deduct the additional bet amount from player's money
-    state.money -= currentHand.bet; // Take money for doubled portion right away
-    
-=======
->>>>>>> 5b04e5d (Site Refactor)
     blackjackUI.output(blackjackUI.getText('doublingDown', state.activeHandIndex + 1));
     currentHand.bet *= 2;
     
@@ -634,13 +494,7 @@ blackjackGame.doubleDownSplitHand = function() {
     
     if (currentHand.score > 21) {
         blackjackUI.output(blackjackUI.getText('handBust', state.activeHandIndex + 1));
-<<<<<<< HEAD
-        // Don't need to deduct the full bet as we already deducted the doubled portion
-        // Only deduct the original bet amount that wasn't deducted yet
-        state.money -= currentHand.bet / 2;
-=======
         state.money -= currentHand.bet;
->>>>>>> 5b04e5d (Site Refactor)
     }
     
     blackjackGame.moveToNextHandOrDealer();
@@ -657,12 +511,6 @@ blackjackGame.doubleDownSingleHand = function() {
         return;
     }
     
-<<<<<<< HEAD
-    // IMPORTANT: Immediately deduct the additional bet amount from player's money
-    state.money -= state.currentBet; // Take money for the doubled portion right away
-    
-=======
->>>>>>> 5b04e5d (Site Refactor)
     blackjackUI.output(blackjackUI.getText('doubleDownBet', state.currentBet * 2));
     state.currentBet *= 2;
     
@@ -673,13 +521,7 @@ blackjackGame.doubleDownSingleHand = function() {
     
     if (state.playerScore > 21) {
         blackjackUI.output(blackjackUI.getText('bust'));
-<<<<<<< HEAD
-        // Don't need to deduct the full bet as we already deducted the doubled portion
-        // Only deduct the original bet amount that wasn't deducted yet
-        state.money -= state.currentBet / 2;
-=======
         state.money -= state.currentBet;
->>>>>>> 5b04e5d (Site Refactor)
         blackjackGame.endGame();
     } else {
         state.playerTurn = false;
@@ -694,26 +536,14 @@ blackjackGame.doubleDownSingleHand = function() {
 blackjackGame.splitHand = function() {
     const state = blackjackGame.state;
     
-<<<<<<< HEAD
-    if (!state.gameInProgress || !state.playerTurn || 
-=======
     if (!state.gameInProgress || !state.playerTurn || !state.canSplit || 
->>>>>>> 5b04e5d (Site Refactor)
         state.playerHand.length !== 2 || blackjackGame.getCardValue(state.playerHand[0]) !== blackjackGame.getCardValue(state.playerHand[1])) {
         blackjackUI.output(blackjackUI.getText(state.canSplit ? 'splitOnlyTwoCards' : 'cantSplit'));
         return;
     }
     
-<<<<<<< HEAD
-    // FIXED: Check if player has DOUBLE the bet amount for splitting (need to cover two full bets)
-    if (state.money < state.currentBet * 2) {
-        state.canSplit = false;
-        // Use getText properly to get the translated message
-        blackjackUI.output(blackjackUI.getText('notEnoughMoneyForSplit'));
-=======
     if (state.money < state.currentBet) {
         blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
->>>>>>> 5b04e5d (Site Refactor)
         return;
     }
     
@@ -726,12 +556,6 @@ blackjackGame.splitHand = function() {
         { cards: [state.playerHand[1]], bet: state.currentBet, score: 0 }
     ];
     
-<<<<<<< HEAD
-    // Deduct the additional bet for the second hand immediately
-    state.money -= state.currentBet;
-    
-=======
->>>>>>> 5b04e5d (Site Refactor)
     // Deal one more card to each hand
     state.playerHands[0].cards.push(blackjackGame.dealCard());
     state.playerHands[1].cards.push(blackjackGame.dealCard());
@@ -742,19 +566,10 @@ blackjackGame.splitHand = function() {
     
     // Reset game state
     state.activeHandIndex = 0;
-<<<<<<< HEAD
-    state.canSplit = false; // Can't split again after splitting
-    state.canSurrender = false;
-    state.canInsurance = false;
-    
-    // Only allow double if they have enough money for EACH hand's double
-    state.canDouble = state.money >= state.currentBet * 2;
-=======
     state.canSplit = false;
     state.canSurrender = false;
     state.canInsurance = false;
     state.canDouble = true;
->>>>>>> 5b04e5d (Site Refactor)
     
     blackjackUI.output(blackjackUI.getText('playingHand', 1));
     blackjackUI.displayGameState();
@@ -775,13 +590,7 @@ blackjackGame.takeInsurance = function() {
     
     const insuranceCost = Math.ceil(state.currentBet / 2);
     
-<<<<<<< HEAD
-    // Double check money availability
     if (state.money < insuranceCost) {
-        state.canInsurance = false;
-=======
-    if (state.money < insuranceCost) {
->>>>>>> 5b04e5d (Site Refactor)
         blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
         return;
     }
@@ -847,60 +656,15 @@ blackjackGame.resolveSplitHands = function() {
     
     for (let i = 0; i < state.playerHands.length; i++) {
         const hand = state.playerHands[i];
-<<<<<<< HEAD
-        const originalBet = hand.bet / 2; // Original bet before doubling
-        const isDoubled = hand.bet > originalBet; // Check if hand was doubled
-        
-        // Skip busted hands - they already lost their bets or had money deducted
-        if (hand.score > 21) {
-            blackjackUI.output(blackjackUI.getText('handBusted', i + 1));
-            // For doubled busted hands, we already deducted the money during hit/double
-=======
         
         // Skip busted hands
         if (hand.score > 21) {
             blackjackUI.output(blackjackUI.getText('handBusted', i + 1));
->>>>>>> 5b04e5d (Site Refactor)
             continue;
         }
         
         if (dealerBusted) {
             blackjackUI.output(blackjackUI.getText('dealerBustsHand', i + 1, hand.bet));
-<<<<<<< HEAD
-            // Win the current bet amount
-            totalWinnings += hand.bet;
-        } else if (hand.score > state.dealerScore) {
-            blackjackUI.output(blackjackUI.getText('handWins', i + 1, hand.score, state.dealerScore, hand.bet));
-            // Win the current bet amount
-            totalWinnings += hand.bet;
-        } else if (hand.score < state.dealerScore) {
-            blackjackUI.output(blackjackUI.getText('handLoses', i + 1, hand.score, state.dealerScore, hand.bet));
-            // Lose the current bet amount, but if doubled, we already took half
-            if (isDoubled) {
-                totalWinnings -= originalBet; // Only deduct the original bet part
-            } else {
-                totalWinnings -= hand.bet; // Deduct the full bet
-            }
-        } else {
-            blackjackUI.output(blackjackUI.getText('handTies', i + 1, hand.score));
-            // On tie, return any doubled amount already deducted
-            if (isDoubled) {
-                totalWinnings += originalBet; // Return the doubled portion already taken
-            }
-            // No other money change on tie - original bet is returned
-        }
-    }
-    
-    // Properly update money balance
-    state.money += totalWinnings;
-    
-    // Ensure money doesn't go negative due to any calculation errors
-    if (state.money < 0) {
-        console.error("Negative money detected, resetting to 0");
-        state.money = 0;
-    }
-    
-=======
             totalWinnings += hand.bet;
         } else if (hand.score > state.dealerScore) {
             blackjackUI.output(blackjackUI.getText('handWins', i + 1, hand.score, state.dealerScore, hand.bet));
@@ -914,7 +678,6 @@ blackjackGame.resolveSplitHands = function() {
     }
     
     state.money += totalWinnings;
->>>>>>> 5b04e5d (Site Refactor)
     blackjackGame.endGame();
 };
 
@@ -923,53 +686,22 @@ blackjackGame.resolveSplitHands = function() {
  */
 blackjackGame.resolveSingleHand = function() {
     const state = blackjackGame.state;
-<<<<<<< HEAD
-    const isDoubled = state.currentBet > 0 && !state.canDouble; // We doubled if we have a bet and canDouble is false
-=======
->>>>>>> 5b04e5d (Site Refactor)
     
     if (state.dealerScore > 21) {
         blackjackUI.output(blackjackUI.getText('dealerBusts'));
         state.money += state.currentBet;
     } else if (state.dealerScore > state.playerScore) {
         blackjackUI.output(blackjackUI.getText('dealerWins', state.dealerScore));
-<<<<<<< HEAD
-        if (!isDoubled) {
-            // If we didn't double, deduct the bet now
-            state.money -= state.currentBet;
-        } else {
-            // If we doubled, we already took the doubled portion when doubling
-            // Just deduct the original portion
-            state.money -= state.currentBet / 2;
-        }
-=======
         state.money -= state.currentBet;
->>>>>>> 5b04e5d (Site Refactor)
     } else if (state.dealerScore < state.playerScore) {
         blackjackUI.output(blackjackUI.getText('playerWins', state.playerScore));
         state.money += state.currentBet;
     } else {
         blackjackUI.output(blackjackUI.getText('tie'));
-<<<<<<< HEAD
-        // For a tie after doubling, return the doubled amount that was already taken
-        if (isDoubled) {
-            state.money += state.currentBet / 2;
-        }
-=======
->>>>>>> 5b04e5d (Site Refactor)
         blackjackGame.endGame(true); // Push
         return;
     }
     
-<<<<<<< HEAD
-    // Safety check to prevent negative money
-    if (state.money < 0) {
-        console.error("Negative money detected, resetting to 0");
-        state.money = 0;
-    }
-    
-=======
->>>>>>> 5b04e5d (Site Refactor)
     blackjackGame.endGame();
 };
 
@@ -980,13 +712,6 @@ blackjackGame.resolveSingleHand = function() {
 blackjackGame.endGame = function(push = false) {
     const state = blackjackGame.state;
     state.gameInProgress = false;
-<<<<<<< HEAD
-    state.playerTurn = false; // Ensure dealer cards are visible
-    
-    // Always redisplay the game state to show all cards
-    blackjackUI.displayGameState();
-=======
->>>>>>> 5b04e5d (Site Refactor)
     
     if (!push) {
         blackjackUI.output(blackjackUI.getText('moneyLeft', state.money));
