@@ -26,6 +26,15 @@ blackjackCommands.setupCommandHandling = function() {
         console.error('Error loading command history:', e);
     }
     
+    // Function to ensure the input is visible
+    const ensureInputVisible = () => {
+        // Make sure the terminal is scrolled to show the input
+        const outputElement = document.getElementById('blackjack-output');
+        if (outputElement) {
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+    };
+    
     // Add event listener for input
     inputElement.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && inputElement.value.trim()) {
@@ -45,6 +54,9 @@ blackjackCommands.setupCommandHandling = function() {
             
             historyIndex = commandHistory.length;
             inputElement.value = '';
+            
+            // Ensure the input field is visible after command execution
+            setTimeout(ensureInputVisible, 50);
             
             e.preventDefault();
         } else if (e.key === 'ArrowUp') {
@@ -97,18 +109,20 @@ blackjackCommands.setupCommandHandling = function() {
     // Focus terminal when clicked, but don't force focus on input
     const terminal = document.getElementById('blackjack-output');
     if (terminal) {
-        terminal.addEventListener('click', () => {
+        terminal.addEventListener('click', (event) => {
             // Only focus if user clicked directly on the terminal (not on a child element)
             if (event.target === terminal) {
                 inputElement.focus();
+                ensureInputVisible();
             }
         });
     }
     
-    // Let the browser handle placeholder text naturally
-    
     // Only focus input initially, but don't force it afterwards
     inputElement.focus();
+    
+    // Ensure input is visible on page load or game start
+    setTimeout(ensureInputVisible, 100);
 };
 
 /**

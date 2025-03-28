@@ -284,6 +284,7 @@ blackjackUI.createGameUI = function(container) {
     // Create terminal elements
     const terminal = document.createElement('div');
     terminal.className = 'game-terminal';
+    terminal.style.display = 'block'; // Change from flex to block
     
     // Create header
     const header = document.createElement('div');
@@ -338,13 +339,14 @@ blackjackUI.createGameUI = function(container) {
     commandInput.autocomplete = 'off';
     commandInput.placeholder = 'type a command...';
     
-    // Assemble terminal
+    // Assemble terminal input
     inputLine.appendChild(prompt);
     inputLine.appendChild(commandInput);
     
+    // Assemble terminal - notice order change
     terminal.appendChild(header);
     terminal.appendChild(terminalOutput);
-    terminal.appendChild(inputLine);
+    terminal.appendChild(inputLine); // Input now follows output directly
     
     // Add to container
     container.appendChild(terminal);
@@ -768,9 +770,6 @@ blackjackUI.applyColorTheme = function(theme) {
     
     // Update the global theme in localStorage to ensure it persists to home screen
     localStorage.setItem('terminalArcadeTheme', theme);
-    
-    // We don't need to update borders for selected options anymore
-    // The CSS will handle this with !important rule
 };
 
 /**
@@ -781,7 +780,15 @@ blackjackUI.applyColorTheme = function(theme) {
  */
 blackjackUI.output = function(text, isAsciiArt = false, messageType = 'auto') {
     const outputElement = blackjackUI.elements.output;
-    if (!outputElement) return;
+    const terminalElement = blackjackUI.elements.terminal;
+    const inputElement = blackjackUI.elements.input && blackjackUI.elements.input.parentElement;
+    
+    if (!outputElement || !inputElement) return;
+    
+    // Remove the input element from the DOM temporarily
+    if (inputElement.parentElement) {
+        inputElement.parentElement.removeChild(inputElement);
+    }
     
     const div = document.createElement('div');
     div.textContent = text;
@@ -818,8 +825,21 @@ blackjackUI.output = function(text, isAsciiArt = false, messageType = 'auto') {
         div.className = `${messageType}-message`;
     }
     
+    // Add the new content to the output
     outputElement.appendChild(div);
-    outputElement.scrollTop = outputElement.scrollHeight;
+    
+    // Now reattach the input element directly after the output element
+    terminalElement.appendChild(inputElement);
+    
+    // Make sure the newly added content and input are visible
+    inputElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Focus the input element
+    if (blackjackUI.elements.input) {
+        setTimeout(() => {
+            blackjackUI.elements.input.focus();
+        }, 10);
+    }
 };
 
 /**
@@ -827,6 +847,12 @@ blackjackUI.output = function(text, isAsciiArt = false, messageType = 'auto') {
  */
 blackjackUI.displayWelcomeMessage = function() {
     const state = blackjackGame.state;
+    
+    // First remove input element so it can be re-appended after content
+    const inputElement = blackjackUI.elements.input && blackjackUI.elements.input.parentElement;
+    if (inputElement && inputElement.parentElement) {
+        inputElement.parentElement.removeChild(inputElement);
+    }
     
     // Clear terminal
     if (blackjackUI.elements.output) {
@@ -846,6 +872,17 @@ ${blackjackUI.getText('helpPrompt')}
 ${blackjackUI.getText('moneyStatus', state.money)}
 
 ${blackjackUI.getText('leaderboardReset')}`);
+    
+    // Re-append input at the end and focus it
+    if (inputElement && blackjackUI.elements.terminal) {
+        blackjackUI.elements.terminal.appendChild(inputElement);
+        
+        if (blackjackUI.elements.input) {
+            setTimeout(() => {
+                blackjackUI.elements.input.focus();
+            }, 10);
+        }
+    }
 };
 
 /**
@@ -853,6 +890,12 @@ ${blackjackUI.getText('leaderboardReset')}`);
  */
 blackjackUI.displayGameState = function() {
     const state = blackjackGame.state;
+    
+    // First remove input element so it can be re-appended after content
+    const inputElement = blackjackUI.elements.input && blackjackUI.elements.input.parentElement;
+    if (inputElement && inputElement.parentElement) {
+        inputElement.parentElement.removeChild(inputElement);
+    }
     
     // Clear terminal
     if (blackjackUI.elements.output) {
@@ -979,6 +1022,17 @@ blackjackUI.displayGameState = function() {
     
     // Output the table
     blackjackUI.output(tableLines.join('\n'), true);
+    
+    // Re-append input at the end and focus it
+    if (inputElement && blackjackUI.elements.terminal) {
+        blackjackUI.elements.terminal.appendChild(inputElement);
+        
+        if (blackjackUI.elements.input) {
+            setTimeout(() => {
+                blackjackUI.elements.input.focus();
+            }, 10);
+        }
+    }
 };
 
 /**
