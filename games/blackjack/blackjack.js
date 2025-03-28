@@ -108,13 +108,33 @@ blackjackGame.init = function(container, exitCallback) {
     
     // If we had a game in progress before refresh, show a message
     if (state.firstGame === false && !state.gameInProgress) {
-        blackjackUI.output('Previous game was interrupted. Start a new game when ready.');
+        blackjackUI.output('Previous game was interrupted. Start a new game when ready.', false, 'info');
     }
+    
+    // Register event listeners for window focus/blur
+    window.addEventListener('focus', blackjackGame.handleWindowFocus);
+    window.addEventListener('blur', blackjackGame.handleWindowBlur);
     
     // Mark as initialized
     state.initialized = true;
     
     return blackjackGame;
+};
+
+/**
+ * Handle window focus event
+ */
+blackjackGame.handleWindowFocus = function() {
+    // No auto-focus behavior to allow user control
+    // This is intentionally empty
+};
+
+/**
+ * Handle window blur event
+ */
+blackjackGame.handleWindowBlur = function() {
+    // Save game state when window loses focus
+    blackjackGame.saveState();
 };
 
 /**
@@ -146,8 +166,8 @@ blackjackGame.resume = function() {
                 // Don't try to restore the full game state as that would be complex
                 // Just show a message notifying the player
                 blackjackUI.displayWelcomeMessage();
-                blackjackUI.output('Game was interrupted. Start a new game when ready.');
-                blackjackUI.output(`Your current balance: $${blackjackGame.state.money}`);
+                blackjackUI.output('Game was interrupted. Start a new game when ready.', false, 'info');
+                blackjackUI.output(`Your current balance: $${blackjackGame.state.money}`, false, 'info');
                 return;
             }
         } catch (e) {
@@ -160,7 +180,13 @@ blackjackGame.resume = function() {
         blackjackUI.displayGameState();
     } else {
         blackjackUI.displayWelcomeMessage();
-        blackjackUI.output(`Your current balance: $${blackjackGame.state.money}`);
+        blackjackUI.output(`Your current balance: $${blackjackGame.state.money}`, false, 'info');
+    }
+    
+    // Refocus input if already had focus before refresh
+    const inputElement = document.getElementById('blackjack-command-input');
+    if (inputElement && document.activeElement === document.body) {
+        inputElement.focus();
     }
 };
 
@@ -256,13 +282,13 @@ blackjackGame.isValidBet = function() {
     
     // Check if a bet has been placed
     if (!state.currentBet || state.currentBet <= 0) {
-        blackjackUI.output(blackjackUI.getText('needBet'));
+        blackjackUI.output(blackjackUI.getText('needBet'), false, 'error');
         return false;
     }
     
     // Check if player has enough money for the bet
     if (state.currentBet > state.money) {
-        blackjackUI.output(blackjackUI.getText('betTooHigh'));
+        blackjackUI.output(blackjackUI.getText('betTooHigh'), false, 'error');
         return false;
     }
     
@@ -276,7 +302,7 @@ blackjackGame.startGame = function() {
     const state = blackjackGame.state;
     
     if (state.gameInProgress) {
-        blackjackUI.output(blackjackUI.getText('gameInProgress'));
+        blackjackUI.output(blackjackUI.getText('gameInProgress'), false, 'error');
         return;
     }
     
@@ -355,22 +381,22 @@ blackjackGame.checkForBlackjack = function() {
     if (state.playerScore === 21) {
         if (state.dealerScore === 21) {
             // Push - both have blackjack
-            blackjackUI.output(blackjackUI.getText('blackjackTie'));
+            blackjackUI.output(blackjackUI.getText('blackjackTie'), false, 'warning');
             blackjackGame.endGame(true);
         } else {
             // Player has blackjack
-            blackjackUI.output(blackjackUI.getText('blackjackWin'));
+            blackjackUI.output(blackjackUI.getText('blackjackWin'), false, 'success');
             state.money += Math.floor(state.currentBet * 1.5);
             blackjackGame.endGame();
         }
     } else if (state.dealerScore === 21) {
         // Dealer has blackjack
         if (state.insuranceBet > 0) {
-            blackjackUI.output(blackjackUI.getText('insurancePays'));
+            blackjackUI.output(blackjackUI.getText('insurancePays'), false, 'success');
             state.money += state.insuranceBet * 2;
             state.money -= state.currentBet; // Still lose the main bet
         } else {
-            blackjackUI.output(blackjackUI.getText('dealerBlackjack'));
+            blackjackUI.output(blackjackUI.getText('dealerBlackjack'), false, 'error');
             state.money -= state.currentBet;
         }
         blackjackGame.endGame();
@@ -384,7 +410,7 @@ blackjackGame.hit = function() {
     const state = blackjackGame.state;
     
     if (!state.gameInProgress || !state.playerTurn) {
-        blackjackUI.output(blackjackUI.getText('cantHit'));
+        blackjackUI.output(blackjackUI.getText('cantHit'), false, 'error');
         return;
     }
     
@@ -412,11 +438,11 @@ blackjackGame.hitSingleHand = function() {
     blackjackUI.displayGameState();
     
     if (state.playerScore > 21) {
-        blackjackUI.output(blackjackUI.getText('bust'));
+        blackjackUI.output(blackjackUI.getText('bust'), false, 'error');
         state.money -= state.currentBet;
         blackjackGame.endGame();
     } else if (state.playerScore === 21) {
-        blackjackUI.output(blackjackUI.getText('have21'));
+        blackjackUI.output(blackjackUI.getText('have21'), false, 'success');
         blackjackGame.stand();
     } else {
         blackjackUI.showOptions();
@@ -435,11 +461,11 @@ blackjackGame.hitSplitHand = function() {
     blackjackUI.displayGameState();
     
     if (currentHand.score > 21) {
-        blackjackUI.output(blackjackUI.getText('handBust', state.activeHandIndex + 1));
+        blackjackUI.output(blackjackUI.getText('handBust', state.activeHandIndex + 1), false, 'error');
         state.money -= currentHand.bet;
         blackjackGame.moveToNextHandOrDealer();
     } else if (currentHand.score === 21) {
-        blackjackUI.output(blackjackUI.getText('hand21', state.activeHandIndex + 1));
+        blackjackUI.output(blackjackUI.getText('hand21', state.activeHandIndex + 1), false, 'success');
         blackjackGame.moveToNextHandOrDealer();
     } else {
         blackjackUI.showOptions();
@@ -454,13 +480,13 @@ blackjackGame.moveToNextHandOrDealer = function() {
     
     if (state.activeHandIndex < state.playerHands.length - 1) {
         state.activeHandIndex++;
-        blackjackUI.output(blackjackUI.getText('playingHand', state.activeHandIndex + 1));
+        blackjackUI.output(blackjackUI.getText('playingHand', state.activeHandIndex + 1), false, 'info');
         state.canDouble = true;
         blackjackUI.displayGameState();
         blackjackUI.showOptions();
     } else {
         state.playerTurn = false;
-        blackjackUI.output(blackjackUI.getText('allHandsComplete'));
+        blackjackUI.output(blackjackUI.getText('allHandsComplete'), false, 'info');
         blackjackGame.dealerPlay();
     }
 };
@@ -472,16 +498,16 @@ blackjackGame.stand = function() {
     const state = blackjackGame.state;
     
     if (!state.gameInProgress || !state.playerTurn) {
-        blackjackUI.output(blackjackUI.getText('cantStand'));
+        blackjackUI.output(blackjackUI.getText('cantStand'), false, 'error');
         return;
     }
     
     if (state.handSplit) {
-        blackjackUI.output(blackjackUI.getText('standingOnHand', state.activeHandIndex + 1));
+        blackjackUI.output(blackjackUI.getText('standingOnHand', state.activeHandIndex + 1), false, 'info');
         blackjackGame.moveToNextHandOrDealer();
     } else {
         state.playerTurn = false;
-        blackjackUI.output(blackjackUI.getText('youStand'));
+        blackjackUI.output(blackjackUI.getText('youStand'), false, 'info');
         blackjackUI.displayGameState();
         blackjackGame.dealerPlay();
     }
@@ -494,7 +520,7 @@ blackjackGame.doubleDown = function() {
     const state = blackjackGame.state;
     
     if (!state.gameInProgress || !state.playerTurn || !state.canDouble) {
-        blackjackUI.output(blackjackUI.getText('cantDouble'));
+        blackjackUI.output(blackjackUI.getText('cantDouble'), false, 'error');
         return;
     }
     
@@ -513,11 +539,11 @@ blackjackGame.doubleDownSplitHand = function() {
     const currentHand = state.playerHands[state.activeHandIndex];
     
     if (state.money < currentHand.bet * 2) {
-        blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
+        blackjackUI.output(blackjackUI.getText('notEnoughMoney'), false, 'error');
         return;
     }
     
-    blackjackUI.output(blackjackUI.getText('doublingDown', state.activeHandIndex + 1));
+    blackjackUI.output(blackjackUI.getText('doublingDown', state.activeHandIndex + 1), false, 'info');
     currentHand.bet *= 2;
     
     // Take exactly one more card
@@ -526,7 +552,7 @@ blackjackGame.doubleDownSplitHand = function() {
     blackjackUI.displayGameState();
     
     if (currentHand.score > 21) {
-        blackjackUI.output(blackjackUI.getText('handBust', state.activeHandIndex + 1));
+        blackjackUI.output(blackjackUI.getText('handBust', state.activeHandIndex + 1), false, 'error');
         state.money -= currentHand.bet;
     }
     
@@ -540,11 +566,11 @@ blackjackGame.doubleDownSingleHand = function() {
     const state = blackjackGame.state;
     
     if (state.money < state.currentBet * 2) {
-        blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
+        blackjackUI.output(blackjackUI.getText('notEnoughMoney'), false, 'error');
         return;
     }
     
-    blackjackUI.output(blackjackUI.getText('doubleDownBet', state.currentBet * 2));
+    blackjackUI.output(blackjackUI.getText('doubleDownBet', state.currentBet * 2), false, 'info');
     state.currentBet *= 2;
     
     // Take one more card and stand
@@ -553,12 +579,12 @@ blackjackGame.doubleDownSingleHand = function() {
     blackjackUI.displayGameState();
     
     if (state.playerScore > 21) {
-        blackjackUI.output(blackjackUI.getText('bust'));
+        blackjackUI.output(blackjackUI.getText('bust'), false, 'error');
         state.money -= state.currentBet;
         blackjackGame.endGame();
     } else {
         state.playerTurn = false;
-        blackjackUI.output(blackjackUI.getText('standingAfterDouble'));
+        blackjackUI.output(blackjackUI.getText('standingAfterDouble'), false, 'info');
         blackjackGame.dealerPlay();
     }
 };
@@ -571,16 +597,16 @@ blackjackGame.splitHand = function() {
     
     if (!state.gameInProgress || !state.playerTurn || !state.canSplit || 
         state.playerHand.length !== 2 || blackjackGame.getCardValue(state.playerHand[0]) !== blackjackGame.getCardValue(state.playerHand[1])) {
-        blackjackUI.output(blackjackUI.getText(state.canSplit ? 'splitOnlyTwoCards' : 'cantSplit'));
+        blackjackUI.output(blackjackUI.getText(state.canSplit ? 'splitOnlyTwoCards' : 'cantSplit'), false, 'error');
         return;
     }
     
     if (state.money < state.currentBet * 2) {
-        blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
+        blackjackUI.output(blackjackUI.getText('notEnoughMoney'), false, 'error');
         return;
     }
     
-    blackjackUI.output(blackjackUI.getText('splittingHand'));
+    blackjackUI.output(blackjackUI.getText('splittingHand'), false, 'info');
     
     // Set up split hands
     state.handSplit = true;
@@ -604,7 +630,7 @@ blackjackGame.splitHand = function() {
     state.canInsurance = false;
     state.canDouble = true;
     
-    blackjackUI.output(blackjackUI.getText('playingHand', 1));
+    blackjackUI.output(blackjackUI.getText('playingHand', 1), false, 'info');
     blackjackUI.displayGameState();
     blackjackUI.showOptions();
 };
@@ -617,28 +643,28 @@ blackjackGame.takeInsurance = function() {
     
     if (!state.gameInProgress || !state.playerTurn || !state.canInsurance || 
         state.dealerHand[0].value !== 'A') {
-        blackjackUI.output(blackjackUI.getText(state.canInsurance ? 'aceNeededForInsurance' : 'cantInsurance'));
+        blackjackUI.output(blackjackUI.getText(state.canInsurance ? 'aceNeededForInsurance' : 'cantInsurance'), false, 'error');
         return;
     }
     
     const insuranceCost = Math.ceil(state.currentBet / 2);
     
     if (state.money < insuranceCost) {
-        blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
+        blackjackUI.output(blackjackUI.getText('notEnoughMoney'), false, 'error');
         return;
     }
     
     state.insuranceBet = insuranceCost;
-    blackjackUI.output(blackjackUI.getText('takingInsurance', insuranceCost));
+    blackjackUI.output(blackjackUI.getText('takingInsurance', insuranceCost), false, 'info');
     
     // If dealer has blackjack, insurance pays 2:1
     if (state.dealerScore === 21) {
-        blackjackUI.output(blackjackUI.getText('insurancePays'));
+        blackjackUI.output(blackjackUI.getText('insurancePays'), false, 'success');
         state.money += state.insuranceBet * 2;
         state.money -= state.currentBet; // Still lose the main bet
         blackjackGame.endGame();
     } else {
-        blackjackUI.output(blackjackUI.getText('noBlackjackLoseInsurance'));
+        blackjackUI.output(blackjackUI.getText('noBlackjackLoseInsurance'), false, 'error');
         state.money -= state.insuranceBet;
         state.canInsurance = false;
         blackjackUI.showOptions();
@@ -652,11 +678,11 @@ blackjackGame.surrender = function() {
     const state = blackjackGame.state;
     
     if (!state.gameInProgress || !state.playerTurn || !state.canSurrender) {
-        blackjackUI.output(blackjackUI.getText('cantSurrender'));
+        blackjackUI.output(blackjackUI.getText('cantSurrender'), false, 'error');
         return;
     }
     
-    blackjackUI.output(blackjackUI.getText('surrendering'));
+    blackjackUI.output(blackjackUI.getText('surrendering'), false, 'warning');
     state.money -= Math.floor(state.currentBet / 2);
     blackjackGame.endGame();
 };
@@ -669,7 +695,7 @@ blackjackGame.dealerPlay = function() {
     
     // Dealer hits until reaching 17 or higher
     while (state.dealerScore < 17) {
-        blackjackUI.output(blackjackUI.getText('dealerHits'));
+        blackjackUI.output(blackjackUI.getText('dealerHits'), false, 'info');
         state.dealerHand.push(blackjackGame.dealCard());
         state.dealerScore = blackjackGame.calculateHandValue(state.dealerHand);
         blackjackUI.displayGameState();
@@ -692,21 +718,21 @@ blackjackGame.resolveSplitHands = function() {
         
         // Skip busted hands
         if (hand.score > 21) {
-            blackjackUI.output(blackjackUI.getText('handBusted', i + 1));
+            blackjackUI.output(blackjackUI.getText('handBusted', i + 1), false, 'error');
             continue;
         }
         
         if (dealerBusted) {
-            blackjackUI.output(blackjackUI.getText('dealerBustsHand', i + 1, hand.bet));
+            blackjackUI.output(blackjackUI.getText('dealerBustsHand', i + 1, hand.bet), false, 'success');
             totalWinnings += hand.bet;
         } else if (hand.score > state.dealerScore) {
-            blackjackUI.output(blackjackUI.getText('handWins', i + 1, hand.score, state.dealerScore, hand.bet));
+            blackjackUI.output(blackjackUI.getText('handWins', i + 1, hand.score, state.dealerScore, hand.bet), false, 'success');
             totalWinnings += hand.bet;
         } else if (hand.score < state.dealerScore) {
-            blackjackUI.output(blackjackUI.getText('handLoses', i + 1, hand.score, state.dealerScore, hand.bet));
+            blackjackUI.output(blackjackUI.getText('handLoses', i + 1, hand.score, state.dealerScore, hand.bet), false, 'error');
             totalWinnings -= hand.bet;
         } else {
-            blackjackUI.output(blackjackUI.getText('handTies', i + 1, hand.score));
+            blackjackUI.output(blackjackUI.getText('handTies', i + 1, hand.score), false, 'info');
         }
     }
     
@@ -721,16 +747,16 @@ blackjackGame.resolveSingleHand = function() {
     const state = blackjackGame.state;
     
     if (state.dealerScore > 21) {
-        blackjackUI.output(blackjackUI.getText('dealerBusts'));
+        blackjackUI.output(blackjackUI.getText('dealerBusts'), false, 'success');
         state.money += state.currentBet;
     } else if (state.dealerScore > state.playerScore) {
-        blackjackUI.output(blackjackUI.getText('dealerWins', state.dealerScore));
+        blackjackUI.output(blackjackUI.getText('dealerWins', state.dealerScore), false, 'error');
         state.money -= state.currentBet;
     } else if (state.dealerScore < state.playerScore) {
-        blackjackUI.output(blackjackUI.getText('playerWins', state.playerScore));
+        blackjackUI.output(blackjackUI.getText('playerWins', state.playerScore), false, 'success');
         state.money += state.currentBet;
     } else {
-        blackjackUI.output(blackjackUI.getText('tie'));
+        blackjackUI.output(blackjackUI.getText('tie'), false, 'info');
         blackjackGame.endGame(true); // Push
         return;
     }
@@ -747,7 +773,7 @@ blackjackGame.endGame = function(push = false) {
     state.gameInProgress = false;
     
     if (!push) {
-        blackjackUI.output(blackjackUI.getText('moneyLeft', state.money));
+        blackjackUI.output(blackjackUI.getText('moneyLeft', state.money), false, 'info');
     }
     
     // Track highest money amount
@@ -756,7 +782,7 @@ blackjackGame.endGame = function(push = false) {
     }
     
     if (state.money <= 0) {
-        blackjackUI.output(blackjackUI.getText('outOfMoney'));
+        blackjackUI.output(blackjackUI.getText('outOfMoney'), false, 'error');
         state.currentBet = 0; // Reset bet when out of money to prevent further play
         
         // Check if the max money amount qualifies for the leaderboard
@@ -768,7 +794,7 @@ blackjackGame.endGame = function(push = false) {
         state.maxMoney = 100;
         
     } else {
-        blackjackUI.output(blackjackUI.getText('playAgain'));
+        blackjackUI.output(blackjackUI.getText('playAgain'), false, 'info');
     }
     
     // Save game state

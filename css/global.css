@@ -48,6 +48,11 @@
     --font-md: 16px;
     --font-lg: 18px;
     --font-xl: 24px;
+    
+    /* Animation speeds */
+    --animation-speed-fast: 0.2s;
+    --animation-speed-normal: 0.3s;
+    --animation-speed-slow: 0.5s;
 }
 
 /* Enhanced theme classes */
@@ -188,7 +193,8 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    transition: transform 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    transition: transform var(--animation-speed-slow) ease-in-out, 
+                opacity var(--animation-speed-normal) ease-in-out;
     opacity: 0;
     transform: translateY(20px);
     visibility: hidden;
@@ -209,7 +215,7 @@ body {
     padding: var(--spacing-sm) var(--spacing-md);
     cursor: pointer;
     font-family: 'Courier New', monospace;
-    transition: all 0.2s;
+    transition: all var(--animation-speed-fast);
 }
 
 .btn:hover {
@@ -220,6 +226,23 @@ body {
 .btn:focus {
     outline: none;
     box-shadow: 0 0 0 2px var(--text-primary);
+}
+
+/* Placeholder Styling */
+::placeholder {
+    color: var(--text-primary);
+    opacity: 0.5;
+}
+
+/* Input Focus States */
+input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+input::selection {
+    background-color: var(--accent-color);
+    color: var(--bg-primary);
 }
 
 /* Utility Classes */
@@ -257,5 +280,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
     * {
         transition: none !important;
+        animation: none !important;
     }
 }

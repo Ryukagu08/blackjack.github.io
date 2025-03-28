@@ -12,9 +12,19 @@ blackjackCommands.setupCommandHandling = function() {
     const inputElement = document.getElementById('blackjack-command-input');
     if (!inputElement) return;
     
-    // Command history
-    const commandHistory = [];
+    // Command history with persistent storage
+    let commandHistory = [];
     let historyIndex = -1;
+    
+    // Try to load command history from localStorage
+    try {
+        const savedHistory = localStorage.getItem('blackjackCommandHistory');
+        if (savedHistory) {
+            commandHistory = JSON.parse(savedHistory);
+        }
+    } catch (e) {
+        console.error('Error loading command history:', e);
+    }
     
     // Add event listener for input
     inputElement.addEventListener('keydown', (e) => {
@@ -24,7 +34,13 @@ blackjackCommands.setupCommandHandling = function() {
             
             // Add to history if not duplicate of last command
             if (commandHistory.length === 0 || commandHistory[commandHistory.length - 1] !== command) {
+                // Limit history to 50 commands
+                if (commandHistory.length >= 50) {
+                    commandHistory.shift(); // Remove oldest command
+                }
                 commandHistory.push(command);
+                // Save to localStorage
+                localStorage.setItem('blackjackCommandHistory', JSON.stringify(commandHistory));
             }
             
             historyIndex = commandHistory.length;
@@ -57,19 +73,85 @@ blackjackCommands.setupCommandHandling = function() {
                 inputElement.value = '';
             }
             e.preventDefault();
+        } else if (e.key === 'Tab') {
+            // Command auto-completion
+            e.preventDefault();
+            const partialCommand = inputElement.value.trim().toLowerCase();
+            if (partialCommand) {
+                const completion = blackjackCommands.autocomplete(partialCommand);
+                if (completion) {
+                    inputElement.value = completion;
+                    // Move cursor to end
+                    setTimeout(() => {
+                        inputElement.selectionStart = inputElement.selectionEnd = inputElement.value.length;
+                    }, 0);
+                }
+            }
+        } else if (e.key === 'Escape') {
+            // Clear input
+            inputElement.value = '';
+            e.preventDefault();
         }
     });
     
-    // Focus input when terminal is clicked
+    // Focus terminal when clicked, but don't force focus on input
     const terminal = document.getElementById('blackjack-output');
     if (terminal) {
         terminal.addEventListener('click', () => {
-            inputElement.focus();
+            // Only focus if user clicked directly on the terminal (not on a child element)
+            if (event.target === terminal) {
+                inputElement.focus();
+            }
         });
     }
     
-    // Ensure input is focused
+    // Let the browser handle placeholder text naturally
+    
+    // Only focus input initially, but don't force it afterwards
     inputElement.focus();
+};
+
+/**
+ * Command autocompletion
+ * @param {string} partial - Partial command to complete
+ * @returns {string|null} Completed command or null if no match
+ */
+blackjackCommands.autocomplete = function(partial) {
+    const commands = [
+        'help', 'rules', 'bet', 'deal', 'hit', 'stand', 'double', 
+        'split', 'insurance', 'surrender', 'money', 'clear', 
+        'language', 'color', 'leaderboard', 'exit'
+    ];
+    
+    // Find matching commands
+    const matches = commands.filter(cmd => cmd.startsWith(partial));
+    
+    if (matches.length === 1) {
+        // Single match - return the command
+        return matches[0];
+    } else if (matches.length > 1) {
+        // Multiple matches - find longest common prefix
+        let commonPrefix = matches[0];
+        for (let i = 1; i < matches.length; i++) {
+            let j = 0;
+            while (j < commonPrefix.length && j < matches[i].length && 
+                   commonPrefix[j] === matches[i][j]) {
+                j++;
+            }
+            commonPrefix = commonPrefix.substring(0, j);
+        }
+        
+        // If we have a longer common prefix than the partial command, return it
+        if (commonPrefix.length > partial.length) {
+            return commonPrefix;
+        } else {
+            // Otherwise, display available options
+            blackjackUI.output(`Matching commands: ${matches.join(', ')}`, false, 'info');
+            return null;
+        }
+    }
+    
+    return null;
 };
 
 /**
@@ -80,7 +162,7 @@ blackjackCommands.processCommand = function(command) {
     const state = blackjackGame.state;
     
     // Echo command
-    blackjackUI.output(`> ${command}`);
+    blackjackUI.output(`> ${command}`, false, 'cmd');
     
     // Check if we're waiting for a username for high score
     if (state.waitingForUsername) {
@@ -89,7 +171,7 @@ blackjackCommands.processCommand = function(command) {
         if (username) {
             // Add to leaderboard
             blackjackLeaderboard.addHighScore(username, state.highScore);
-            blackjackUI.output(blackjackUI.getText('highScoreAdded'));
+            blackjackUI.output(blackjackUI.getText('highScoreAdded'), false, 'success');
             state.waitingForUsername = false;
             
             // Show the leaderboard after adding
@@ -163,7 +245,7 @@ blackjackCommands.processCommand = function(command) {
             }
             break;
         default:
-            blackjackUI.output(blackjackUI.getText('unknownCommand'));
+            blackjackUI.output(blackjackUI.getText('unknownCommand'), false, 'error');
     }
 };
 
@@ -173,7 +255,7 @@ blackjackCommands.processCommand = function(command) {
 blackjackCommands.showHelp = function() {
     const helpText = blackjackUI.getText('helpText');
     for (const line of helpText) {
-        blackjackUI.output(line);
+        blackjackUI.output(line, false, 'info');
     }
 };
 
@@ -183,7 +265,7 @@ blackjackCommands.showHelp = function() {
 blackjackCommands.showRules = function() {
     const rulesText = blackjackUI.getText('rulesText');
     for (const line of rulesText) {
-        blackjackUI.output(line);
+        blackjackUI.output(line, false, 'info');
     }
 };
 
@@ -195,26 +277,26 @@ blackjackCommands.placeBet = function(amountStr) {
     const state = blackjackGame.state;
     
     if (state.gameInProgress) {
-        blackjackUI.output(blackjackUI.getText('gameInProgress'));
+        blackjackUI.output(blackjackUI.getText('gameInProgress'), false, 'error');
         return;
     }
     
     if (state.money <= 0) {
-        blackjackUI.output(blackjackUI.getText('outOfMoney'));
+        blackjackUI.output(blackjackUI.getText('outOfMoney'), false, 'error');
         return;
     }
     
     // Validate bet amount
     const bet = parseInt(amountStr);
     if (isNaN(bet) || bet <= 0) {
-        blackjackUI.output(blackjackUI.getText('invalidBet'));
+        blackjackUI.output(blackjackUI.getText('invalidBet'), false, 'error');
         // Reset current bet if invalid to ensure it can't be used
         state.currentBet = 0;
         return;
     }
     
     if (bet > state.money) {
-        blackjackUI.output(blackjackUI.getText('betTooHigh'));
+        blackjackUI.output(blackjackUI.getText('betTooHigh'), false, 'error');
         // Reset current bet
         state.currentBet = 0;
         return;
@@ -222,14 +304,14 @@ blackjackCommands.placeBet = function(amountStr) {
     
     // Set valid bet
     state.currentBet = bet;
-    blackjackUI.output(blackjackUI.getText('betPlaced', bet));
+    blackjackUI.output(blackjackUI.getText('betPlaced', bet), false, 'success');
     
     // Auto-start unless first game
     if (!state.firstGame) {
         blackjackGame.startGame();
     } else {
         state.firstGame = false;
-        blackjackUI.output(blackjackUI.getText('dealPrompt'));
+        blackjackUI.output(blackjackUI.getText('dealPrompt'), false, 'info');
     }
 };
 
@@ -237,7 +319,7 @@ blackjackCommands.placeBet = function(amountStr) {
  * Check money/balance
  */
 blackjackCommands.checkMoney = function() {
-    blackjackUI.output(blackjackUI.getText('moneyStatus', blackjackGame.state.money));
+    blackjackUI.output(blackjackUI.getText('moneyStatus', blackjackGame.state.money), false, 'info');
 };
 
 /**
@@ -247,10 +329,10 @@ blackjackCommands.checkMoney = function() {
 blackjackCommands.changeLanguage = function(lang) {
     if (lang && (lang === 'en' || lang === 'es')) {
         blackjackGame.state.language = lang;
-        blackjackUI.output(blackjackUI.getText('languageChanged'));
+        blackjackUI.output(blackjackUI.getText('languageChanged'), false, 'success');
         blackjackGame.saveState();
     } else {
-        blackjackUI.output(blackjackUI.getText('languageOptions'));
+        blackjackUI.output(blackjackUI.getText('languageOptions'), false, 'info');
     }
 };
 
@@ -264,10 +346,10 @@ blackjackCommands.changeColor = function(theme) {
     if (theme && validThemes.includes(theme)) {
         blackjackGame.state.colorTheme = theme;
         blackjackUI.applyColorTheme(theme);
-        blackjackUI.output(blackjackUI.getText('colorChanged', theme));
+        blackjackUI.output(blackjackUI.getText('colorChanged', theme), false, 'success');
         blackjackGame.saveState();
     } else {
-        blackjackUI.output(blackjackUI.getText('colorOptions'));
+        blackjackUI.output(blackjackUI.getText('colorOptions'), false, 'info');
     }
 };
 
@@ -276,7 +358,7 @@ blackjackCommands.changeColor = function(theme) {
  */
 blackjackCommands.showLeaderboard = function() {
     // Display a loading message
-    blackjackUI.output('Loading leaderboard...');
+    blackjackUI.output('Loading leaderboard...', false, 'info');
     
     // Give Firebase a moment to fetch data (if needed)
     setTimeout(() => {

@@ -336,6 +336,7 @@ blackjackUI.createGameUI = function(container) {
     commandInput.className = 'command-input';
     commandInput.id = 'blackjack-command-input';
     commandInput.autocomplete = 'off';
+    commandInput.placeholder = 'type a command...';
     
     // Assemble terminal
     inputLine.appendChild(prompt);
@@ -357,8 +358,10 @@ blackjackUI.createGameUI = function(container) {
     // Create settings modal
     blackjackUI.createSettingsModal(container);
     
-    // Focus input
-    commandInput.focus();
+    // Only focus input on initial creation
+    if (document.activeElement === document.body) {
+        commandInput.focus();
+    }
 };
 
 /**
@@ -774,8 +777,9 @@ blackjackUI.applyColorTheme = function(theme) {
  * Output text to the terminal
  * @param {string} text - Text to output
  * @param {boolean} isAsciiArt - Whether the text is ASCII art
+ * @param {string} messageType - Type of message (auto, cmd, error, info, success, warning)
  */
-blackjackUI.output = function(text, isAsciiArt = false) {
+blackjackUI.output = function(text, isAsciiArt = false, messageType = 'auto') {
     const outputElement = blackjackUI.elements.output;
     if (!outputElement) return;
     
@@ -784,6 +788,34 @@ blackjackUI.output = function(text, isAsciiArt = false) {
     
     if (isAsciiArt) {
         div.className = 'ascii-art';
+    } else {
+        // Auto-detect message type if not specified
+        if (messageType === 'auto') {
+            if (text.startsWith('>')) {
+                messageType = 'cmd';
+            } else if (text.toLowerCase().includes('error') || 
+                       text.includes('invalid') || 
+                       text.includes('failed') ||
+                       text.includes('can\'t') ||
+                       text.includes('cannot')) {
+                messageType = 'error';
+            } else if (text.toLowerCase().includes('success') || 
+                       text.toLowerCase().includes('win') || 
+                       text.toLowerCase().includes('blackjack') ||
+                       text.toLowerCase().includes('congratulations')) {
+                messageType = 'success';
+            } else if (text.toLowerCase().includes('warning') || 
+                       text.toLowerCase().includes('caution') ||
+                       text.toLowerCase().includes('note') ||
+                       text.toLowerCase().includes('lose') ||
+                       text.toLowerCase().includes('bust')) {
+                messageType = 'warning';
+            } else {
+                messageType = 'info';
+            }
+        }
+        
+        div.className = `${messageType}-message`;
     }
     
     outputElement.appendChild(div);
@@ -979,7 +1011,7 @@ blackjackUI.showOptions = function() {
     if (state.canInsurance) options.push('insurance');
     if (state.canSurrender) options.push('surrender');
     
-    blackjackUI.output(blackjackUI.getText('availableActions', options.join(", ")));
+    blackjackUI.output(blackjackUI.getText('availableActions', options.join(", ")), false, 'info');
 };
 
 /**
