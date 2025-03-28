@@ -100,6 +100,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 .game-card:hover, .game-card:focus, .game-card.selected {
@@ -118,6 +119,102 @@
     box-shadow: none;
 }
 
+/* Blackjack card specific styling */
+.blackjack-card {
+    background-color: #fff;
+    color: #000;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.blackjack-card h3 {
+    color: #000;
+    z-index: 2;
+    position: relative;
+    text-shadow: none;
+    margin-top: 0;
+}
+
+.blackjack-card p {
+    color: #000;
+    z-index: 2;
+    position: relative;
+    text-shadow: none;
+}
+
+.blackjack-card:hover, .blackjack-card:focus, .blackjack-card.selected {
+    transform: translateY(-10px) rotate(2deg);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.blackjack-card:hover h3, 
+.blackjack-card:focus h3, 
+.blackjack-card.selected h3,
+.blackjack-card:hover p, 
+.blackjack-card:focus p, 
+.blackjack-card.selected p {
+    color: var(--text-primary);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+}
+
+.card-corner {
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #000;
+}
+
+.top-left {
+    top: 10px;
+    left: 10px;
+}
+
+.bottom-right {
+    bottom: 10px;
+    right: 10px;
+    transform: rotate(180deg);
+}
+
+.suit {
+    font-size: 20px;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.card-center {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    opacity: 0.2;
+    color: #000;
+}
+
+.big-suit {
+    font-size: 120px;
+    line-height: 1;
+}
+
+.blackjack-card:hover .card-corner,
+.blackjack-card:focus .card-corner,
+.blackjack-card.selected .card-corner,
+.blackjack-card:hover .card-center,
+.blackjack-card:focus .card-center,
+.blackjack-card.selected .card-center {
+    color: var(--text-primary);
+}
+
 .game-icon {
     font-size: 48px;
     margin-bottom: var(--spacing-md);
@@ -126,16 +223,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.game-card h3 {
-    margin-bottom: var(--spacing-sm);
-    font-size: var(--font-lg);
-}
-
-.game-card p {
-    font-size: var(--font-sm);
-    color: rgba(255, 255, 255, 0.7);
 }
 
 /* Footer */
