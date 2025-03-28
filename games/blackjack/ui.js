@@ -763,6 +763,9 @@ blackjackUI.applyColorTheme = function(theme) {
         elements.prompt.style.color = 'var(--text-primary)';
     }
     
+    // Update the global theme in localStorage to ensure it persists to home screen
+    localStorage.setItem('terminalArcadeTheme', theme);
+    
     // We don't need to update borders for selected options anymore
     // The CSS will handle this with !important rule
 };

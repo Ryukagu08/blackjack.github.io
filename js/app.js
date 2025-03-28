@@ -290,7 +290,7 @@ function navigateToHome() {
  * Set application color theme
  */
 function setColorTheme(theme) {
-    if (!theme || !['green', 'blue', 'amber', 'white', 'matrix'].includes(theme)) {
+    if (!theme || !['green', 'blue', 'amber', 'white', 'red', 'purple', 'cyan', 'orange', 'pink'].includes(theme)) {
         theme = 'green';
     }
     
@@ -298,7 +298,7 @@ function setColorTheme(theme) {
     appState.currentTheme = theme;
     
     // Remove all theme classes
-    document.body.classList.remove('theme-green', 'theme-blue', 'theme-amber', 'theme-white', 'theme-matrix');
+    document.body.classList.remove('theme-green', 'theme-blue', 'theme-amber', 'theme-white', 'theme-red', 'theme-purple', 'theme-cyan', 'theme-orange', 'theme-pink');
     
     // Add new theme class
     document.body.classList.add(`theme-${theme}`);

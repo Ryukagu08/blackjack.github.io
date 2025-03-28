@@ -155,8 +155,13 @@ blackjackGame.resume = function() {
         }
     }
     
-    // Just update UI normally
-    blackjackUI.displayGameState();
+    // Only display game state if there's an active game, otherwise show welcome message
+    if (blackjackGame.state.gameInProgress) {
+        blackjackUI.displayGameState();
+    } else {
+        blackjackUI.displayWelcomeMessage();
+        blackjackUI.output(`Your current balance: $${blackjackGame.state.money}`);
+    }
 };
 
 /**
