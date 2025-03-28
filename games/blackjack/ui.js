@@ -25,6 +25,7 @@ blackjackUI.translations = {
         leaderboardTitle: "LEADERBOARD",
         noHighScores: "No high scores yet!",
         highScoreAdded: "Your score has been added to the leaderboard!",
+        leaderboardReset: "NOTE: Leaderboard scores are reset weekly.",
         rulesText: [
             "BLACKJACK RULES:",
             "---------------------",
@@ -151,6 +152,7 @@ blackjackUI.translations = {
         leaderboardTitle: "TABLA DE CLASIFICACIÓN",
         noHighScores: "¡Aún no hay puntuaciones altas!",
         highScoreAdded: "¡Tu puntuación ha sido añadida a la tabla!",
+        leaderboardReset: "NOTA: La tabla de clasificación se reinicia semanalmente.",
         rulesText: [
             "REGLAS DEL BLACKJACK:",
             "---------------------",
@@ -384,6 +386,7 @@ blackjackUI.createSettingsModal = function(container) {
     const closeButton = document.createElement('button');
     closeButton.className = 'close-settings';
     closeButton.textContent = '×';
+    closeButton.setAttribute('aria-label', 'Close settings');
     closeButton.addEventListener('click', () => {
         modal.classList.remove('active');
     });
@@ -391,28 +394,20 @@ blackjackUI.createSettingsModal = function(container) {
     header.appendChild(title);
     header.appendChild(closeButton);
 
-    // Settings container for two columns
-    const settingsColumnsContainer = document.createElement('div');
-    settingsColumnsContainer.className = 'settings-columns';
+    // Main settings container
+    const settingsContent = document.createElement('div');
+    settingsContent.className = 'settings-content';
     
-    // Left column
-    const leftColumn = document.createElement('div');
-    leftColumn.className = 'settings-column';
-    
-    // Right column
-    const rightColumn = document.createElement('div');
-    rightColumn.className = 'settings-column';
-    
-    // Language settings
+    // Language settings (top row)
     const languageGroup = document.createElement('div');
-    languageGroup.className = 'settings-group';
+    languageGroup.className = 'settings-group language-group';
     
     const languageTitle = document.createElement('div');
     languageTitle.className = 'settings-group-title';
     languageTitle.textContent = 'Language';
     
     const languageOptions = document.createElement('div');
-    languageOptions.className = 'settings-options';
+    languageOptions.className = 'settings-options language-options';
     
     // Language options
     const languages = [
@@ -424,6 +419,7 @@ blackjackUI.createSettingsModal = function(container) {
         const langOption = document.createElement('div');
         langOption.className = 'settings-option';
         langOption.dataset.value = lang.value;
+        
         if (blackjackGame.state.language === lang.value) {
             langOption.classList.add('selected');
         }
@@ -464,21 +460,21 @@ blackjackUI.createSettingsModal = function(container) {
     languageGroup.appendChild(languageTitle);
     languageGroup.appendChild(languageOptions);
     
-    // Colors group
-    const colorsGroup = document.createElement('div');
-    colorsGroup.className = 'settings-group';
+    // Settings columns for colors
+    const settingsColumnsContainer = document.createElement('div');
+    settingsColumnsContainer.className = 'settings-columns';
     
-    const colorsTitle = document.createElement('div');
-    colorsTitle.className = 'settings-group-title';
-    colorsTitle.textContent = 'Colors';
+    // Left column - Text Color
+    const leftColumn = document.createElement('div');
+    leftColumn.className = 'settings-column';
     
     // Text color section
     const textColorSection = document.createElement('div');
+    textColorSection.className = 'settings-group';
     
-    const textColorLabel = document.createElement('div');
-    textColorLabel.textContent = 'Text Color';
-    textColorLabel.style.marginBottom = '5px';
-    textColorLabel.style.opacity = '0.8';
+    const textColorTitle = document.createElement('div');
+    textColorTitle.className = 'settings-group-title';
+    textColorTitle.textContent = 'Text Color';
     
     const textColorOptions = document.createElement('div');
     textColorOptions.className = 'color-option-group';
@@ -541,20 +537,20 @@ blackjackUI.createSettingsModal = function(container) {
         textColorOptions.appendChild(colorOption);
     });
     
-    textColorSection.appendChild(textColorLabel);
+    textColorSection.appendChild(textColorTitle);
     textColorSection.appendChild(textColorOptions);
     
-    // Divider
-    const divider = document.createElement('div');
-    divider.className = 'settings-divider';
+    // Right column - Background Color
+    const rightColumn = document.createElement('div');
+    rightColumn.className = 'settings-column';
     
     // Background color section
     const bgColorSection = document.createElement('div');
+    bgColorSection.className = 'settings-group';
     
-    const bgColorLabel = document.createElement('div');
-    bgColorLabel.textContent = 'Background Color';
-    bgColorLabel.style.marginBottom = '5px';
-    bgColorLabel.style.opacity = '0.8';
+    const bgColorTitle = document.createElement('div');
+    bgColorTitle.className = 'settings-group-title';
+    bgColorTitle.textContent = 'Background Color';
     
     const bgColorOptions = document.createElement('div');
     bgColorOptions.className = 'color-option-group';
@@ -614,26 +610,24 @@ blackjackUI.createSettingsModal = function(container) {
         bgColorOptions.appendChild(colorOption);
     });
     
-    bgColorSection.appendChild(bgColorLabel);
+    bgColorSection.appendChild(bgColorTitle);
     bgColorSection.appendChild(bgColorOptions);
     
-    // Assemble colors group
-    colorsGroup.appendChild(colorsTitle);
-    colorsGroup.appendChild(textColorSection);
-    colorsGroup.appendChild(divider);
-    colorsGroup.appendChild(bgColorSection);
-    
-    // Arrange the groups in columns
-    leftColumn.appendChild(languageGroup);
-    rightColumn.appendChild(colorsGroup);
+    // Arrange the columns
+    leftColumn.appendChild(textColorSection);
+    rightColumn.appendChild(bgColorSection);
     
     // Add columns to container
     settingsColumnsContainer.appendChild(leftColumn);
     settingsColumnsContainer.appendChild(rightColumn);
     
+    // Assemble content
+    settingsContent.appendChild(languageGroup);
+    settingsContent.appendChild(settingsColumnsContainer);
+    
     // Assemble panel
     panel.appendChild(header);
-    panel.appendChild(settingsColumnsContainer);
+    panel.appendChild(settingsContent);
     
     // Add to modal
     modal.appendChild(panel);
@@ -658,25 +652,34 @@ blackjackUI.createSettingsModal = function(container) {
 blackjackUI.showSettingsModal = function() {
     const modal = blackjackUI.elements.settingsModal;
     if (modal) {
-        // Make sure selected options reflect current settings
-        // Language
+        // First, remove selected class from all options
+        const allOptions = modal.querySelectorAll('.settings-option');
+        allOptions.forEach(option => {
+            option.classList.remove('selected');
+        });
+        
+        // Language - select the current language
         const languageOptions = modal.querySelectorAll('.settings-option[data-value]');
         languageOptions.forEach(option => {
-            if (!option.dataset.type) { // Language options don't have a type
-                option.classList.toggle('selected', option.dataset.value === blackjackGame.state.language);
+            if (!option.dataset.type && option.dataset.value === blackjackGame.state.language) {
+                option.classList.add('selected');
             }
         });
         
-        // Text color
+        // Text color - select the current theme
         const textColorOptions = modal.querySelectorAll('.settings-option[data-type="text-color"]');
         textColorOptions.forEach(option => {
-            option.classList.toggle('selected', option.dataset.value === blackjackGame.state.colorTheme);
+            if (option.dataset.value === blackjackGame.state.colorTheme) {
+                option.classList.add('selected');
+            }
         });
         
-        // Background color
+        // Background color - select the current background
         const bgColorOptions = modal.querySelectorAll('.settings-option[data-type="bg-color"]');
         bgColorOptions.forEach(option => {
-            option.classList.toggle('selected', option.dataset.value === (blackjackGame.state.backgroundTheme || 'black'));
+            if (option.dataset.value === (blackjackGame.state.backgroundTheme || 'black')) {
+                option.classList.add('selected');
+            }
         });
         
         modal.classList.add('active');
@@ -760,11 +763,8 @@ blackjackUI.applyColorTheme = function(theme) {
         elements.prompt.style.color = 'var(--text-primary)';
     }
     
-    // Update any selected options borders
-    const selectedOptions = document.querySelectorAll('.settings-option.selected');
-    selectedOptions.forEach(option => {
-        option.style.borderColor = 'var(--text-primary)';
-    });
+    // We don't need to update borders for selected options anymore
+    // The CSS will handle this with !important rule
 };
 
 /**
@@ -808,7 +808,9 @@ blackjackUI.displayWelcomeMessage = function() {
 
 ${blackjackUI.getText('welcome')}
 ${blackjackUI.getText('helpPrompt')}
-${blackjackUI.getText('moneyStatus', state.money)}`);
+${blackjackUI.getText('moneyStatus', state.money)}
+
+${blackjackUI.getText('leaderboardReset')}`);
 };
 
 /**

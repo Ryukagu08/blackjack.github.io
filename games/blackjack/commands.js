@@ -120,7 +120,9 @@ blackjackCommands.processCommand = function(command) {
             blackjackCommands.placeBet(arg);
             break;
         case 'deal':
-            blackjackGame.startGame();
+            if (blackjackGame.isValidBet()) {
+                blackjackGame.startGame();
+            }
             break;
         case 'hit':
             blackjackGame.hit();
@@ -202,17 +204,23 @@ blackjackCommands.placeBet = function(amountStr) {
         return;
     }
     
+    // Validate bet amount
     const bet = parseInt(amountStr);
     if (isNaN(bet) || bet <= 0) {
         blackjackUI.output(blackjackUI.getText('invalidBet'));
+        // Reset current bet if invalid to ensure it can't be used
+        state.currentBet = 0;
         return;
     }
     
     if (bet > state.money) {
         blackjackUI.output(blackjackUI.getText('betTooHigh'));
+        // Reset current bet
+        state.currentBet = 0;
         return;
     }
     
+    // Set valid bet
     state.currentBet = bet;
     blackjackUI.output(blackjackUI.getText('betPlaced', bet));
     

@@ -13,6 +13,15 @@ blackjackGame.CARD_VALUES = {
     'J': 10, 'Q': 10, 'K': 10, 'A': 11
 };
 
+// Default settings
+blackjackGame.DEFAULT_SETTINGS = {
+    money: 100,
+    language: 'en',
+    colorTheme: 'green',
+    backgroundTheme: 'black',
+    maxMoney: 100
+};
+
 // Game state
 blackjackGame.state = {
     deck: [],
@@ -22,7 +31,7 @@ blackjackGame.state = {
     dealerHand: [],
     playerScore: 0,
     dealerScore: 0,
-    money: 100,
+    money: blackjackGame.DEFAULT_SETTINGS.money,
     currentBet: 0,
     insuranceBet: 0,
     gameInProgress: false,
@@ -32,13 +41,13 @@ blackjackGame.state = {
     canInsurance: false,
     canSurrender: false,
     handSplit: false,
-    language: 'en',
-    colorTheme: 'green',
-    backgroundTheme: 'black',
+    language: blackjackGame.DEFAULT_SETTINGS.language,
+    colorTheme: blackjackGame.DEFAULT_SETTINGS.colorTheme,
+    backgroundTheme: blackjackGame.DEFAULT_SETTINGS.backgroundTheme,
     firstGame: true,
     waitingForUsername: false,
     highScore: 0,
-    maxMoney: 100,
+    maxMoney: blackjackGame.DEFAULT_SETTINGS.maxMoney,
     leaderboardPosition: 0,
     initialized: false,
     containerElement: null
@@ -72,12 +81,14 @@ blackjackGame.init = function(container, exitCallback) {
     if (savedState) {
         try {
             const parsed = JSON.parse(savedState);
-            // Restore settings and money
-            state.money = parsed.money || 100;
-            state.language = parsed.language || 'en';
-            state.colorTheme = parsed.colorTheme || 'green';
-            state.backgroundTheme = parsed.backgroundTheme || 'black';
-            state.maxMoney = parsed.maxMoney || 100;
+            // Restore settings but NOT money (always start with default money)
+            state.money = blackjackGame.DEFAULT_SETTINGS.money;
+            state.language = parsed.language || blackjackGame.DEFAULT_SETTINGS.language;
+            state.colorTheme = parsed.colorTheme || blackjackGame.DEFAULT_SETTINGS.colorTheme;
+            state.backgroundTheme = parsed.backgroundTheme || blackjackGame.DEFAULT_SETTINGS.backgroundTheme;
+            
+            // Reset maxMoney to default for each new session
+            state.maxMoney = blackjackGame.DEFAULT_SETTINGS.maxMoney;
             
             // Don't restore full game state, but note if we had a game in progress
             if (parsed.hadGameInProgress) {
@@ -149,21 +160,16 @@ blackjackGame.resume = function() {
 };
 
 /**
- * Save the current game state with background theme
+ * Save the current game state without money
  */
 blackjackGame.saveState = function() {
     const state = blackjackGame.state;
     const stateToSave = {
-        money: state.money,
+        // Do NOT save money - we want it to reset each session
         language: state.language,
         colorTheme: state.colorTheme,
         backgroundTheme: state.backgroundTheme || 'black',
-        maxMoney: state.maxMoney,
-        // Save additional state if a game is in progress
-        gameInProgress: state.gameInProgress,
-        currentBet: state.currentBet,
-        // Only save the minimal game state - not the entire deck or hands
-        // Just enough to know a game was in progress if we refresh
+        // Save minimal game state
         hadGameInProgress: state.gameInProgress
     };
     
@@ -237,6 +243,28 @@ blackjackGame.calculateHandValue = function(hand) {
 };
 
 /**
+ * Validate if a bet is valid
+ * @returns {boolean} Whether the current bet is valid
+ */
+blackjackGame.isValidBet = function() {
+    const state = blackjackGame.state;
+    
+    // Check if a bet has been placed
+    if (!state.currentBet || state.currentBet <= 0) {
+        blackjackUI.output(blackjackUI.getText('needBet'));
+        return false;
+    }
+    
+    // Check if player has enough money for the bet
+    if (state.currentBet > state.money) {
+        blackjackUI.output(blackjackUI.getText('betTooHigh'));
+        return false;
+    }
+    
+    return true;
+};
+
+/**
  * Start a new game
  */
 blackjackGame.startGame = function() {
@@ -247,8 +275,8 @@ blackjackGame.startGame = function() {
         return;
     }
     
-    if (state.currentBet <= 0) {
-        blackjackUI.output(blackjackUI.getText('needBet'));
+    // Validate the bet is valid before proceeding
+    if (!blackjackGame.isValidBet()) {
         return;
     }
     
@@ -297,9 +325,9 @@ blackjackGame.dealInitialCards = function() {
     state.dealerScore = blackjackGame.calculateHandValue(state.dealerHand);
     
     // Set available actions
-    state.canDouble = state.money >= state.currentBet;
+    state.canDouble = state.money >= state.currentBet * 2;  // Must have enough to double the bet
     state.canSplit = (blackjackGame.getCardValue(state.playerHand[0]) === blackjackGame.getCardValue(state.playerHand[1])) && 
-                    state.money >= state.currentBet;
+                    state.money >= state.currentBet * 2;  // Must have enough for two equal bets
     state.canInsurance = state.dealerHand[0].value === 'A' && state.money >= Math.ceil(state.currentBet / 2);
     state.canSurrender = true;
 }
@@ -479,7 +507,7 @@ blackjackGame.doubleDownSplitHand = function() {
     const state = blackjackGame.state;
     const currentHand = state.playerHands[state.activeHandIndex];
     
-    if (state.money < currentHand.bet) {
+    if (state.money < currentHand.bet * 2) {
         blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
         return;
     }
@@ -506,7 +534,7 @@ blackjackGame.doubleDownSplitHand = function() {
 blackjackGame.doubleDownSingleHand = function() {
     const state = blackjackGame.state;
     
-    if (state.money < state.currentBet) {
+    if (state.money < state.currentBet * 2) {
         blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
         return;
     }
@@ -542,7 +570,7 @@ blackjackGame.splitHand = function() {
         return;
     }
     
-    if (state.money < state.currentBet) {
+    if (state.money < state.currentBet * 2) {
         blackjackUI.output(blackjackUI.getText('notEnoughMoney'));
         return;
     }
