@@ -440,6 +440,7 @@ blackjackGame.hitSingleHand = function() {
     if (state.playerScore > 21) {
         blackjackUI.output(blackjackUI.getText('bust'), false, 'error');
         state.money -= state.currentBet;
+        state.playerTurn = false; // Ensure dealer cards are shown when player busts
         blackjackGame.endGame();
     } else if (state.playerScore === 21) {
         blackjackUI.output(blackjackUI.getText('have21'), false, 'success');
@@ -581,6 +582,7 @@ blackjackGame.doubleDownSingleHand = function() {
     if (state.playerScore > 21) {
         blackjackUI.output(blackjackUI.getText('bust'), false, 'error');
         state.money -= state.currentBet;
+        state.playerTurn = false; // Ensure dealer cards are shown when player busts
         blackjackGame.endGame();
     } else {
         state.playerTurn = false;
@@ -662,6 +664,7 @@ blackjackGame.takeInsurance = function() {
         blackjackUI.output(blackjackUI.getText('insurancePays'), false, 'success');
         state.money += state.insuranceBet * 2;
         state.money -= state.currentBet; // Still lose the main bet
+        state.playerTurn = false; // Ensure dealer cards are shown
         blackjackGame.endGame();
     } else {
         blackjackUI.output(blackjackUI.getText('noBlackjackLoseInsurance'), false, 'error');
@@ -684,6 +687,7 @@ blackjackGame.surrender = function() {
     
     blackjackUI.output(blackjackUI.getText('surrendering'), false, 'warning');
     state.money -= Math.floor(state.currentBet / 2);
+    state.playerTurn = false; // Ensure dealer cards are shown when player surrenders
     blackjackGame.endGame();
 };
 
@@ -771,6 +775,10 @@ blackjackGame.resolveSingleHand = function() {
 blackjackGame.endGame = function(push = false) {
     const state = blackjackGame.state;
     state.gameInProgress = false;
+    state.playerTurn = false; // FIXED: Always set playerTurn to false to show dealer's cards
+    
+    // Refresh the display to show all dealer cards
+    blackjackUI.displayGameState();
     
     if (!push) {
         blackjackUI.output(blackjackUI.getText('moneyLeft', state.money), false, 'info');
