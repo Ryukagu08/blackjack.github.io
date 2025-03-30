@@ -7,7 +7,7 @@ const appState = {
     currentScreen: 'home',
     selectedGame: null,
     currentTheme: 'green',
-    availableGames: ['blackjack'], // Add more game IDs as they're implemented
+    availableGames: ['blackjack', 'roulette'], // Added roulette to available games
     loadedGames: {}, // Will hold loaded game modules
     gameScripts: {
         // Map of game IDs to their required script files
@@ -16,8 +16,14 @@ const appState = {
             'games/blackjack/ui.js',
             'games/blackjack/commands.js',
             'games/blackjack/leaderboard.js'
+        ],
+        // Added roulette game scripts
+        roulette: [
+            'games/roulette/roulette.js',
+            'games/roulette/ui.js',
+            'games/roulette/commands.js',
+            'games/roulette/leaderboard.js'
         ]
-        // Add more games as they're implemented
     }
 };
 

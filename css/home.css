@@ -119,46 +119,7 @@
     box-shadow: none;
 }
 
-/* Blackjack card specific styling */
-.blackjack-card {
-    background-color: #fff;
-    color: #000;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-}
-
-.blackjack-card h3 {
-    color: #000;
-    z-index: 2;
-    position: relative;
-    text-shadow: none;
-    margin-top: 0;
-}
-
-.blackjack-card p {
-    color: #000;
-    z-index: 2;
-    position: relative;
-    text-shadow: none;
-}
-
-.blackjack-card:hover, .blackjack-card:focus, .blackjack-card.selected {
-    transform: translateY(-10px) rotate(2deg);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-}
-
-.blackjack-card:hover h3, 
-.blackjack-card:focus h3, 
-.blackjack-card.selected h3,
-.blackjack-card:hover p, 
-.blackjack-card:focus p, 
-.blackjack-card.selected p {
-    color: var(--text-primary);
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
-}
-
+/* Card corner stylings (shared between game cards) */
 .card-corner {
     position: absolute;
     font-size: 18px;
@@ -167,7 +128,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #000;
 }
 
 .top-left {
@@ -198,7 +158,6 @@
     justify-content: center;
     z-index: 1;
     opacity: 0.2;
-    color: #000;
 }
 
 .big-suit {
@@ -206,6 +165,43 @@
     line-height: 1;
 }
 
+/* Blackjack card specific styling */
+.blackjack-card {
+    background-color: #fff;
+    color: #000;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.blackjack-card .card-corner,
+.blackjack-card .card-center {
+    color: #000;
+}
+
+.blackjack-card h3,
+.blackjack-card p {
+    color: #000;
+    z-index: 2;
+    position: relative;
+    text-shadow: none;
+    margin-top: 0;
+}
+
+.blackjack-card:hover, 
+.blackjack-card:focus, 
+.blackjack-card.selected {
+    transform: translateY(-10px) rotate(2deg);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.blackjack-card:hover h3, 
+.blackjack-card:focus h3, 
+.blackjack-card.selected h3,
+.blackjack-card:hover p, 
+.blackjack-card:focus p, 
+.blackjack-card.selected p,
 .blackjack-card:hover .card-corner,
 .blackjack-card:focus .card-corner,
 .blackjack-card.selected .card-corner,
@@ -213,8 +209,127 @@
 .blackjack-card:focus .card-center,
 .blackjack-card.selected .card-center {
     color: var(--text-primary);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
 }
 
+/* Roulette card specific styling - redesigned to match blackjack */
+.roulette-card {
+    background-color: #fff;
+    color: #000;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.roulette-card .card-corner,
+.roulette-card .card-center {
+    color: #000;
+}
+
+.roulette-card .suit {
+    color: #d32f2f; /* Red diamond suit */
+}
+
+.roulette-card h3,
+.roulette-card p {
+    color: #000;
+    z-index: 2;
+    position: relative;
+    text-shadow: none;
+    margin-top: 0;
+}
+
+.roulette-card:hover, 
+.roulette-card:focus, 
+.roulette-card.selected {
+    transform: translateY(-10px) rotate(-2deg);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.roulette-card:hover h3, 
+.roulette-card:focus h3, 
+.roulette-card.selected h3,
+.roulette-card:hover p, 
+.roulette-card:focus p, 
+.roulette-card.selected p,
+.roulette-card:hover .card-corner,
+.roulette-card:focus .card-corner,
+.roulette-card.selected .card-corner,
+.roulette-card:hover .card-center,
+.roulette-card:focus .card-center,
+.roulette-card.selected .card-center {
+    color: var(--text-primary);
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+}
+
+/* Simplified roulette wheel */
+.roulette-wheel {
+    width: 100px;
+    height: 100px;
+    position: relative;
+}
+
+.wheel-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+        #d32f2f 0deg 18deg,
+        #000000 18deg 36deg
+    );
+    border: 5px solid #a67c00;
+}
+
+.wheel-center {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(#d4af37, #a67c00);
+    border: 2px solid #d4af37;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.wheel-ball {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #fff;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.roulette-card:hover .wheel-ring {
+    animation: spin 3s ease-out forwards;
+}
+
+.roulette-card:hover .wheel-ball {
+    animation: bounce 3s ease-out forwards;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(720deg); }
+}
+
+@keyframes bounce {
+    0% { top: 15px; left: 50%; }
+    20% { top: 10px; left: 35%; }
+    40% { top: 15px; left: 20%; }
+    60% { top: 85px; left: 35%; }
+    80% { top: 75px; left: 65%; }
+    100% { top: 60px; left: 50%; }
+}
+
+/* Coming soon card */
 .game-icon {
     font-size: 48px;
     margin-bottom: var(--spacing-md);
