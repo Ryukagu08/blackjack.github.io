@@ -140,7 +140,7 @@ rouletteCommands.autocomplete = function(partial) {
     const betCommands = [
         'bet straight', 'bet split', 'bet street', 'bet corner',
         'bet line', 'bet column', 'bet dozen', 'bet red', 'bet black',
-        'bet odd', 'bet even', 'bet high', 'bet low'
+        'bet odd', 'bet even', 'bet high', 'bet low', 'bet repeat'
     ];
     
     // Check if partial command starts with "bet"
@@ -236,7 +236,11 @@ rouletteCommands.processCommand = function(command) {
             rouletteCommands.showRules();
             break;
         case 'bet':
-            rouletteCommands.processBetCommand(parts.slice(1));
+            if (parts[1] === 'repeat') {
+                rouletteCommands.repeatLastBets();
+            } else {
+                rouletteCommands.processBetCommand(parts.slice(1));
+            }
             break;
         case 'spin':
             rouletteGame.spin();
@@ -284,6 +288,45 @@ rouletteCommands.processCommand = function(command) {
         default:
             rouletteUI.output(rouletteUI.getText('unknownCommand'), false, 'error');
     }
+};
+
+/**
+ * Repeat the last set of bets
+ */
+rouletteCommands.repeatLastBets = function() {
+    const state = rouletteGame.state;
+    
+    // Check if spin is in progress
+    if (state.spinInProgress) {
+        rouletteUI.output(rouletteUI.getText('spinInProgress'), false, 'error');
+        return;
+    }
+    
+    // Check if there are any previous bets to repeat
+    if (!state.lastBets || state.lastBets.length === 0) {
+        rouletteUI.output(rouletteUI.getText('noPreviousBets'), false, 'error');
+        return;
+    }
+    
+    // Calculate total bet amount
+    let totalAmount = 0;
+    state.lastBets.forEach(bet => {
+        totalAmount += bet.amount;
+    });
+    
+    // Check if player has enough money
+    if (totalAmount > state.money) {
+        rouletteUI.output(rouletteUI.getText('notEnoughMoneyForRepeat', totalAmount), false, 'error');
+        return;
+    }
+    
+    // Place all previous bets again
+    state.lastBets.forEach(lastBet => {
+        rouletteGame.placeBet(lastBet.type, [...lastBet.numbers], lastBet.amount);
+    });
+    
+    // Success message
+    rouletteUI.output(rouletteUI.getText('betsRepeated', totalAmount), false, 'success');
 };
 
 /**

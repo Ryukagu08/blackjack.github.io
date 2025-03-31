@@ -62,7 +62,7 @@ rouletteUI.translations = {
             "  bet high 25            - Bet $25 on high numbers (19-36)"
         ],
         moneyStatus: (money) => `You have $${money}.`,
-        availableBets: "Bet commands: 'bet straight', 'bet split', 'bet street', 'bet corner', 'bet line', 'bet column', 'bet dozen', 'bet red', 'bet black', 'bet odd', 'bet even', 'bet high', 'bet low'",
+        availableBets: "Bet commands: 'bet straight', 'bet split', 'bet street', 'bet corner', 'bet line', 'bet column', 'bet dozen', 'bet red', 'bet black', 'bet odd', 'bet even', 'bet high', 'bet low', 'bet repeat'",
         invalidBet: "Please enter a valid bet amount.",
         betTooHigh: "You don't have enough money for that bet.",
         invalidBetType: "Invalid bet type. Type 'help bets' to see available bet types.",
@@ -90,12 +90,19 @@ rouletteUI.translations = {
         speedChanged: (speed) => `Animation speed changed to ${speed}.`,
         speedOptions: "Available speeds: fast, normal, slow",
         unknownCommand: "Unknown command. Type 'help' for commands.",
+        
+        // New translations for bet repeat functionality
+        noPreviousBets: "No previous bets to repeat.",
+        notEnoughMoneyForRepeat: (amount) => `Not enough money to repeat previous bets (need $${amount}).`,
+        betsRepeated: (amount) => `Previous bets repeated for a total of $${amount}.`,
+        
         helpText: [
             "Available commands:",
             "  help           - Show this help message",
             "  help bets      - Show detailed betting information",
             "  rules          - Show Roulette rules",
             "  bet [type] ... - Place a bet (see 'help bets')",
+            "  bet repeat     - Repeat your last set of bets",
             "  spin           - Spin the wheel",
             "  clear bets     - Clear all current bets",
             "  money          - Check your current balance",
@@ -129,6 +136,8 @@ rouletteUI.translations = {
             "",
             "  bet dozen [dozen] [amount] (dozens are 1-3, representing 1-12, 13-24, 25-36)",
             "    Example: 'bet dozen 1 10' - Bet $10 on numbers 1-12",
+            "",
+            "  bet repeat        - Repeat your previous bets exactly",
             "",
             "OUTSIDE BETS (SIMPLER):",
             "  bet red [amount]     - Bet on all red numbers",
@@ -189,7 +198,7 @@ rouletteUI.translations = {
             "  bet high 25            - Apostar $25 a números altos (19-36)"
         ],
         moneyStatus: (money) => `Tienes $${money}.`,
-        availableBets: "Comandos de apuesta: 'bet straight', 'bet split', 'bet street', 'bet corner', 'bet line', 'bet column', 'bet dozen', 'bet red', 'bet black', 'bet odd', 'bet even', 'bet high', 'bet low'",
+        availableBets: "Comandos de apuesta: 'bet straight', 'bet split', 'bet street', 'bet corner', 'bet line', 'bet column', 'bet dozen', 'bet red', 'bet black', 'bet odd', 'bet even', 'bet high', 'bet low', 'bet repeat'",
         invalidBet: "Por favor, introduce una cantidad válida para apostar.",
         betTooHigh: "No tienes suficiente dinero para esa apuesta.",
         invalidBetType: "Tipo de apuesta inválido. Escribe 'help bets' para ver los tipos disponibles.",
@@ -217,12 +226,19 @@ rouletteUI.translations = {
         speedChanged: (speed) => `Velocidad de animación cambiada a ${speed}.`,
         speedOptions: "Velocidades disponibles: fast (rápida), normal, slow (lenta)",
         unknownCommand: "Comando desconocido. Escribe 'help' para ver los comandos.",
+        
+        // New translations for bet repeat functionality
+        noPreviousBets: "No hay apuestas anteriores para repetir.",
+        notEnoughMoneyForRepeat: (amount) => `No tienes suficiente dinero para repetir las apuestas anteriores (necesitas $${amount}).`,
+        betsRepeated: (amount) => `Apuestas anteriores repetidas por un total de $${amount}.`,
+        
         helpText: [
             "Comandos disponibles:",
             "  help           - Mostrar este mensaje de ayuda",
             "  help bets      - Mostrar información detallada de apuestas",
             "  rules          - Mostrar reglas de la Ruleta",
             "  bet [tipo] ... - Realizar una apuesta (ver 'help bets')",
+            "  bet repeat     - Repetir tu último conjunto de apuestas",
             "  spin           - Girar la rueda",
             "  clear bets     - Borrar todas las apuestas actuales",
             "  money          - Verificar tu saldo actual",
@@ -256,6 +272,8 @@ rouletteUI.translations = {
             "",
             "  bet dozen [docena] [cantidad] (docenas son 1-3, representando 1-12, 13-24, 25-36)",
             "    Ejemplo: 'bet dozen 1 10' - Apostar $10 a números 1-12",
+            "",
+            "  bet repeat        - Repetir tus apuestas anteriores exactamente",
             "",
             "APUESTAS EXTERNAS (MÁS SIMPLES):",
             "  bet red [cantidad]     - Apostar a todos los números rojos",

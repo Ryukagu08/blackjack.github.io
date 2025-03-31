@@ -67,6 +67,7 @@ rouletteGame.ANIMATION = {
 rouletteGame.state = {
     money: rouletteGame.DEFAULT_SETTINGS.money,
     bets: [],
+    lastBets: [], // Added property to store previous bets
     spinInProgress: false,
     lastNumber: null,
     lastWinnings: 0,
@@ -556,6 +557,12 @@ rouletteGame.completeSpin = function() {
     // Process bets
     rouletteGame.processBets();
     
+    // Store current bets for repeat functionality before clearing them
+    state.lastBets = JSON.parse(JSON.stringify(state.bets)); // Deep copy
+    
+    // Clear bets
+    state.bets = [];
+    
     // End spin
     state.spinInProgress = false;
     
@@ -716,6 +723,7 @@ rouletteGame.resetGame = function() {
     // Reset money to default
     state.money = rouletteGame.DEFAULT_SETTINGS.money;
     state.bets = [];
+    state.lastBets = []; // Also clear last bets
     state.spinHistory = [];
     state.lastNumber = null;
     state.lastWinnings = 0;
