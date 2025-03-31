@@ -1,6 +1,6 @@
 /**
- * Roulette Game Module - UI Handling
- * Redesigned with deterministic wheel animation that syncs with the actual outcome
+ * Visual Roulette Game - UI Handling
+ * Handles all UI rendering and animations for the roulette game
  */
 
 // Create roulette UI namespace
@@ -12,283 +12,12 @@ rouletteUI.elements = {
     terminal: null,
     output: null,
     input: null,
-    prompt: null
-};
-
-// Include translations
-rouletteUI.translations = {
-    en: {
-        welcome: "Welcome to Terminal Roulette!",
-        helpPrompt: "Type 'help' for commands, 'rules' for game rules, 'language es' for Spanish, 'color' to change colors.",
-        highScore: "Congratulations! You got a high score!",
-        positionEarned: (position) => `You earned position #${position}!`,
-        enterUsername: "Enter your name (15 chars max):",
-        leaderboardTitle: "LEADERBOARD",
-        noHighScores: "No high scores yet!",
-        highScoreAdded: "Your score has been added to the leaderboard!",
-        leaderboardReset: "NOTE: Leaderboard scores are reset weekly.",
-        rulesText: [
-            "ROULETTE RULES:",
-            "---------------------",
-            "OBJECTIVE:",
-            "  Predict which number the ball will land on and place bets accordingly.",
-            "",
-            "GAMEPLAY:",
-            "  1. Place bets on various outcomes",
-            "  2. Spin the wheel",
-            "  3. Win if the ball lands on your predicted numbers or groups",
-            "",
-            "BET TYPES & PAYOUTS:",
-            "  • STRAIGHT: Bet on a single number (35:1)",
-            "  • SPLIT: Bet on 2 adjacent numbers (17:1)",
-            "  • STREET: Bet on 3 numbers in a row (11:1)",
-            "  • CORNER: Bet on 4 numbers in a square (8:1)",
-            "  • LINE: Bet on 6 numbers (2 rows) (5:1)",
-            "  • COLUMN: Bet on 12 numbers (1st, 2nd, or 3rd column) (2:1)",
-            "  • DOZEN: Bet on 12 numbers (1-12, 13-24, or 25-36) (2:1)",
-            "  • RED/BLACK: Bet on color (1:1)",
-            "  • ODD/EVEN: Bet on number parity (1:1)",
-            "  • HIGH/LOW: Bet on numbers 1-18 or 19-36 (1:1)",
-            "",
-            "The wheel has numbers 0-36. 0 is green, others alternate red/black.",
-            "IMPORTANT: For all even-money bets (red/black, odd/even, high/low),",
-            "you lose if the ball lands on 0.",
-            "",
-            "Use 'bet [type] [number(s)] [amount]' to place bets.",
-            "Examples:",
-            "  bet straight 17 10     - Bet $10 on number 17",
-            "  bet red 20             - Bet $20 on red",
-            "  bet column 3 50        - Bet $50 on 3rd column",
-            "  bet high 25            - Bet $25 on high numbers (19-36)"
-        ],
-        moneyStatus: (money) => `You have $${money}.`,
-        availableBets: "Bet commands: 'bet straight', 'bet split', 'bet street', 'bet corner', 'bet line', 'bet column', 'bet dozen', 'bet red', 'bet black', 'bet odd', 'bet even', 'bet high', 'bet low', 'bet repeat'",
-        invalidBet: "Please enter a valid bet amount.",
-        betTooHigh: "You don't have enough money for that bet.",
-        invalidBetType: "Invalid bet type. Type 'help bets' to see available bet types.",
-        betPlaced: (type, amount) => `${type} bet of $${amount} placed.`,
-        spinPrompt: "Type 'spin' to spin the wheel.",
-        noBets: "You need to place at least one bet before spinning.",
-        spinningWheel: "Spinning the wheel...",
-        spinAlreadyInProgress: "Wheel is already spinning.",
-        spinInProgress: "Can't place bets while wheel is spinning.",
-        outOfMoney: "You're out of money! Game over.",
-        placeMoreBets: "Place your bets for the next spin.",
-        betWon: (type, numbers, amount) => `${type} bet on ${numbers} won! You receive $${amount}.`,
-        totalWinnings: (amount) => `Total winnings: $${amount}.`,
-        noBetsWon: "Sorry, none of your bets won.",
-        cantClearBetsDuringSpin: "Can't clear bets while wheel is spinning.",
-        noBetsToClear: "No bets to clear.",
-        betsCleared: (amount) => `All bets cleared. $${amount} returned to your balance.`,
-        cantResetDuringSpin: "Can't reset the game while wheel is spinning.",
-        gameReset: "Game has been reset. Your balance is now $1000.",
-        numberLanded: (number, color) => `Ball landed on ${number} ${color}!`,
-        languageChanged: "Language changed to English.",
-        languageOptions: "Available languages: en (English), es (Spanish)",
-        colorChanged: (theme) => `Color theme changed to ${theme}.`,
-        colorOptions: "Available colors: green, blue, amber, white, red, purple, cyan, orange, pink",
-        speedChanged: (speed) => `Animation speed changed to ${speed}.`,
-        speedOptions: "Available speeds: fast, normal, slow",
-        unknownCommand: "Unknown command. Type 'help' for commands.",
-        
-        // New translations for bet repeat functionality
-        noPreviousBets: "No previous bets to repeat.",
-        notEnoughMoneyForRepeat: (amount) => `Not enough money to repeat previous bets (need $${amount}).`,
-        betsRepeated: (amount) => `Previous bets repeated for a total of $${amount}.`,
-        
-        helpText: [
-            "Available commands:",
-            "  help           - Show this help message",
-            "  help bets      - Show detailed betting information",
-            "  rules          - Show Roulette rules",
-            "  bet [type] ... - Place a bet (see 'help bets')",
-            "  bet repeat     - Repeat your last set of bets",
-            "  spin           - Spin the wheel",
-            "  clear bets     - Clear all current bets",
-            "  money          - Check your current balance",
-            "  speed          - Change animation speed (fast/normal/slow)",
-            "  history        - Show past spin results",
-            "  reset          - Reset the game to initial state",
-            "  language       - Change language (en/es)",
-            "  color          - Change color theme",
-            "  leaderboard    - Show top 10 high scores",
-            "  exit           - Return to home screen"
-        ],
-        helpBetsText: [
-            "BETTING COMMANDS:",
-            "  bet straight [number] [amount]",
-            "    Example: 'bet straight 17 10' - Bet $10 on number 17",
-            "",
-            "  bet split [number1] [number2] [amount]",
-            "    Example: 'bet split 17 18 10' - Bet $10 on the split between 17 & 18",
-            "",
-            "  bet street [row] [amount] (rows are 1-12, representing the 12 rows of 3 numbers)",
-            "    Example: 'bet street 4 10' - Bet $10 on 10-11-12",
-            "",
-            "  bet corner [number] [amount] (number is the lowest number in the corner)",
-            "    Example: 'bet corner 10 10' - Bet $10 on 10-11-13-14",
-            "",
-            "  bet line [row] [amount] (rows are 1-11, representing two adjacent rows)",
-            "    Example: 'bet line 4 10' - Bet $10 on 10-11-12-13-14-15",
-            "",
-            "  bet column [column] [amount] (columns are 1-3)",
-            "    Example: 'bet column 2 10' - Bet $10 on the middle column",
-            "",
-            "  bet dozen [dozen] [amount] (dozens are 1-3, representing 1-12, 13-24, 25-36)",
-            "    Example: 'bet dozen 1 10' - Bet $10 on numbers 1-12",
-            "",
-            "  bet repeat        - Repeat your previous bets exactly",
-            "",
-            "OUTSIDE BETS (SIMPLER):",
-            "  bet red [amount]     - Bet on all red numbers",
-            "  bet black [amount]   - Bet on all black numbers",
-            "  bet odd [amount]     - Bet on all odd numbers",
-            "  bet even [amount]    - Bet on all even numbers",
-            "  bet high [amount]    - Bet on numbers 19-36",
-            "  bet low [amount]     - Bet on numbers 1-18"
-        ],
-        uiLabels: {
-            money: "Money:", bets: "Current Bets:", wheel: "Roulette Wheel",
-            history: "History:", bet: "Bet:", on: "on", amount: "Amount:",
-            board: "Betting Board", placedBets: "Active Bets:", totalBet: "Total Bet:"
-        }
-    },
-    es: {
-        welcome: "¡Bienvenido a la Ruleta Terminal!",
-        helpPrompt: "Escribe 'help' para comandos, 'rules' para reglas del juego, 'language en' para inglés, 'color' para cambiar colores.",
-        highScore: "¡Felicidades!",
-        positionEarned: (position) => `¡Has obtenido la posición #${position}!`,
-        enterUsername: "Ingresa tu nombre (máx. 15 caracteres)",
-        leaderboardTitle: "TABLA DE CLASIFICACIÓN",
-        noHighScores: "¡Aún no hay puntuaciones altas!",
-        highScoreAdded: "¡Tu puntuación ha sido añadida a la tabla!",
-        leaderboardReset: "NOTA: La tabla de clasificación se reinicia semanalmente.",
-        rulesText: [
-            "REGLAS DE LA RULETA:",
-            "---------------------",
-            "OBJETIVO:",
-            "  Predecir en qué número caerá la bola y realizar apuestas en consecuencia.",
-            "",
-            "JUEGO:",
-            "  1. Realiza apuestas en varios resultados posibles",
-            "  2. Gira la rueda",
-            "  3. Gana si la bola cae en tus números o grupos predichos",
-            "",
-            "TIPOS DE APUESTAS Y PAGOS:",
-            "  • PLENO: Apuesta a un solo número (35:1)",
-            "  • CABALLO: Apuesta a 2 números adyacentes (17:1)",
-            "  • TRANSVERSAL: Apuesta a 3 números en fila (11:1)",
-            "  • CUADRO: Apuesta a 4 números en cuadrado (8:1)",
-            "  • SEISENA: Apuesta a 6 números (2 filas) (5:1)",
-            "  • COLUMNA: Apuesta a 12 números (1ª, 2ª o 3ª columna) (2:1)",
-            "  • DOCENA: Apuesta a 12 números (1-12, 13-24, o 25-36) (2:1)",
-            "  • ROJO/NEGRO: Apuesta al color (1:1)",
-            "  • IMPAR/PAR: Apuesta a la paridad del número (1:1)",
-            "  • MAYOR/MENOR: Apuesta a números 1-18 o 19-36 (1:1)",
-            "",
-            "La rueda tiene números 0-36. El 0 es verde, los demás alternan rojo/negro.",
-            "IMPORTANTE: Para todas las apuestas sencillas (rojo/negro, impar/par, mayor/menor),",
-            "pierdes si la bola cae en 0.",
-            "",
-            "Usa 'bet [tipo] [número(s)] [cantidad]' para realizar apuestas.",
-            "Ejemplos:",
-            "  bet straight 17 10     - Apostar $10 al número 17",
-            "  bet red 20             - Apostar $20 al rojo",
-            "  bet column 3 50        - Apostar $50 a la 3ª columna",
-            "  bet high 25            - Apostar $25 a números altos (19-36)"
-        ],
-        moneyStatus: (money) => `Tienes $${money}.`,
-        availableBets: "Comandos de apuesta: 'bet straight', 'bet split', 'bet street', 'bet corner', 'bet line', 'bet column', 'bet dozen', 'bet red', 'bet black', 'bet odd', 'bet even', 'bet high', 'bet low', 'bet repeat'",
-        invalidBet: "Por favor, introduce una cantidad válida para apostar.",
-        betTooHigh: "No tienes suficiente dinero para esa apuesta.",
-        invalidBetType: "Tipo de apuesta inválido. Escribe 'help bets' para ver los tipos disponibles.",
-        betPlaced: (type, amount) => `Apuesta ${type} de $${amount} realizada.`,
-        spinPrompt: "Escribe 'spin' para girar la rueda.",
-        noBets: "Necesitas realizar al menos una apuesta antes de girar.",
-        spinningWheel: "Girando la rueda...",
-        spinAlreadyInProgress: "La rueda ya está girando.",
-        spinInProgress: "No puedes apostar mientras la rueda está girando.",
-        outOfMoney: "¡Te has quedado sin dinero! Fin del juego.",
-        placeMoreBets: "Haz tus apuestas para el próximo giro.",
-        betWon: (type, numbers, amount) => `¡Apuesta ${type} en ${numbers} ganó! Recibes $${amount}.`,
-        totalWinnings: (amount) => `Ganancias totales: $${amount}.`,
-        noBetsWon: "Lo siento, ninguna de tus apuestas ganó.",
-        cantClearBetsDuringSpin: "No puedes borrar apuestas mientras la rueda está girando.",
-        noBetsToClear: "No hay apuestas para borrar.",
-        betsCleared: (amount) => `Todas las apuestas borradas. $${amount} devueltos a tu saldo.`,
-        cantResetDuringSpin: "No puedes reiniciar el juego mientras la rueda está girando.",
-        gameReset: "El juego ha sido reiniciado. Tu saldo ahora es de $1000.",
-        numberLanded: (number, color) => `¡La bola cayó en ${number} ${color}!`,
-        languageChanged: "Idioma cambiado a Español.",
-        languageOptions: "Idiomas disponibles: en (Inglés), es (Español)",
-        colorChanged: (theme) => `Tema de color cambiado a ${theme}.`,
-        colorOptions: "Colores disponibles: green (verde), blue (azul), amber (ámbar), white (blanco), matrix",
-        speedChanged: (speed) => `Velocidad de animación cambiada a ${speed}.`,
-        speedOptions: "Velocidades disponibles: fast (rápida), normal, slow (lenta)",
-        unknownCommand: "Comando desconocido. Escribe 'help' para ver los comandos.",
-        
-        // New translations for bet repeat functionality
-        noPreviousBets: "No hay apuestas anteriores para repetir.",
-        notEnoughMoneyForRepeat: (amount) => `No tienes suficiente dinero para repetir las apuestas anteriores (necesitas $${amount}).`,
-        betsRepeated: (amount) => `Apuestas anteriores repetidas por un total de $${amount}.`,
-        
-        helpText: [
-            "Comandos disponibles:",
-            "  help           - Mostrar este mensaje de ayuda",
-            "  help bets      - Mostrar información detallada de apuestas",
-            "  rules          - Mostrar reglas de la Ruleta",
-            "  bet [tipo] ... - Realizar una apuesta (ver 'help bets')",
-            "  bet repeat     - Repetir tu último conjunto de apuestas",
-            "  spin           - Girar la rueda",
-            "  clear bets     - Borrar todas las apuestas actuales",
-            "  money          - Verificar tu saldo actual",
-            "  speed          - Cambiar velocidad de animación (fast/normal/slow)",
-            "  history        - Mostrar resultados de giros anteriores",
-            "  reset          - Reiniciar el juego al estado inicial",
-            "  language       - Cambiar idioma (en/es)",
-            "  color          - Cambiar tema de color",
-            "  leaderboard    - Mostrar tabla de clasificación (top 10)",
-            "  exit           - Volver a la pantalla principal"
-        ],
-        helpBetsText: [
-            "COMANDOS DE APUESTAS:",
-            "  bet straight [número] [cantidad]",
-            "    Ejemplo: 'bet straight 17 10' - Apostar $10 al número 17",
-            "",
-            "  bet split [número1] [número2] [cantidad]",
-            "    Ejemplo: 'bet split 17 18 10' - Apostar $10 a la separación entre 17 y 18",
-            "",
-            "  bet street [fila] [cantidad] (filas son 1-12, representando las 12 filas de 3 números)",
-            "    Ejemplo: 'bet street 4 10' - Apostar $10 a 10-11-12",
-            "",
-            "  bet corner [número] [cantidad] (número es el número más bajo en la esquina)",
-            "    Ejemplo: 'bet corner 10 10' - Apostar $10 a 10-11-13-14",
-            "",
-            "  bet line [fila] [cantidad] (filas son 1-11, representando dos filas adyacentes)",
-            "    Ejemplo: 'bet line 4 10' - Apostar $10 a 10-11-12-13-14-15",
-            "",
-            "  bet column [columna] [cantidad] (columnas son 1-3)",
-            "    Ejemplo: 'bet column 2 10' - Apostar $10 a la columna central",
-            "",
-            "  bet dozen [docena] [cantidad] (docenas son 1-3, representando 1-12, 13-24, 25-36)",
-            "    Ejemplo: 'bet dozen 1 10' - Apostar $10 a números 1-12",
-            "",
-            "  bet repeat        - Repetir tus apuestas anteriores exactamente",
-            "",
-            "APUESTAS EXTERNAS (MÁS SIMPLES):",
-            "  bet red [cantidad]     - Apostar a todos los números rojos",
-            "  bet black [cantidad]   - Apostar a todos los números negros",
-            "  bet odd [cantidad]     - Apostar a todos los números impares",
-            "  bet even [cantidad]    - Apostar a todos los números pares",
-            "  bet high [cantidad]    - Apostar a números 19-36",
-            "  bet low [cantidad]     - Apostar a números 1-18"
-        ],
-        uiLabels: {
-            money: "Dinero:", bets: "Apuestas Actuales:", wheel: "Rueda de Ruleta",
-            history: "Historial:", bet: "Apuesta:", on: "en", amount: "Cantidad:",
-            board: "Mesa de Apuestas", placedBets: "Apuestas Activas:", totalBet: "Apuesta Total:"
-        }
-    }
+    prompt: null,
+    wheel: null,
+    ballTrack: null,
+    bettingBoard: null,
+    settingsModal: null,
+    gameContentWrapper: null
 };
 
 /**
@@ -337,6 +66,10 @@ rouletteUI.createGameUI = function(container) {
     settingsContainer.appendChild(settingsButton);
     header.appendChild(settingsContainer);
     
+    // Create game content wrapper
+    const gameContentWrapper = document.createElement('div');
+    gameContentWrapper.className = 'game-content-wrapper';
+    
     // Create terminal output
     const terminalOutput = document.createElement('div');
     terminalOutput.className = 'terminal-output';
@@ -363,6 +96,7 @@ rouletteUI.createGameUI = function(container) {
     
     // Assemble terminal
     terminal.appendChild(header);
+    terminal.appendChild(gameContentWrapper);
     terminal.appendChild(terminalOutput);
     terminal.appendChild(inputLine);
     
@@ -374,9 +108,75 @@ rouletteUI.createGameUI = function(container) {
     rouletteUI.elements.output = terminalOutput;
     rouletteUI.elements.input = commandInput;
     rouletteUI.elements.prompt = prompt;
+    rouletteUI.elements.gameContentWrapper = gameContentWrapper;
     
     // Create settings modal
     rouletteUI.createSettingsModal(container);
+    
+    // Ensure enough spacing below game board to avoid overlap with terminal input
+    const style = document.createElement('style');
+    style.textContent = `
+        .game-content-wrapper {
+            margin-bottom: 120px; /* Extra space to prevent overlap with terminal input */
+            padding-bottom: 20px;
+        }
+        
+        /* Fix position of terminal input */
+        .terminal-input {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--bg-primary);
+            z-index: 100;
+            border-top: 1px solid var(--terminal-border);
+        }
+        
+        /* Additional spacing for chip deck and controls */
+        .chipDeck, .bankContainer {
+            position: relative;
+            margin-left: 0;
+            margin-top: 10px;
+            width: 310px;
+            display: inline-block;
+            vertical-align: top;
+        }
+        
+        .bankContainer {
+            margin-top: 10px;
+            margin-left: 20px;
+        }
+        
+        .wheel {
+            margin-right: 20px;
+            transform: scale(0.9);
+            transform-origin: center;
+        }
+        
+        .spinBtn {
+            position: relative;
+            margin-top: 10px;
+            margin-left: 10px;
+            display: inline-block;
+        }
+        
+        /* Make sure betting board fits within the container */
+        #betting_board {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+        
+        /* Controls container */
+        .controls-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            align-items: center;
+            margin-top: 10px;
+            width: 100%;
+        }
+    `;
+    document.head.appendChild(style);
     
     // Only focus input on initial creation
     if (document.activeElement === document.body) {
@@ -386,6 +186,7 @@ rouletteUI.createGameUI = function(container) {
 
 /**
  * Create settings modal
+ * @param {HTMLElement} container - The container element
  */
 rouletteUI.createSettingsModal = function(container) {
     // Create modal container
@@ -420,7 +221,7 @@ rouletteUI.createSettingsModal = function(container) {
     const settingsContent = document.createElement('div');
     settingsContent.className = 'settings-content';
     
-    // Language settings (top row)
+    // Language settings
     const languageGroup = document.createElement('div');
     languageGroup.className = 'settings-group language-group';
     
@@ -469,11 +270,7 @@ rouletteUI.createSettingsModal = function(container) {
             rouletteGame.saveState();
             
             // Update UI with new language
-            if (rouletteGame.state.spinInProgress) {
-                rouletteUI.displaySpinAnimation(rouletteGame.state);
-            } else {
-                rouletteUI.displayGameState();
-            }
+            rouletteUI.output(rouletteUI.getText('languageChanged'), false, 'success');
         });
         
         languageOptions.appendChild(langOption);
@@ -921,1028 +718,660 @@ rouletteUI.output = function(text, isAsciiArt = false, messageType = 'auto') {
 };
 
 /**
- * Display welcome message
- */
-rouletteUI.displayWelcomeMessage = function() {
-    const state = rouletteGame.state;
-    
-    // First remove input element so it can be re-appended after content
-    const inputElement = rouletteUI.elements.input && rouletteUI.elements.input.parentElement;
-    if (inputElement && inputElement.parentElement) {
-        inputElement.parentElement.removeChild(inputElement);
-    }
-    
-    // Clear terminal
-    if (rouletteUI.elements.output) {
-        rouletteUI.elements.output.innerHTML = '';
-    }
-    
-    // Create welcome container
-    const welcomeContainer = document.createElement('div');
-    welcomeContainer.className = 'welcome-container';
-    
-    // Create header
-    const header = document.createElement('div');
-    header.className = 'terminal-box-header';
-    header.textContent = 'TERMINAL ROULETTE';
-    welcomeContainer.appendChild(header);
-    
-    // Create money display
-    const moneyDisplay = document.createElement('div');
-    moneyDisplay.className = 'money-display';
-    moneyDisplay.textContent = rouletteUI.getText('moneyStatus', state.money);
-    welcomeContainer.appendChild(moneyDisplay);
-    
-    // Add betting board to the welcome screen
-    const bettingBoard = rouletteUI.createBettingBoard([]);
-    welcomeContainer.appendChild(bettingBoard);
-    
-    // Create wheel for welcome screen - below the betting board
-    const wheelContainer = rouletteUI.createRouletteWheel();
-    welcomeContainer.appendChild(wheelContainer);
-    
-    // Create welcome message
-    const welcomeText = document.createElement('div');
-    welcomeText.className = 'welcome-text';
-    welcomeText.innerHTML = `
-        <p>${rouletteUI.getText('welcome')}</p>
-        <p>${rouletteUI.getText('helpPrompt')}</p>
-        <p>${rouletteUI.getText('leaderboardReset')}</p>
-    `;
-    welcomeContainer.appendChild(welcomeText);
-    
-    // Add to output
-    rouletteUI.elements.output.appendChild(welcomeContainer);
-    
-    // Re-append input at the end and focus it
-    if (inputElement && rouletteUI.elements.terminal) {
-        rouletteUI.elements.terminal.appendChild(inputElement);
-        
-        if (rouletteUI.elements.input) {
-            setTimeout(() => {
-                rouletteUI.elements.input.focus();
-            }, 10);
-        }
-    }
-};
-
-/**
- * Create a visual roulette wheel with European sequence
- * @returns {HTMLElement} The wheel container element
- */
-rouletteUI.createRouletteWheel = function() {
-    const wheelNumbers = rouletteGame.WHEEL_NUMBERS;
-    const cellWidth = rouletteGame.ANIMATION.CELL_WIDTH;
-    
-    // Create wheel container
-    const wheelContainer = document.createElement('div');
-    wheelContainer.className = 'roulette-wheel-container';
-    
-    // Create header for wheel
-    const wheelHeader = document.createElement('div');
-    wheelHeader.className = 'wheel-header';
-    wheelHeader.textContent = rouletteUI.getText('uiLabels.wheel');
-    wheelContainer.appendChild(wheelHeader);
-    
-    // Create wheel window (the visible portion of the wheel)
-    const wheelWindow = document.createElement('div');
-    wheelWindow.className = 'roulette-wheel-window';
-    wheelWindow.id = 'roulette-wheel-window';
-    
-    // Add indicator (the pointer that shows the winning number)
-    const indicator = document.createElement('div');
-    indicator.className = 'roulette-indicator';
-    wheelWindow.appendChild(indicator);
-    
-    // Add ball (the bouncing ball that follows the wheel)
-    const ball = document.createElement('div');
-    ball.className = 'roulette-ball';
-    wheelWindow.appendChild(ball);
-    
-    // Create wheel strip (will contain all the numbers)
-    const wheelStrip = document.createElement('div');
-    wheelStrip.className = 'roulette-wheel-strip';
-    wheelStrip.id = 'roulette-wheel-strip';
-    
-    // Add numbers to the wheel strip multiple times for seamless animation
-    // We use 3 copies to ensure continuity during animation
-    const repeatMultiple = 3;
-    
-    for (let i = 0; i < repeatMultiple; i++) {
-        wheelNumbers.forEach(number => {
-            const cell = document.createElement('div');
-            cell.className = `roulette-number-cell ${rouletteGame.NUMBER_COLORS[number]}`;
-            cell.textContent = number;
-            cell.setAttribute('data-number', number);
-            wheelStrip.appendChild(cell);
-        });
-    }
-    
-    // Set initial position to center the middle sequence
-    const middleSequenceOffset = (repeatMultiple > 1) 
-        ? Math.floor(repeatMultiple / 2) * (wheelNumbers.length * cellWidth)
-        : 0;
-    const initialOffset = ((rouletteGame.ANIMATION.VISIBLE_CELLS * cellWidth) / 2) - middleSequenceOffset;
-    wheelStrip.style.transform = `translateX(${initialOffset}px)`;
-    
-    // Add strip to window
-    wheelWindow.appendChild(wheelStrip);
-    
-    // Add window to container
-    wheelContainer.appendChild(wheelWindow);
-    
-    // Create current number display
-    const currentNumber = document.createElement('div');
-    currentNumber.className = 'current-number';
-    currentNumber.id = 'roulette-current-number';
-    
-    const numberValue = document.createElement('span');
-    numberValue.className = 'number-value';
-    
-    // Show random number initially
-    const randomNumber = wheelNumbers[Math.floor(Math.random() * wheelNumbers.length)];
-    numberValue.textContent = randomNumber;
-    numberValue.style.color = rouletteGame.NUMBER_COLORS[randomNumber] === 'red' ? '#d32f2f' :
-                             rouletteGame.NUMBER_COLORS[randomNumber] === 'black' ? 'white' :
-                             '#2e7d32'; // Green
-    
-    currentNumber.appendChild(numberValue);
-    wheelContainer.appendChild(currentNumber);
-    
-    return wheelContainer;
-};
-
-/**
- * Create a standardized betting board that matches real roulette tables
- * @param {Array} currentBets - Current active bets
- * @returns {HTMLElement} The betting board element
- */
-rouletteUI.createBettingBoard = function(currentBets = []) {
-    const boardContainer = document.createElement('div');
-    boardContainer.className = 'betting-board-container';
-    
-    // Create header
-    const boardHeader = document.createElement('div');
-    boardHeader.className = 'terminal-box-header';
-    boardHeader.textContent = rouletteUI.getText('uiLabels.board');
-    boardContainer.appendChild(boardHeader);
-    
-    // Create main board table - standard European roulette layout
-    const table = document.createElement('table');
-    table.className = 'roulette-table';
-    
-    // Create 4 rows for the main board (0 at top, then 3 rows of numbers)
-    const zeroRow = document.createElement('tr');
-    const row1 = document.createElement('tr'); // Top row (3, 6, 9, 12...)
-    const row2 = document.createElement('tr'); // Middle row (2, 5, 8, 11...)
-    const row3 = document.createElement('tr'); // Bottom row (1, 4, 7, 10...)
-    
-    // Create zero cell spanning 3 columns for the top row
-    const zeroCell = document.createElement('td');
-    zeroCell.className = 'zero-cell';
-    zeroCell.rowSpan = 1;
-    zeroCell.colSpan = 3;
-    zeroCell.textContent = '0';
-    zeroCell.setAttribute('data-number', '0');
-    
-    // Check for zero bet
-    const zeroBet = currentBets.find(b => 
-        b.type === 'STRAIGHT' && b.numbers.includes(0)
-    );
-    
-    if (zeroBet) {
-        zeroCell.classList.add('active-bet');
-        const betAmount = document.createElement('div');
-        betAmount.className = 'bet-amount';
-        betAmount.textContent = `$${zeroBet.amount}`;
-        zeroCell.appendChild(betAmount);
-    }
-    
-    zeroRow.appendChild(zeroCell);
-    
-    // Add all numbers 1-36 in the correct layout
-    for (let col = 0; col < 12; col++) {
-        // Each column has 3 numbers
-        for (let row = 0; row < 3; row++) {
-            const number = (3 * col) + (3 - row);
-            const cell = document.createElement('td');
-            cell.className = `number-cell ${rouletteGame.NUMBER_COLORS[number]}`;
-            cell.textContent = number;
-            cell.setAttribute('data-number', number);
-            
-            // Check for straight bet on this number
-            const straightBet = currentBets.find(b => 
-                b.type === 'STRAIGHT' && b.numbers.includes(number)
-            );
-            
-            if (straightBet) {
-                cell.classList.add('active-bet');
-                const betAmount = document.createElement('div');
-                betAmount.className = 'bet-amount';
-                betAmount.textContent = `$${straightBet.amount}`;
-                cell.appendChild(betAmount);
-            }
-            
-            // Add to the appropriate row
-            if (row === 0) row3.appendChild(cell);
-            else if (row === 1) row2.appendChild(cell);
-            else row1.appendChild(cell);
-        }
-    }
-    
-    table.appendChild(zeroRow);
-    table.appendChild(row1);
-    table.appendChild(row2);
-    table.appendChild(row3);
-    
-    // Create rows for outside bets
-    
-    // 2 to 1 columns
-    const columnsRow = document.createElement('tr');
-    
-    for (let col = 1; col <= 3; col++) {
-        const columnCell = document.createElement('td');
-        columnCell.className = 'outside-bet column-bet';
-        columnCell.textContent = '2:1';
-        columnCell.setAttribute('data-column', col);
-        
-        // Highlight active column bets
-        const columnBet = currentBets.find(b => 
-            b.type === 'COLUMN' && b.numbers[0] === col
-        );
-        
-        if (columnBet) {
-            columnCell.classList.add('active-bet');
-            const betAmount = document.createElement('div');
-            betAmount.className = 'bet-amount';
-            betAmount.textContent = `$${columnBet.amount}`;
-            columnCell.appendChild(betAmount);
-        }
-        
-        columnsRow.appendChild(columnCell);
-    }
-    
-    table.appendChild(columnsRow);
-    
-    // Dozens
-    const dozensRow = document.createElement('tr');
-    
-    for (let dozen = 1; dozen <= 3; dozen++) {
-        const dozenCell = document.createElement('td');
-        dozenCell.className = 'outside-bet dozen-bet';
-        dozenCell.colSpan = 4;
-        dozenCell.textContent = `${(dozen-1)*12+1}-${dozen*12}`;
-        dozenCell.setAttribute('data-dozen', dozen);
-        
-        // Highlight active dozen bets
-        const dozenBet = currentBets.find(b => 
-            b.type === 'DOZEN' && b.numbers[0] === dozen
-        );
-        
-        if (dozenBet) {
-            dozenCell.classList.add('active-bet');
-            const betAmount = document.createElement('div');
-            betAmount.className = 'bet-amount';
-            betAmount.textContent = `$${dozenBet.amount}`;
-            dozenCell.appendChild(betAmount);
-        }
-        
-        dozensRow.appendChild(dozenCell);
-    }
-    
-    table.appendChild(dozensRow);
-    
-    // Simple outside bets (split into 2 rows for better layout)
-    const outsideBets1 = document.createElement('tr');
-    const outsideBets2 = document.createElement('tr');
-    
-    // Create Low/High cells
-    const lowCell = document.createElement('td');
-    lowCell.className = 'outside-bet low-bet';
-    lowCell.textContent = '1-18';
-    lowCell.colSpan = 2;
-    lowCell.setAttribute('data-bet-type', 'LOW');
-    
-    const highCell = document.createElement('td');
-    highCell.className = 'outside-bet high-bet';
-    highCell.textContent = '19-36';
-    highCell.colSpan = 2;
-    highCell.setAttribute('data-bet-type', 'HIGH');
-    
-    // Create Even/Odd cells
-    const evenCell = document.createElement('td');
-    evenCell.className = 'outside-bet even-bet';
-    evenCell.textContent = 'EVEN';
-    evenCell.colSpan = 2;
-    evenCell.setAttribute('data-bet-type', 'EVEN');
-    
-    const oddCell = document.createElement('td');
-    oddCell.className = 'outside-bet odd-bet';
-    oddCell.textContent = 'ODD';
-    oddCell.colSpan = 2;
-    oddCell.setAttribute('data-bet-type', 'ODD');
-    
-    // Create Red/Black cells
-    const redCell = document.createElement('td');
-    redCell.className = 'outside-bet red-bet';
-    redCell.style.backgroundColor = '#d32f2f';
-    redCell.textContent = 'RED';
-    redCell.colSpan = 2;
-    redCell.setAttribute('data-bet-type', 'RED');
-    
-    const blackCell = document.createElement('td');
-    blackCell.className = 'outside-bet black-bet';
-    blackCell.style.backgroundColor = '#212121';
-    blackCell.textContent = 'BLACK';
-    blackCell.colSpan = 2;
-    blackCell.setAttribute('data-bet-type', 'BLACK');
-    
-    // Check for active outside bets
-    const lowBet = currentBets.find(b => b.type === 'LOW');
-    const highBet = currentBets.find(b => b.type === 'HIGH');
-    const evenBet = currentBets.find(b => b.type === 'EVEN');
-    const oddBet = currentBets.find(b => b.type === 'ODD');
-    const redBet = currentBets.find(b => b.type === 'RED');
-    const blackBet = currentBets.find(b => b.type === 'BLACK');
-    
-    // Highlight active bets
-    if (lowBet) {
-        lowCell.classList.add('active-bet');
-        const betAmount = document.createElement('div');
-        betAmount.className = 'bet-amount';
-        betAmount.textContent = `$${lowBet.amount}`;
-        lowCell.appendChild(betAmount);
-    }
-    
-    if (highBet) {
-        highCell.classList.add('active-bet');
-        const betAmount = document.createElement('div');
-        betAmount.className = 'bet-amount';
-        betAmount.textContent = `$${highBet.amount}`;
-        highCell.appendChild(betAmount);
-    }
-    
-    if (evenBet) {
-        evenCell.classList.add('active-bet');
-        const betAmount = document.createElement('div');
-        betAmount.className = 'bet-amount';
-        betAmount.textContent = `$${evenBet.amount}`;
-        evenCell.appendChild(betAmount);
-    }
-    
-    if (oddBet) {
-        oddCell.classList.add('active-bet');
-        const betAmount = document.createElement('div');
-        betAmount.className = 'bet-amount';
-        betAmount.textContent = `$${oddBet.amount}`;
-        oddCell.appendChild(betAmount);
-    }
-    
-    if (redBet) {
-        redCell.classList.add('active-bet');
-        const betAmount = document.createElement('div');
-        betAmount.className = 'bet-amount';
-        betAmount.textContent = `$${redBet.amount}`;
-        redCell.appendChild(betAmount);
-    }
-    
-    if (blackBet) {
-        blackCell.classList.add('active-bet');
-        const betAmount = document.createElement('div');
-        betAmount.className = 'bet-amount';
-        betAmount.textContent = `$${blackBet.amount}`;
-        blackCell.appendChild(betAmount);
-    }
-    
-    // Arrange cells in rows
-    outsideBets1.appendChild(lowCell);
-    outsideBets1.appendChild(evenCell);
-    outsideBets1.appendChild(redCell);
-    
-    outsideBets2.appendChild(highCell);
-    outsideBets2.appendChild(oddCell);
-    outsideBets2.appendChild(blackCell);
-    
-    table.appendChild(outsideBets1);
-    table.appendChild(outsideBets2);
-    
-    boardContainer.appendChild(table);
-    
-    // Add list of placed bets if there are any
-    if (currentBets && currentBets.length > 0) {
-        const betsContainer = document.createElement('div');
-        betsContainer.className = 'current-bets-container';
-        
-        const betsHeader = document.createElement('div');
-        betsHeader.className = 'current-bets-header';
-        betsHeader.textContent = rouletteUI.getText('uiLabels.placedBets');
-        betsContainer.appendChild(betsHeader);
-        
-        const betsList = document.createElement('ul');
-        betsList.className = 'current-bets-list';
-        
-        // Calculate total bet amount
-        let totalBet = 0;
-        
-        currentBets.forEach(bet => {
-            totalBet += bet.amount;
-            
-            const betItem = document.createElement('li');
-            
-            // Format bet description based on type
-            let betDesc = '';
-            const betTypeName = rouletteGame.BET_TYPES[bet.type].name;
-            
-            switch (bet.type) {
-                case 'STRAIGHT':
-                    betDesc = `${betTypeName} ${rouletteUI.getText('uiLabels.on')} ${bet.numbers[0]}`;
-                    break;
-                case 'COLUMN':
-                    betDesc = `${betTypeName} ${rouletteUI.getText('uiLabels.on')} ${bet.numbers[0]}`;
-                    break;
-                case 'DOZEN':
-                    const start = (bet.numbers[0] - 1) * 12 + 1;
-                    const end = bet.numbers[0] * 12;
-                    betDesc = `${betTypeName} ${rouletteUI.getText('uiLabels.on')} ${start}-${end}`;
-                    break;
-                case 'RED':
-                case 'BLACK':
-                case 'ODD':
-                case 'EVEN':
-                case 'HIGH':
-                case 'LOW':
-                    betDesc = betTypeName;
-                    break;
-                default:
-                    betDesc = `${betTypeName} ${rouletteUI.getText('uiLabels.on')} ${bet.numbers.join(', ')}`;
-            }
-            
-            betItem.textContent = `${betDesc}: $${bet.amount}`;
-            betsList.appendChild(betItem);
-        });
-        
-        betsContainer.appendChild(betsList);
-        
-        // Add total bet amount
-        const totalItem = document.createElement('div');
-        totalItem.className = 'total-bet';
-        totalItem.textContent = `${rouletteUI.getText('uiLabels.totalBet')} $${totalBet}`;
-        
-        betsContainer.appendChild(totalItem);
-        
-        boardContainer.appendChild(betsContainer);
-    }
-    
-    return boardContainer;
-};
-
-/**
- * Display current game state
+ * Display the current game state
  */
 rouletteUI.displayGameState = function() {
+    // Store reference to container
+    const container = rouletteUI.elements.gameContentWrapper;
+    if (!container) return;
+    
+    // Clear the container
+    container.innerHTML = '';
+    
+    // Build wheel and betting board
+    rouletteUI.buildWheel();
+    rouletteUI.buildBettingBoard();
+    
+    // Update previous numbers display
+    rouletteUI.updatePreviousNumbers(rouletteGame.state.previousNumbers);
+};
+
+/**
+ * Update the previous numbers display
+ * @param {Array} previousNumbers - Array of previous spin results
+ */
+rouletteUI.updatePreviousNumbers = function(previousNumbers) {
+    const pnContent = document.getElementById('pnContent');
+    if (!pnContent) return;
+    
+    // Clear the content
+    pnContent.innerHTML = '';
+    
+    // Add each previous number
+    for (let i = 0; i < previousNumbers.length; i++) {
+        const num = previousNumbers[i];
+        let pnClass = (num.color === 'red') ? 'pnRed' : 
+                     ((num.color === 'green') ? 'pnGreen' : 'pnBlack');
+        
+        let pnSpan = document.createElement('span');
+        pnSpan.setAttribute('class', pnClass);
+        pnSpan.innerText = num.number;
+        pnContent.append(pnSpan);
+    }
+    
+    // Scroll to show latest numbers
+    pnContent.scrollLeft = pnContent.scrollWidth;
+};
+
+/**
+ * Build the roulette wheel
+ */
+rouletteUI.buildWheel = function() {
+    const gameContentWrapper = rouletteUI.elements.gameContentWrapper;
+    
+    let wheel = document.createElement('div');
+    wheel.setAttribute('class', 'wheel');
+    
+    let outerRim = document.createElement('div');
+    outerRim.setAttribute('class', 'outerRim');
+    wheel.append(outerRim);
+    
+    let numbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    for(let i = 0; i < numbers.length; i++) {
+        let a = i + 1;
+        let spanClass = (numbers[i] < 10) ? 'single' : 'double';
+        let sect = document.createElement('div');
+        sect.setAttribute('id', 'sect'+a);
+        sect.setAttribute('class', 'sect');
+        let span = document.createElement('span');
+        span.setAttribute('class', spanClass);
+        span.innerText = numbers[i];
+        sect.append(span);
+        let block = document.createElement('div');
+        block.setAttribute('class', 'block');
+        sect.append(block);
+        wheel.append(sect);
+    }
+    
+    let pocketsRim = document.createElement('div');
+    pocketsRim.setAttribute('class', 'pocketsRim');
+    wheel.append(pocketsRim);
+    
+    let ballTrack = document.createElement('div');
+    ballTrack.setAttribute('class', 'ballTrack');
+    let ball = document.createElement('div');
+    ball.setAttribute('class', 'ball');
+    ballTrack.append(ball);
+    wheel.append(ballTrack);
+    
+    let pockets = document.createElement('div');
+    pockets.setAttribute('class', 'pockets');
+    wheel.append(pockets);
+    
+    let cone = document.createElement('div');
+    cone.setAttribute('class', 'cone');
+    wheel.append(cone);
+    
+    let turret = document.createElement('div');
+    turret.setAttribute('class', 'turret');
+    wheel.append(turret);
+    
+    let turretHandle = document.createElement('div');
+    turretHandle.setAttribute('class', 'turretHandle');
+    let thendOne = document.createElement('div');
+    thendOne.setAttribute('class', 'thendOne');
+    turretHandle.append(thendOne);
+    let thendTwo = document.createElement('div');
+    thendTwo.setAttribute('class', 'thendTwo');
+    turretHandle.append(thendTwo);
+    wheel.append(turretHandle);
+    
+    // Add to game content wrapper
+    gameContentWrapper.appendChild(wheel);
+    
+    // Store references
+    rouletteUI.elements.wheel = wheel;
+    rouletteUI.elements.ballTrack = ballTrack;
+};
+
+/**
+ * Build the betting board
+ */
+rouletteUI.buildBettingBoard = function() {
+    const gameContentWrapper = rouletteUI.elements.gameContentWrapper;
     const state = rouletteGame.state;
     
-    // First remove input element so it can be re-appended after content
-    const inputElement = rouletteUI.elements.input && rouletteUI.elements.input.parentElement;
-    if (inputElement && inputElement.parentElement) {
-        inputElement.parentElement.removeChild(inputElement);
+    let bettingBoard = document.createElement('div');
+    bettingBoard.setAttribute('id', 'betting_board');
+    
+    let wl = document.createElement('div');
+    wl.setAttribute('class', 'winning_lines');
+    
+    var wlttb = document.createElement('div');
+    wlttb.setAttribute('id', 'wlttb_top');
+    wlttb.setAttribute('class', 'wlttb');
+    for(let i = 0; i < 11; i++) {
+        let j = i;
+        var ttbbetblock = document.createElement('div');
+        ttbbetblock.setAttribute('class', 'ttbbetblock');
+        var numA = (1 + (3 * j));
+        var numB = (2 + (3 * j));
+        var numC = (3 + (3 * j));
+        var numD = (4 + (3 * j));
+        var numE = (5 + (3 * j));
+        var numF = (6 + (3 * j));
+        let num = numA + ', ' + numB + ', ' + numC + ', ' + numD + ', ' + numE + ', ' + numF;
+        var objType = 'double_street';
+        ttbbetblock.onclick = function() {
+            rouletteGame.placeBet(this, num, objType, 5);
+        };
+        ttbbetblock.oncontextmenu = function(e) {
+            e.preventDefault();
+            rouletteGame.removeBet(this, num, objType, 5);
+        };
+        wlttb.append(ttbbetblock);
     }
+    wl.append(wlttb);
     
-    // Clear terminal
-    if (rouletteUI.elements.output) {
-        rouletteUI.elements.output.innerHTML = '';
-    }
-    
-    // Create the game state container
-    const gameStateContainer = document.createElement('div');
-    gameStateContainer.className = 'roulette-game-state';
-    
-    // Create header
-    const header = document.createElement('div');
-    header.className = 'terminal-box-header';
-    header.textContent = 'ROULETTE';
-    gameStateContainer.appendChild(header);
-    
-    // Create money display
-    const moneyDisplay = document.createElement('div');
-    moneyDisplay.className = 'money-display';
-    moneyDisplay.textContent = `${rouletteUI.getText('uiLabels.money')} $${state.money}`;
-    gameStateContainer.appendChild(moneyDisplay);
-    
-    // Create betting board
-    const bettingBoard = rouletteUI.createBettingBoard(state.bets);
-    gameStateContainer.appendChild(bettingBoard);
-    
-    // Add roulette wheel
-    const wheelElement = rouletteUI.createRouletteWheel();
-    gameStateContainer.appendChild(wheelElement);
-    
-    // Add history section if available
-    if (state.spinHistory.length > 0) {
-        const historySection = document.createElement('div');
-        historySection.className = 'history-section';
-        
-        const historyHeader = document.createElement('div');
-        historyHeader.className = 'section-header';
-        historyHeader.textContent = rouletteUI.getText('uiLabels.history');
-        historySection.appendChild(historyHeader);
-        
-        const historyDisplay = document.createElement('div');
-        historyDisplay.className = 'history-display';
-        
-        state.spinHistory.slice(0, 10).forEach((spin) => {
-            const historyItem = document.createElement('div');
-            historyItem.className = `history-item ${rouletteGame.NUMBER_COLORS[spin.number]}`;
-            historyItem.textContent = spin.number;
-            historyDisplay.appendChild(historyItem);
-        });
-        
-        historySection.appendChild(historyDisplay);
-        gameStateContainer.appendChild(historySection);
-    }
-    
-    // Add to output
-    rouletteUI.elements.output.appendChild(gameStateContainer);
-    
-    // Re-append input at the end and focus it
-    if (inputElement && rouletteUI.elements.terminal) {
-        rouletteUI.elements.terminal.appendChild(inputElement);
-        
-        if (rouletteUI.elements.input) {
-            setTimeout(() => {
-                rouletteUI.elements.input.focus();
-            }, 10);
+    for(let c = 1; c < 4; c++) {
+        let d = c;
+        var wlttb = document.createElement('div');
+        wlttb.setAttribute('id', 'wlttb_'+c);
+        wlttb.setAttribute('class', 'wlttb');
+        for(let i = 0; i < 12; i++) {
+            let j = i;
+            var ttbbetblock = document.createElement('div');
+            ttbbetblock.setAttribute('class', 'ttbbetblock');
+            ttbbetblock.onclick = function() {
+                if(d == 1 || d == 2) {
+                    var numA = ((2 - (d - 1)) + (3 * j));
+                    var numB = ((3 - (d - 1)) + (3 * j));
+                    var num = numA + ', ' + numB;
+                } else {
+                    var numA = (1 + (3 * j));
+                    var numB = (2 + (3 * j));
+                    var numC = (3 + (3 * j));
+                    var num = numA + ', ' + numB + ', ' + numC;
+                }
+                var objType = (d == 3) ? 'street' : 'split';
+                var odd = (d == 3) ? 11 : 17;
+                rouletteGame.placeBet(this, num, objType, odd);
+            };
+            ttbbetblock.oncontextmenu = function(e) {
+                e.preventDefault();
+                if(d == 1 || d == 2) {
+                    var numA = ((2 - (d - 1)) + (3 * j));
+                    var numB = ((3 - (d - 1)) + (3 * j));
+                    var num = numA + ', ' + numB;
+                } else {
+                    var numA = (1 + (3 * j));
+                    var numB = (2 + (3 * j));
+                    var numC = (3 + (3 * j));
+                    var num = numA + ', ' + numB + ', ' + numC;
+                }
+                var objType = (d == 3) ? 'street' : 'split';
+                var odd = (d == 3) ? 11 : 17;
+                rouletteGame.removeBet(this, num, objType, odd);
+            };
+            wlttb.append(ttbbetblock);
         }
-    }
-};
-
-/**
- * Initialize the spin animation UI
- * @param {Object} state - The current game state
- */
-rouletteUI.displaySpinAnimation = function(state) {
-    // Add spin-in-progress class to terminal for animation control
-    if (rouletteUI.elements.terminal) {
-        rouletteUI.elements.terminal.classList.add('spin-in-progress');
+        wl.append(wlttb);
     }
     
-    // First remove input element so it can be re-appended after content
-    const inputElement = rouletteUI.elements.input && rouletteUI.elements.input.parentElement;
-    if (inputElement && inputElement.parentElement) {
-        inputElement.parentElement.removeChild(inputElement);
-    }
-    
-    // Clear terminal
-    if (rouletteUI.elements.output) {
-        rouletteUI.elements.output.innerHTML = '';
-    }
-    
-    // Create the animation container
-    const animContainer = document.createElement('div');
-    animContainer.className = 'roulette-animation-container';
-    animContainer.id = 'roulette-animation-container';
-    
-    // Create header
-    const header = document.createElement('div');
-    header.className = 'roulette-animation-header';
-    header.textContent = 'SPINNING THE WHEEL';
-    animContainer.appendChild(header);
-    
-    // Create money display
-    const moneyDisplay = document.createElement('div');
-    moneyDisplay.className = 'money-display';
-    moneyDisplay.textContent = `${rouletteUI.getText('uiLabels.money')} $${state.money}`;
-    animContainer.appendChild(moneyDisplay);
-    
-    // Create wheel container for the animation
-    const wheelContainer = document.createElement('div');
-    wheelContainer.className = 'roulette-wheel-container';
-    
-    // Create wheel window (the visible portion of the wheel)
-    const wheelWindow = document.createElement('div');
-    wheelWindow.className = 'roulette-wheel-window';
-    wheelWindow.id = 'roulette-wheel-window';
-    
-    // Add indicator (the pointer that shows the winning number)
-    const indicator = document.createElement('div');
-    indicator.className = 'roulette-indicator';
-    wheelWindow.appendChild(indicator);
-    
-    // Add ball (the bouncing ball that follows the wheel)
-    const ball = document.createElement('div');
-    ball.className = 'roulette-ball';
-    wheelWindow.appendChild(ball);
-    
-    // Create wheel strip (will contain all the numbers)
-    const wheelStrip = document.createElement('div');
-    wheelStrip.className = 'roulette-wheel-strip';
-    wheelStrip.id = 'roulette-wheel-strip';
-    
-    // Add numbers to the wheel strip multiple times for continuous spinning
-    // Use 5 repetitions to ensure there's always enough content in view
-    const repeatMultiple = 5; // More repetitions for better looping
-    
-    for (let i = 0; i < repeatMultiple; i++) {
-        rouletteGame.WHEEL_NUMBERS.forEach(number => {
-            const cell = document.createElement('div');
-            cell.className = `roulette-number-cell ${rouletteGame.NUMBER_COLORS[number]}`;
-            cell.textContent = number;
-            cell.setAttribute('data-number', number);
-            cell.setAttribute('data-sequence', i); // Track which sequence this cell belongs to
-            wheelStrip.appendChild(cell);
-        });
-    }
-    
-    // Add strip to window
-    wheelWindow.appendChild(wheelStrip);
-    wheelContainer.appendChild(wheelWindow);
-    
-    // Create current number display
-    const currentNumber = document.createElement('div');
-    currentNumber.className = 'current-number';
-    currentNumber.id = 'roulette-current-number';
-    
-    const numberValue = document.createElement('span');
-    numberValue.className = 'number-value';
-    numberValue.textContent = '?';
-    numberValue.style.color = 'white';
-    
-    currentNumber.appendChild(numberValue);
-    wheelContainer.appendChild(currentNumber);
-    
-    // Add wheel container to animation container
-    animContainer.appendChild(wheelContainer);
-    
-    // Show bets
-    if (state.bets && state.bets.length > 0) {
-        const betsContainer = rouletteUI.createBettingBoard(state.bets);
-        animContainer.appendChild(betsContainer);
-    }
-    
-    // Add to output
-    rouletteUI.elements.output.appendChild(animContainer);
-    
-    // Re-append input at the end and focus it
-    if (inputElement && rouletteUI.elements.terminal) {
-        rouletteUI.elements.terminal.appendChild(inputElement);
-        
-        if (rouletteUI.elements.input) {
-            setTimeout(() => {
-                rouletteUI.elements.input.focus();
-            }, 10);
+    for(let c = 1; c < 12; c++) {
+        let d = c;
+        var wlrtl = document.createElement('div');
+        wlrtl.setAttribute('id', 'wlrtl_'+c);
+        wlrtl.setAttribute('class', 'wlrtl');
+        for(let i = 1; i < 4; i++) {
+            let j = i;
+            var rtlbb = document.createElement('div');
+            rtlbb.setAttribute('class', 'rtlbb'+i);
+            var numA = (3 + (3 * (d - 1))) - (j - 1);
+            var numB = (6 + (3 * (d - 1))) - (j - 1);
+            let num = numA + ', ' + numB;
+            rtlbb.onclick = function() {
+                rouletteGame.placeBet(this, num, 'split', 17);
+            };
+            rtlbb.oncontextmenu = function(e) {
+                e.preventDefault();
+                rouletteGame.removeBet(this, num, 'split', 17);
+            };
+            wlrtl.append(rtlbb);
         }
+        wl.append(wlrtl);
     }
     
-    // Cache the DOM elements that will be updated during animation
-    state.uiElements = {
-        strip: document.getElementById('roulette-wheel-strip'),
-        ball: document.querySelector('.roulette-ball'),
-        numberDisplay: document.getElementById('roulette-current-number'),
-        numberValue: document.querySelector('#roulette-current-number .number-value')
+    for(let c = 1; c < 3; c++) {
+        var wlcb = document.createElement('div');
+        wlcb.setAttribute('id', 'wlcb_'+c);
+        wlcb.setAttribute('class', 'wlcb');
+        for(let i = 1; i < 12; i++) {
+            let count = (c == 1) ? i : i + 11;
+            var cbbb = document.createElement('div');
+            cbbb.setAttribute('id', 'cbbb_'+count);
+            cbbb.setAttribute('class', 'cbbb');
+            var numA = '2';
+            var numB = '3';
+            var numC = '5';
+            var numD = '6';
+            let num = (count >= 1 && count < 12) ? 
+                     (parseInt(numA) + ((count - 1) * 3)) + ', ' + 
+                     (parseInt(numB) + ((count - 1) * 3)) + ', ' + 
+                     (parseInt(numC) + ((count - 1) * 3)) + ', ' + 
+                     (parseInt(numD) + ((count - 1) * 3)) : 
+                     ((parseInt(numA) - 1) + ((count - 12) * 3)) + ', ' + 
+                     ((parseInt(numB) - 1) + ((count - 12) * 3)) + ', ' + 
+                     ((parseInt(numC) - 1) + ((count - 12) * 3)) + ', ' + 
+                     ((parseInt(numD) - 1) + ((count - 12) * 3));
+            var objType = 'corner_bet';
+            cbbb.onclick = function() {
+                rouletteGame.placeBet(this, num, objType, 8);
+            };
+            cbbb.oncontextmenu = function(e) {
+                e.preventDefault();
+                rouletteGame.removeBet(this, num, objType, 8);
+            };
+            wlcb.append(cbbb);
+        }
+        wl.append(wlcb);
+    }
+    
+    bettingBoard.append(wl);
+    
+    let bbtop = document.createElement('div');
+    bbtop.setAttribute('class', 'bbtop');
+    let bbtopBlocks = ['1 to 18', '19 to 36'];
+    for(let i = 0; i < bbtopBlocks.length; i++) {
+        let f = i;
+        var bbtoptwo = document.createElement('div');
+        bbtoptwo.setAttribute('class', 'bbtoptwo');
+        let num = (f == 0) ? '1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18' : 
+                            '19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36';
+        var objType = (f == 0) ? 'outside_low' : 'outside_high';
+        bbtoptwo.onclick = function() {
+            rouletteGame.placeBet(this, num, objType, 1);
+        };
+        bbtoptwo.oncontextmenu = function(e) {
+            e.preventDefault();
+            rouletteGame.removeBet(this, num, objType, 1);
+        };
+        bbtoptwo.innerText = bbtopBlocks[i];
+        bbtop.append(bbtoptwo);
+    }
+    bettingBoard.append(bbtop);
+    
+    let numberBoard = document.createElement('div');
+    numberBoard.setAttribute('class', 'number_board');
+    
+    let zero = document.createElement('div');
+    zero.setAttribute('class', 'number_0');
+    var objType = 'zero';
+    var odds = 35;
+    zero.onclick = function() {
+        rouletteGame.placeBet(this, '0', objType, odds);
     };
+    zero.oncontextmenu = function(e) {
+        e.preventDefault();
+        rouletteGame.removeBet(this, '0', objType, odds);
+    };
+    let nbnz = document.createElement('div');
+    nbnz.setAttribute('class', 'nbn');
+    nbnz.innerText = '0';
+    zero.append(nbnz);
+    numberBoard.append(zero);
     
-    // Initialize wheel position
-    // Get the initial position from the strip (calculated during creation)
-    const initialPosition = parseInt(wheelStrip.getAttribute('data-initial-position') || '0');
-    
-    // Start with this initial position
-    state.wheelPosition = initialPosition;
-    state.initialWheelPosition = initialPosition; // Store for reference
-    wheelStrip.style.transform = `translateX(${state.wheelPosition}px)`;
-    
-    // Use a short timeout to ensure the initial position is applied before any transitions
-    setTimeout(() => {
-        wheelStrip.style.transition = 'transform 0.05s linear';
-    }, 50);
-};
-
-/**
- * Update wheel position during animation
- * @param {Object} state - The current game state
- * @param {boolean} isComplete - Whether this is the final update (animation complete)
- */
-rouletteUI.updateWheelPosition = function(state, isComplete = false) {
-    if (!state.uiElements || !state.uiElements.strip) return;
-    
-    const { strip, numberValue, ball } = state.uiElements;
-    
-    // Check if we need to extend the strip for infinite scrolling
-    const shouldExtendStrip = rouletteUI.checkAndExtendWheelStrip(strip, state.wheelPosition);
-    
-    // Apply the current position to the wheel strip
-    strip.style.transform = `translateX(${state.wheelPosition}px)`;
-    
-    // Determine current visible number at the center
-    let centerNumber = rouletteUI.getCenteredNumber(strip);
-    
-    // Only if not final update, adjust transition and ball animation based on progress
-    if (!isComplete) {
-        // Calculate progress through animation
-        const currentTime = performance.now();
-        const elapsedTime = currentTime - state.spinStartTime;
-        const progress = Math.min(elapsedTime / state.spinDuration, 1);
-        
-        if (progress < 0.7) {
-            // Fast at beginning - quick transitions
-            strip.style.transition = 'transform 0.05s linear';
-            
-            // Update the number display with the center number
-            numberValue.textContent = centerNumber;
-            numberValue.style.color = rouletteGame.NUMBER_COLORS[centerNumber] === 'red' ? '#d32f2f' :
-                                     rouletteGame.NUMBER_COLORS[centerNumber] === 'black' ? 'white' :
-                                     '#2e7d32'; // Green
-            
-            // Fast ball movement
-            ball.style.animation = 'ballBounce 0.15s ease-in-out infinite alternate';
-            
-        } else if (progress < 0.9) {
-            // Slowing down
-            strip.style.transition = 'transform 0.15s ease-out';
-            
-            // Update the number display with the center number
-            numberValue.textContent = centerNumber;
-            numberValue.style.color = rouletteGame.NUMBER_COLORS[centerNumber] === 'red' ? '#d32f2f' :
-                                     rouletteGame.NUMBER_COLORS[centerNumber] === 'black' ? 'white' :
-                                     '#2e7d32'; // Green
-            
-            // Slower ball movement
-            ball.style.animation = 'ballBounce 0.3s ease-in-out infinite alternate';
-            
-        } else {
-            // Final approach to target number - make sure we end up showing the correct number
-            strip.style.transition = 'transform 0.3s ease-out';
-            
-            // Show target number (predetermined winner)
-            numberValue.textContent = state.targetNumber;
-            numberValue.style.color = rouletteGame.NUMBER_COLORS[state.targetNumber] === 'red' ? '#d32f2f' :
-                                     rouletteGame.NUMBER_COLORS[state.targetNumber] === 'black' ? 'white' :
-                                     '#2e7d32'; // Green
-            
-            // Stop ball animation when wheel stops
-            ball.style.animation = 'none';
-            ball.style.transform = 'translateX(-50%) translateY(0)';
-        }
-    } else {
-        // Final position - force correct target number display
-        strip.style.transition = 'none';
-        
-        // Ensure the target number is displayed
-        numberValue.textContent = state.targetNumber;
-        numberValue.style.color = rouletteGame.NUMBER_COLORS[state.targetNumber] === 'red' ? '#d32f2f' :
-                                 rouletteGame.NUMBER_COLORS[state.targetNumber] === 'black' ? 'white' :
-                                 '#2e7d32'; // Green
-        
-        // Stop ball animation
-        ball.style.animation = 'none';
-        ball.style.transform = 'translateX(-50%) translateY(0)';
-        
-        // Find and highlight the winning cell
-        setTimeout(() => {
-            const cells = strip.querySelectorAll('.roulette-number-cell');
-            cells.forEach(cell => {
-                cell.classList.remove('highlight');
-                
-                // Find cells that match our target number
-                if (parseInt(cell.getAttribute('data-number')) === state.targetNumber) {
-                    // Get cell position relative to the window
-                    const cellRect = cell.getBoundingClientRect();
-                    const windowRect = document.getElementById('roulette-wheel-window').getBoundingClientRect();
-                    const windowCenter = windowRect.left + (windowRect.width / 2);
-                    const cellCenter = cellRect.left + (cellRect.width / 2);
-                    
-                    // Highlight cell only if it's very close to center (within 15px)
-                    if (Math.abs(cellCenter - windowCenter) < 15) {
-                        cell.classList.add('highlight');
-                    }
-                }
-            });
-            
-            // Apply celebration animation to number display
-            numberValue.style.animation = 'numberPulse 1s ease-in-out infinite alternate';
-        }, 50);
-    }
-};
-
-/**
- * Get the number currently centered in the wheel
- * @param {HTMLElement} strip - The wheel strip element
- * @returns {number} The centered number
- */
-rouletteUI.getCenteredNumber = function(strip) {
-    // Default to 0 if we can't determine
-    let centerNumber = 0;
-    
-    // Try to identify the centered number visually by examining the DOM
-    const wheelWindow = document.getElementById('roulette-wheel-window');
-    if (wheelWindow) {
-        const windowRect = wheelWindow.getBoundingClientRect();
-        const windowCenter = windowRect.left + (windowRect.width / 2);
-        
-        // Find the cell closest to the center
-        let closestCell = null;
-        let minDistance = Infinity;
-        
-        const cells = strip.querySelectorAll('.roulette-number-cell');
-        cells.forEach(cell => {
-            const cellRect = cell.getBoundingClientRect();
-            const cellCenter = cellRect.left + (cellRect.width / 2);
-            const distance = Math.abs(cellCenter - windowCenter);
-            
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestCell = cell;
-            }
-        });
-        
-        if (closestCell) {
-            centerNumber = parseInt(closestCell.getAttribute('data-number'));
-        }
-    }
-    
-    return centerNumber;
-};
-
-/**
- * Check if the wheel strip needs extension and add cells if necessary
- * This creates the infinite scrolling effect
- * @param {HTMLElement} strip - The wheel strip element
- * @param {number} position - Current position of the strip
- * @returns {boolean} Whether the strip was extended
- */
-rouletteUI.checkAndExtendWheelStrip = function(strip, position) {
-    const wheelWindow = document.getElementById('roulette-wheel-window');
-    if (!wheelWindow) return false;
-    
-    const windowWidth = wheelWindow.offsetWidth;
-    const cellWidth = rouletteGame.ANIMATION.CELL_WIDTH;
-    const wheelNumbers = rouletteGame.WHEEL_NUMBERS;
-    const sequenceWidth = wheelNumbers.length * cellWidth;
-    
-    // We'll add cells when we're getting within one full sequence of the edge
-    const buffer = sequenceWidth * 1.5;
-    
-    // Get all cells and count
-    const cells = strip.querySelectorAll('.roulette-number-cell');
-    const cellCount = cells.length;
-    
-    // Get first and last cells to determine strip boundaries
-    if (cellCount === 0) {
-        rouletteUI.populateWheelStrip(strip);
-        return true;
-    }
-    
-    // Calculate the visible left and right edges of the wheel window
-    // relative to the strip's current position
-    const leftEdge = -position;
-    const rightEdge = leftEdge + windowWidth;
-    
-    // Calculate the left and right edges of the content in the strip
-    const stripLeft = 0;
-    const stripRight = cellCount * cellWidth;
-    
-    let didExtend = false;
-    
-    // If we're approaching the left edge, add cells to the beginning
-    if (leftEdge - stripLeft < buffer) {
-        // Need to add more cells at the beginning
-        // First disable transitions temporarily to prevent jumpiness
-        const originalTransition = strip.style.transition;
-        strip.style.transition = 'none';
-        
-        // Insert a full sequence at the beginning
-        const originalFirstCell = cells[0];
-        let insertPosition = 0;
-        
-        // Calculate offset to adjust position when adding cells
-        const offsetAdjustment = sequenceWidth;
-        
-        // Prepend a new sequence to the strip
-        for (let i = wheelNumbers.length - 1; i >= 0; i--) {
-            const number = wheelNumbers[i];
-            const cell = document.createElement('div');
-            cell.className = `roulette-number-cell ${rouletteGame.NUMBER_COLORS[number]}`;
-            cell.textContent = number;
-            cell.setAttribute('data-number', number);
-            cell.setAttribute('data-index', i);
-            
-            // Insert at the beginning
-            if (originalFirstCell) {
-                strip.insertBefore(cell, originalFirstCell);
+    var numberBlocks = [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, '2 to 1', 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, '2 to 1', 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, '2 to 1'];
+    var redBlocks = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    for(let i = 0; i < numberBlocks.length; i++) {
+        let a = i;
+        var nbClass = (numberBlocks[i] == '2 to 1') ? 'tt1_block' : 'number_block';
+        var colourClass = (redBlocks.includes(numberBlocks[i])) ? ' redNum' : ((nbClass == 'number_block') ? ' blackNum' : '');
+        var numberBlock = document.createElement('div');
+        numberBlock.setAttribute('class', nbClass + colourClass);
+        numberBlock.onclick = function() {
+            if(numberBlocks[a] != '2 to 1') {
+                rouletteGame.placeBet(this, ''+numberBlocks[a]+'', 'inside_whole', 35);
             } else {
-                strip.appendChild(cell);
+                num = (a == 12) ? '3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36' : 
+                      ((a == 25) ? '2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35' : 
+                                  '1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34');
+                rouletteGame.placeBet(this, num, 'outside_column', 2);
             }
-        }
-        
-        // Adjust the position to maintain visual continuity
-        // This is crucial - we shift the strip right by the width of the added cells
-        strip.style.transform = `translateX(${position + offsetAdjustment}px)`;
-        
-        // Restore transition after a brief delay to ensure position update takes effect
-        setTimeout(() => {
-            strip.style.transition = originalTransition;
-        }, 10);
-        
-        didExtend = true;
+        };
+        numberBlock.oncontextmenu = function(e) {
+            e.preventDefault();
+            if(numberBlocks[a] != '2 to 1') {
+                rouletteGame.removeBet(this, ''+numberBlocks[a]+'', 'inside_whole', 35);
+            } else {
+                num = (a == 12) ? '3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36' : 
+                      ((a == 25) ? '2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35' : 
+                                  '1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34');
+                rouletteGame.removeBet(this, num, 'outside_column', 2);
+            }
+        };
+        var nbn = document.createElement('div');
+        nbn.setAttribute('class', 'nbn');
+        nbn.innerText = numberBlocks[i];
+        numberBlock.append(nbn);
+        numberBoard.append(numberBlock);
     }
+    bettingBoard.append(numberBoard);
     
-    // If we're approaching the right edge, add cells to the end
-    if (stripRight - rightEdge < buffer) {
-        // Add more cells at the end - no need to adjust position
-        const lastSequenceIndex = Math.floor(cellCount / wheelNumbers.length);
-        const nextSequenceIndex = lastSequenceIndex + 1;
-        
-        // Append a new sequence to the strip
-        wheelNumbers.forEach((number, index) => {
-            const cell = document.createElement('div');
-            cell.className = `roulette-number-cell ${rouletteGame.NUMBER_COLORS[number]}`;
-            cell.textContent = number;
-            cell.setAttribute('data-number', number);
-            cell.setAttribute('data-sequence', nextSequenceIndex);
-            cell.setAttribute('data-index', index);
-            strip.appendChild(cell);
-        });
-        
-        didExtend = true;
+    let bo3Board = document.createElement('div');
+    bo3Board.setAttribute('class', 'bo3_board');    
+    let bo3Blocks = ['1 to 12', '13 to 24', '25 to 36'];
+    for(let i = 0; i < bo3Blocks.length; i++) {
+        let b = i;
+        var bo3Block = document.createElement('div');
+        bo3Block.setAttribute('class', 'bo3_block');
+        bo3Block.onclick = function() {
+            num = (b == 0) ? '1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12' : 
+                  ((b == 1) ? '13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24' : 
+                             '25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36');
+            rouletteGame.placeBet(this, num, 'outside_dozen', 2);
+        };
+        bo3Block.oncontextmenu = function(e) {
+            e.preventDefault();
+            num = (b == 0) ? '1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12' : 
+                  ((b == 1) ? '13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24' : 
+                             '25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36');
+            rouletteGame.removeBet(this, num, 'outside_dozen', 2);
+        };
+        bo3Block.innerText = bo3Blocks[i];
+        bo3Board.append(bo3Block);
     }
+    bettingBoard.append(bo3Board);
     
-    // Trim excess cells if the strip gets too long
-    // This prevents memory issues from having too many DOM elements
-    if (cellCount > wheelNumbers.length * 10) {
-        // Remove cells that are far from the visible area
-        const visibleStart = Math.floor(leftEdge / cellWidth) - wheelNumbers.length;
-        const visibleEnd = Math.ceil(rightEdge / cellWidth) + wheelNumbers.length;
-        
-        // Remove excess cells from beginning if they're far from visible area
-        const cellsToRemoveStart = Math.max(0, Math.min(visibleStart, cellCount - wheelNumbers.length * 5));
-        if (cellsToRemoveStart > wheelNumbers.length) {
-            for (let i = 0; i < cellsToRemoveStart; i++) {
-                if (strip.firstChild) {
-                    strip.removeChild(strip.firstChild);
+    let otoBoard = document.createElement('div');
+    otoBoard.setAttribute('class', 'oto_board');    
+    let otoBlocks = ['EVEN', 'RED', 'BLACK', 'ODD'];
+    for(let i = 0; i < otoBlocks.length; i++) {
+        let d = i;
+        var colourClass = (otoBlocks[i] == 'RED') ? ' redNum' : ((otoBlocks[i] == 'BLACK') ? ' blackNum' : '');
+        var otoBlock = document.createElement('div');
+        otoBlock.setAttribute('class', 'oto_block' + colourClass);
+        otoBlock.onclick = function() {
+            num = (d == 0) ? '2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36' : 
+                  ((d == 1) ? '1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36' : 
+                   ((d == 2) ? '2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35' : 
+                              '1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35'));
+            rouletteGame.placeBet(this, num, 'outside_oerb', 1);
+        };
+        otoBlock.oncontextmenu = function(e) {
+            num = (d == 0) ? '2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36' : 
+                  ((d == 1) ? '1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36' : 
+                   ((d == 2) ? '2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35' : 
+                              '1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35'));
+            e.preventDefault();
+            rouletteGame.removeBet(this, num, 'outside_oerb', 1);
+        };
+        otoBlock.innerText = otoBlocks[i];
+        otoBoard.append(otoBlock);
+    }
+    bettingBoard.append(otoBoard);
+    
+    // Add to game content wrapper
+    gameContentWrapper.appendChild(bettingBoard);
+    
+    // Create controls container
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'controls-container';
+    
+    // Create chip deck
+    let chipDeck = document.createElement('div');
+    chipDeck.setAttribute('class', 'chipDeck');
+    let chipValues = [1, 5, 10, 100, 'clear'];
+    for(let i = 0; i < chipValues.length; i++) {
+        let cvi = i;
+        let chipColour = (i == 0) ? 'red' : ((i == 1) ? 'blue cdChipActive' : ((i == 2) ? 'orange' : ((i == 3) ? 'gold' : 'clearBet')));
+        let chip = document.createElement('div');
+        chip.setAttribute('class', 'cdChip ' + chipColour);
+        chip.onclick = function() {
+            if(cvi !== 4) {
+                let cdChipActive = document.getElementsByClassName('cdChipActive');
+                for(let i = 0; i < cdChipActive.length; i++) {
+                    cdChipActive[i].classList.remove('cdChipActive');
                 }
-            }
-        }
-        
-        // Remove excess cells from end if they're far from visible area
-        const cellsToKeep = Math.min(cellCount, visibleEnd - visibleStart + wheelNumbers.length * 2);
-        const cellsToRemoveEnd = cellCount - cellsToKeep;
-        if (cellsToRemoveEnd > wheelNumbers.length) {
-            for (let i = 0; i < cellsToRemoveEnd; i++) {
-                if (strip.lastChild) {
-                    strip.removeChild(strip.lastChild);
+                let curClass = this.getAttribute('class');
+                if(!curClass.includes('cdChipActive')) {
+                    this.setAttribute('class', curClass + ' cdChipActive');
                 }
+                state.wager = parseInt(chip.childNodes[0].innerText);
+                
+                // Output to terminal when chip value changes
+                rouletteUI.output(`Bet amount changed to $${state.wager}`, "info");
+            } else {
+                // Clear button - refund bets
+                rouletteGame.clearBets();
             }
-        }
+        };
+        let chipSpan = document.createElement('span');
+        chipSpan.setAttribute('class', 'cdChipSpan');
+        chipSpan.innerText = chipValues[i];
+        chip.append(chipSpan);
+        chipDeck.append(chip);
+    }
+    controlsContainer.appendChild(chipDeck);
+    
+    // Create bank container
+    let bankContainer = document.createElement('div');
+    bankContainer.setAttribute('class', 'bankContainer');
+    
+    let bank = document.createElement('div');
+    bank.setAttribute('class', 'bank');
+    let bankSpan = document.createElement('span');
+    bankSpan.setAttribute('id', 'bankSpan');
+    bankSpan.innerText = '' + state.money.toLocaleString("en-GB") + '';
+    bank.append(bankSpan);
+    bankContainer.append(bank);
+    
+    let betDisplay = document.createElement('div');
+    betDisplay.setAttribute('class', 'bet');
+    let betSpan = document.createElement('span');
+    betSpan.setAttribute('id', 'betSpan');
+    betSpan.innerText = '' + state.currentBet.toLocaleString("en-GB") + '';
+    betDisplay.append(betSpan);
+    bankContainer.append(betDisplay);    
+    controlsContainer.appendChild(bankContainer);
+    
+    // Create previous numbers block
+    let pnBlock = document.createElement('div');
+    pnBlock.setAttribute('class', 'pnBlock');
+    let pnContent = document.createElement('div');
+    pnContent.setAttribute('id', 'pnContent');
+    pnContent.onwheel = function(e) {
+        e.preventDefault();
+        pnContent.scrollLeft += e.deltaY;
+    };
+    pnBlock.append(pnContent);    
+    
+    // Add to controls container
+    controlsContainer.appendChild(pnBlock);
+    
+    // Add spin button if bets are placed
+    if (state.currentBet > 0) {
+        let spinBtn = document.createElement('div');
+        spinBtn.setAttribute('class', 'spinBtn');
+        spinBtn.innerText = 'spin';
+        spinBtn.onclick = function() {
+            this.remove();
+            rouletteGame.spin();
+        };
+        controlsContainer.appendChild(spinBtn);
     }
     
-    return didExtend;
+    // Add controls container to game content wrapper
+    gameContentWrapper.appendChild(controlsContainer);
+    
+    // Store reference
+    rouletteUI.elements.bettingBoard = bettingBoard;
 };
 
 /**
- * Display spin result with enhanced visualization
- * @param {number} number - Winning number
+ * Remove all chips from the board
  */
-rouletteUI.displaySpinResult = function(number) {
-    const color = rouletteGame.NUMBER_COLORS[number];
-    const colorName = color === 'red' ? 'RED' : color === 'black' ? 'BLACK' : 'GREEN';
+rouletteUI.removeChips = function() {
+    var chips = document.getElementsByClassName('chip');
+    if(chips.length > 0) {
+        for(let i = 0; i < chips.length; i++) {
+            chips[i].remove();
+        }
+        rouletteUI.removeChips(); // Recursively remove remaining chips
+    }
+};
+
+/**
+ * Show game over notification
+ */
+rouletteUI.showGameOver = function() {
+    const state = rouletteGame.state;
+    const container = rouletteUI.elements.container;
+    if (!container) return;
     
-    // Remove spin-in-progress class to re-enable animations
-    if (rouletteUI.elements.terminal) {
-        rouletteUI.elements.terminal.classList.remove('spin-in-progress');
+    let notification = document.createElement('div');
+    notification.setAttribute('id', 'notification');
+    
+    let nSpan = document.createElement('span');
+    nSpan.setAttribute('class', 'nSpan');
+    nSpan.innerText = 'Bankrupt';
+    notification.append(nSpan);
+    
+    let nBtn = document.createElement('div');
+    nBtn.setAttribute('class', 'nBtn');
+    nBtn.innerText = 'Play again';    
+    nBtn.onclick = function() {
+        rouletteGame.resetGame();
+    };
+    notification.append(nBtn);
+    
+    container.prepend(notification);
+    
+    // Output to terminal
+    rouletteUI.output("Game over! You've gone bankrupt. Click 'Play again' to restart.", "error");
+};
+
+/**
+ * Show win notification
+ * @param {number} winningNumber - The winning number
+ * @param {number} winValue - The amount won
+ * @param {number} betTotal - Total bet amount on the winning number
+ */
+rouletteUI.showWin = function(winningNumber, winValue, betTotal) {
+    const state = rouletteGame.state;
+    const container = rouletteUI.elements.container;
+    if (!container || winValue <= 0) return;
+    
+    let notification = document.createElement('div');
+    notification.setAttribute('id', 'notification');
+    
+    let nSpan = document.createElement('div');
+    nSpan.setAttribute('class', 'nSpan');
+    
+    let nsnumber = document.createElement('span');
+    nsnumber.setAttribute('class', 'nsnumber');
+    nsnumber.style.cssText = (rouletteGame.RED_NUMBERS.includes(winningNumber)) ? 'color:red' : 'color:black';
+    nsnumber.innerText = winningNumber;
+    nSpan.append(nsnumber);
+    
+    let nsTxt = document.createElement('span');
+    nsTxt.innerText = ' Win';
+    nSpan.append(nsTxt);
+    
+    let nsWin = document.createElement('div');
+    nsWin.setAttribute('class', 'nsWin');
+    
+    let nsWinBlock = document.createElement('div');
+    nsWinBlock.setAttribute('class', 'nsWinBlock');
+    nsWinBlock.innerText = 'Bet: ' + betTotal;
+    nSpan.append(nsWinBlock);
+    nsWin.append(nsWinBlock);
+    
+    nsWinBlock = document.createElement('div');
+    nsWinBlock.setAttribute('class', 'nsWinBlock');
+    nsWinBlock.innerText = 'Win: ' + winValue;
+    nSpan.append(nsWinBlock);
+    nsWin.append(nsWinBlock);
+    
+    nsWinBlock = document.createElement('div');
+    nsWinBlock.setAttribute('class', 'nsWinBlock');
+    nsWinBlock.innerText = 'Payout: ' + (winValue + betTotal);
+    nsWin.append(nsWinBlock);
+    
+    nSpan.append(nsWin);
+    notification.append(nSpan);
+    container.prepend(notification);
+    
+    // Auto-hide notification after a delay
+    if (state.notificationTimer) {
+        clearTimeout(state.notificationTimer);
     }
     
-    // Output the result
-    rouletteUI.output(rouletteUI.getText('numberLanded', number, colorName), false, 'success');
+    state.notificationTimer = setTimeout(function() {
+        notification.style.cssText = 'opacity:0';
+        
+        setTimeout(function() {
+            notification.remove();
+            state.notificationTimer = null;
+        }, 1000);
+    }, 3000);
+};
+
+/**
+ * Spin the wheel with animation
+ * @param {number} winningNumber - The predetermined winning number
+ */
+rouletteUI.spinWheel = function(winningNumber) {
+    const state = rouletteGame.state;
+    const wheel = state.wheelElement;
+    const ballTrack = state.ballTrackElement;
     
-    // Create result container
-    const resultContainer = document.createElement('div');
-    resultContainer.className = 'roulette-result-container';
+    if (!wheel || !ballTrack) return;
     
-    // Create result header
-    const resultHeader = document.createElement('div');
-    resultHeader.className = 'roulette-result-header';
-    resultHeader.textContent = 'FINAL RESULT';
-    resultContainer.appendChild(resultHeader);
+    // Find the degree for the winning number
+    let degree = 0;
+    for(let i = 0; i < rouletteGame.WHEEL_NUMBERS.length; i++) {
+        if(rouletteGame.WHEEL_NUMBERS[i] == winningNumber) {
+            degree = (i * 9.73) + 362;
+        }
+    }
     
-    // Create winning number display
-    const winningNumber = document.createElement('div');
-    winningNumber.className = `winning-number ${color}`;
-    winningNumber.textContent = number;
-    resultContainer.appendChild(winningNumber);
+    // Start fast wheel rotation
+    wheel.style.cssText = 'animation: wheelRotate 5s linear infinite;';
+    ballTrack.style.cssText = 'animation: ballRotate 1s linear infinite;';
     
-    // Create color name display
-    const colorNameDisplay = document.createElement('div');
-    colorNameDisplay.className = 'color-name';
-    colorNameDisplay.textContent = colorName;
-    colorNameDisplay.style.color = color === 'red' ? '#d32f2f' : color === 'black' ? 'white' : '#2e7d32';
-    resultContainer.appendChild(colorNameDisplay);
+    // Slow down the ball after 2 seconds
+    setTimeout(function() {
+        ballTrack.style.cssText = 'animation: ballRotate 2s linear infinite;';
+        
+        // Create the stopping animation to land on the winning number
+        let style = document.createElement('style');
+        style.type = 'text/css';
+        style.innerText = '@keyframes ballStop {from {transform: rotate(0deg);}to{transform: rotate(-'+degree+'deg);}}';
+        document.head.appendChild(style);
+        
+        // Keep reference to remove later
+        window.lastStyle = style;
+    }, 2000);
     
-    // Add to output
-    rouletteUI.elements.output.appendChild(resultContainer);
+    // Start stopping animation
+    setTimeout(function() {
+        ballTrack.style.cssText = 'animation: ballStop 3s linear;';
+    }, 6000);
     
-    // Update the game state display after a delay
-    setTimeout(() => {
-        rouletteUI.displayGameState();
-    }, 2500);
+    // Final position
+    setTimeout(function() {
+        ballTrack.style.cssText = 'transform: rotate(-'+degree+'deg);';
+    }, 9000);
+    
+    // Cleanup
+    setTimeout(function() {
+        wheel.style.cssText = '';
+        if (window.lastStyle) {
+            window.lastStyle.remove();
+            window.lastStyle = null;
+        }
+    }, 10000);
 };
 
 /**
@@ -1951,20 +1380,93 @@ rouletteUI.displaySpinResult = function(number) {
  * @param  {...any} args - Arguments for translation function
  * @returns {string} Translated text
  */
-rouletteUI.getText = function(key, ...args) {
-    const language = rouletteGame.state.language || 'en';
-    const langData = rouletteUI.translations[language] || rouletteUI.translations.en;
+rouletteUI.getText = function(key, defaultText = '', ...args) {
+    if (!window.translations) {
+        // Fallback translations object
+        window.translations = {
+            en: {
+                'welcome': "Welcome to Roulette!",
+                'spinInProgress': "Wheel is already spinning.",
+                'noBets': "You need to place at least one bet before spinning.",
+                'spinAlreadyInProgress': "Wheel is already spinning.",
+                'outOfMoney': "You're out of money! Game over.",
+                'placeMoreBets': "Place your bets for the next spin.",
+                'betWon': (type, numbers, amount) => `${type} bet on ${numbers} won! You receive $${amount}.`,
+                'totalWinnings': (amount) => `Total winnings: $${amount}.`,
+                'noBetsWon': "Sorry, none of your bets won.",
+                'cantClearBetsDuringSpin': "Can't clear bets while wheel is spinning.",
+                'noBetsToClear': "No bets to clear.",
+                'betsCleared': (amount) => `All bets cleared. $${amount} returned to your balance.`,
+                'cantResetDuringSpin': "Can't reset the game while wheel is spinning.",
+                'gameReset': "Game has been reset. Your balance is now $1000.",
+                'languageChanged': "Language changed to English.",
+                'languageOptions': "Available languages: en (English), es (Spanish)",
+                'colorChanged': (theme) => `Color theme changed to ${theme}.`,
+                'colorOptions': "Available colors: green, blue, amber, white, red, purple, cyan, orange, pink",
+                'speedChanged': (speed) => `Animation speed changed to ${speed}.`,
+                'speedOptions': "Available speeds: fast, normal, slow",
+                'unknownCommand': "Unknown command. Type 'help' for commands.",
+                'leaderboardTitle': "ROULETTE LEADERBOARD",
+                'noHighScores': "No high scores yet",
+                'highScore': "NEW HIGH SCORE!",
+                'positionEarned': (position) => `You earned position #${position}!`,
+                'enterUsername': "Enter your name:",
+                'submit': "SUBMIT"
+            },
+            es: {
+                'welcome': "¡Bienvenido a la Ruleta!",
+                'spinInProgress': "La rueda ya está girando.",
+                'noBets': "Necesitas hacer al menos una apuesta antes de girar.",
+                'spinAlreadyInProgress': "La rueda ya está girando.",
+                'outOfMoney': "¡Te has quedado sin dinero! Fin del juego.",
+                'placeMoreBets': "Haz tus apuestas para el próximo giro.",
+                'betWon': (type, numbers, amount) => `¡Apuesta ${type} en ${numbers} ganó! Recibes $${amount}.`,
+                'totalWinnings': (amount) => `Ganancias totales: $${amount}.`,
+                'noBetsWon': "Lo siento, ninguna de tus apuestas ganó.",
+                'cantClearBetsDuringSpin': "No puedes borrar apuestas mientras la rueda está girando.",
+                'noBetsToClear': "No hay apuestas para borrar.",
+                'betsCleared': (amount) => `Todas las apuestas borradas. $${amount} devueltos a tu saldo.`,
+                'cantResetDuringSpin': "No puedes reiniciar el juego mientras la rueda está girando.",
+                'gameReset': "El juego ha sido reiniciado. Tu saldo ahora es de $1000.",
+                'languageChanged': "Idioma cambiado a Español.",
+                'languageOptions': "Idiomas disponibles: en (Inglés), es (Español)",
+                'colorChanged': (theme) => `Tema de color cambiado a ${theme}.`,
+                'colorOptions': "Colores disponibles: green (verde), blue (azul), amber (ámbar), white (blanco), red (rojo)",
+                'speedChanged': (speed) => `Velocidad de animación cambiada a ${speed}.`,
+                'speedOptions': "Velocidades disponibles: fast (rápida), normal, slow (lenta)",
+                'unknownCommand': "Comando desconocido. Escribe 'help' para ver los comandos.",
+                'leaderboardTitle': "TABLA DE CLASIFICACIÓN DE RULETA",
+                'noHighScores': "Aún no hay puntuaciones altas",
+                'highScore': "¡NUEVA PUNTUACIÓN ALTA!",
+                'positionEarned': (position) => `¡Has conseguido la posición #${position}!`,
+                'enterUsername': "Introduce tu nombre:",
+                'submit': "ENVIAR"
+            }
+        };
+    }
+    
+    // Use the provided default text if no translation key exists
+    if (!key && defaultText) {
+        return defaultText;
+    }
+    
+    const language = rouletteGame.state && rouletteGame.state.language ? rouletteGame.state.language : 'en';
+    const langData = window.translations[language] || window.translations.en;
     
     if (key.includes('.')) {
         const parts = key.split('.');
         let value = langData;
         for (const part of parts) {
-            if (!value) return key;
+            if (!value) return defaultText || key;
             value = value[part];
         }
-        return typeof value === 'function' ? value(...args) : (value || key);
+        return typeof value === 'function' ? value(...args) : (value || defaultText || key);
     }
     
     const text = langData[key];
+    if (!text && defaultText) {
+        return defaultText;
+    }
+    
     return typeof text === 'function' ? text(...args) : (text || key);
 };

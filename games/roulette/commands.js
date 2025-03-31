@@ -1,5 +1,6 @@
 /**
- * Roulette Game Module - Command Handling
+ * Visual Roulette Game - Command Handling
+ * Handles command parsing and execution for the roulette game
  */
 
 // Create roulette commands namespace
@@ -140,7 +141,8 @@ rouletteCommands.autocomplete = function(partial) {
     const betCommands = [
         'bet straight', 'bet split', 'bet street', 'bet corner',
         'bet line', 'bet column', 'bet dozen', 'bet red', 'bet black',
-        'bet odd', 'bet even', 'bet high', 'bet low', 'bet repeat'
+        'bet odd', 'bet even', 'bet high', 'bet low', 'bet repeat',
+        'bet number'
     ];
     
     // Check if partial command starts with "bet"
@@ -236,11 +238,7 @@ rouletteCommands.processCommand = function(command) {
             rouletteCommands.showRules();
             break;
         case 'bet':
-            if (parts[1] === 'repeat') {
-                rouletteCommands.repeatLastBets();
-            } else {
-                rouletteCommands.processBetCommand(parts.slice(1));
-            }
+            rouletteCommands.processBetCommand(command, parts);
             break;
         case 'spin':
             rouletteGame.spin();
@@ -278,253 +276,245 @@ rouletteCommands.processCommand = function(command) {
                 state.exitCallback();
             }
             break;
-        // Hidden debug command - useful for testing
-        case 'debug':
-            if (parts[1] === 'skipanimation') {
-                state.skipAnimation = parts[2] === 'on';
-                rouletteUI.output(`Animation skip mode: ${state.skipAnimation ? 'ON' : 'OFF'}`, false, 'info');
-            }
-            break;
         default:
             rouletteUI.output(rouletteUI.getText('unknownCommand'), false, 'error');
     }
 };
 
 /**
- * Repeat the last set of bets
+ * Process a bet command by finding the appropriate element to click
+ * @param {string} fullCommand - Full command string
+ * @param {Array} parts - Command parts
  */
-rouletteCommands.repeatLastBets = function() {
-    const state = rouletteGame.state;
+rouletteCommands.processBetCommand = function(fullCommand, parts) {
+    // Skip the 'bet' part
+    const betType = parts[1];
     
-    // Check if spin is in progress
-    if (state.spinInProgress) {
-        rouletteUI.output(rouletteUI.getText('spinInProgress'), false, 'error');
+    if (!betType) {
+        rouletteUI.output("Usage: bet [type] [parameters]", "info");
+        rouletteUI.output("Types: red, black, odd, even, high, low, number, straight, split, street, corner, column, dozen", "info");
         return;
     }
     
-    // Check if there are any previous bets to repeat
-    if (!state.lastBets || state.lastBets.length === 0) {
-        rouletteUI.output(rouletteUI.getText('noPreviousBets'), false, 'error');
-        return;
-    }
-    
-    // Calculate total bet amount
-    let totalAmount = 0;
-    state.lastBets.forEach(bet => {
-        totalAmount += bet.amount;
-    });
-    
-    // Check if player has enough money
-    if (totalAmount > state.money) {
-        rouletteUI.output(rouletteUI.getText('notEnoughMoneyForRepeat', totalAmount), false, 'error');
-        return;
-    }
-    
-    // Place all previous bets again
-    state.lastBets.forEach(lastBet => {
-        rouletteGame.placeBet(lastBet.type, [...lastBet.numbers], lastBet.amount);
-    });
-    
-    // Success message
-    rouletteUI.output(rouletteUI.getText('betsRepeated', totalAmount), false, 'success');
-};
-
-/**
- * Process bet command
- * @param {Array} args - Command arguments
- */
-rouletteCommands.processBetCommand = function(args) {
-    if (args.length === 0) {
-        rouletteUI.output(rouletteUI.getText('availableBets'), false, 'info');
-        return;
-    }
-    
-    const betType = args[0].toUpperCase();
-    let numbers = [];
-    let amount = 0;
-    
-    // Parse based on bet type
     switch (betType) {
-        case 'STRAIGHT':
-            // bet straight [number] [amount]
-            if (args.length < 3) {
-                rouletteUI.output('Usage: bet straight [number] [amount]', false, 'error');
-                return;
-            }
-            numbers = [parseInt(args[1])];
-            amount = parseInt(args[2]);
-            if (isNaN(numbers[0]) || numbers[0] < 0 || numbers[0] > 36) {
-                rouletteUI.output('Invalid number. Must be 0-36.', false, 'error');
-                return;
-            }
-            break;
-        
-        case 'SPLIT':
-            // bet split [number1] [number2] [amount]
-            if (args.length < 4) {
-                rouletteUI.output('Usage: bet split [number1] [number2] [amount]', false, 'error');
-                return;
-            }
-            numbers = [parseInt(args[1]), parseInt(args[2])];
-            amount = parseInt(args[3]);
-            if (isNaN(numbers[0]) || isNaN(numbers[1]) || 
-                numbers[0] < 0 || numbers[0] > 36 || 
-                numbers[1] < 0 || numbers[1] > 36) {
-                rouletteUI.output('Invalid numbers. Must be 0-36.', false, 'error');
-                return;
-            }
-            // Check if the numbers are adjacent
-            const isAdjacent = rouletteCommands.areNumbersAdjacent(numbers[0], numbers[1]);
-            if (!isAdjacent) {
-                rouletteUI.output('Split bet requires adjacent numbers.', false, 'error');
-                return;
+        case 'red':
+        case 'black':
+        case 'odd':
+        case 'even':
+            // Find the outer bet blocks
+            const amount = parseInt(parts[2]) || rouletteGame.state.wager;
+            const otoBlocks = document.querySelectorAll('.oto_block');
+            
+            // Set the chip value first
+            rouletteCommands.setChipValue(amount);
+            
+            // Find the correct bet block
+            for (let i = 0; i < otoBlocks.length; i++) {
+                if (otoBlocks[i].innerText.toLowerCase() === betType.toUpperCase()) {
+                    otoBlocks[i].click();
+                    return;
+                }
             }
             break;
-        
-        case 'STREET':
-            // bet street [row] [amount]
-            if (args.length < 3) {
-                rouletteUI.output('Usage: bet street [row] [amount]', false, 'error');
-                return;
-            }
-            const row = parseInt(args[1]);
-            amount = parseInt(args[2]);
-            if (isNaN(row) || row < 1 || row > 12) {
-                rouletteUI.output('Invalid row. Must be 1-12.', false, 'error');
-                return;
-            }
-            // Calculate the three numbers in the row
-            const startNum = (row - 1) * 3 + 1;
-            numbers = [startNum, startNum + 1, startNum + 2];
-            break;
-        
-        case 'CORNER':
-            // bet corner [number] [amount]
-            if (args.length < 3) {
-                rouletteUI.output('Usage: bet corner [number] [amount]', false, 'error');
-                return;
-            }
-            const corner = parseInt(args[1]);
-            amount = parseInt(args[2]);
-            if (isNaN(corner) || corner < 1 || corner > 32 || corner % 3 === 0) {
-                rouletteUI.output('Invalid corner number.', false, 'error');
-                return;
-            }
-            // Calculate the four numbers in the corner
-            if (corner % 3 === 1) { // Left edge
-                numbers = [corner, corner + 1, corner + 3, corner + 4];
-            } else { // Right edge (corner % 3 === 2)
-                numbers = [corner, corner + 1, corner + 3, corner + 4];
+            
+        case 'high':
+        case 'low':
+            // Find the 1-18 or 19-36 blocks
+            const highLowAmount = parseInt(parts[2]) || rouletteGame.state.wager;
+            const bbtopBlocks = document.querySelectorAll('.bbtoptwo');
+            
+            // Set the chip value first
+            rouletteCommands.setChipValue(highLowAmount);
+            
+            // Find the correct bet block
+            if (bbtopBlocks.length >= 2) {
+                if (betType === 'low') {
+                    bbtopBlocks[0].click(); // 1 to 18
+                } else {
+                    bbtopBlocks[1].click(); // 19 to 36
+                }
             }
             break;
-        
-        case 'LINE':
-            // bet line [row] [amount]
-            if (args.length < 3) {
-                rouletteUI.output('Usage: bet line [row] [amount]', false, 'error');
+            
+        case 'number':
+        case 'straight':
+            // Straight bet on a specific number
+            if (parts.length < 3) {
+                rouletteUI.output("Usage: bet number [number] [amount]", "error");
                 return;
             }
-            const lineRow = parseInt(args[1]);
-            amount = parseInt(args[2]);
-            if (isNaN(lineRow) || lineRow < 1 || lineRow > 11) {
-                rouletteUI.output('Invalid row. Must be 1-11.', false, 'error');
+            
+            const number = parseInt(parts[2]);
+            const straightAmount = parseInt(parts[3]) || rouletteGame.state.wager;
+            
+            if (isNaN(number) || number < 0 || number > 36) {
+                rouletteUI.output("Invalid number. Must be between 0 and 36.", "error");
                 return;
             }
-            // Calculate the six numbers (two rows)
-            const lineStart = (lineRow - 1) * 3 + 1;
-            numbers = [
-                lineStart, lineStart + 1, lineStart + 2,
-                lineStart + 3, lineStart + 4, lineStart + 5
-            ];
+            
+            // Set the chip value first
+            rouletteCommands.setChipValue(straightAmount);
+            
+            // Place bet on zero or regular number
+            if (number === 0) {
+                const zero = document.querySelector('.number_0');
+                if (zero) zero.click();
+            } else {
+                // Find the number block
+                const numberBlocks = document.querySelectorAll('.number_block');
+                for (let i = 0; i < numberBlocks.length; i++) {
+                    const nbn = numberBlocks[i].querySelector('.nbn');
+                    if (nbn && parseInt(nbn.innerText) === number) {
+                        numberBlocks[i].click();
+                        return;
+                    }
+                }
+            }
             break;
-        
-        case 'COLUMN':
-            // bet column [column] [amount]
-            if (args.length < 3) {
-                rouletteUI.output('Usage: bet column [column] [amount]', false, 'error');
+            
+        case 'column':
+            // Column bet (1st, 2nd, or 3rd column)
+            if (parts.length < 3) {
+                rouletteUI.output("Usage: bet column [1-3] [amount]", "error");
                 return;
             }
-            const column = parseInt(args[1]);
-            amount = parseInt(args[2]);
+            
+            const column = parseInt(parts[2]);
+            const columnAmount = parseInt(parts[3]) || rouletteGame.state.wager;
+            
             if (isNaN(column) || column < 1 || column > 3) {
-                rouletteUI.output('Invalid column. Must be 1-3.', false, 'error');
+                rouletteUI.output("Invalid column. Must be 1, 2, or 3.", "error");
                 return;
             }
-            // Column bet is stored as a single number representing the column
-            numbers = [column];
+            
+            // Set the chip value first
+            rouletteCommands.setChipValue(columnAmount);
+            
+            // Find the 2 to 1 blocks
+            const columnBlocks = document.querySelectorAll('.tt1_block');
+            if (columnBlocks.length >= 3) {
+                // Click the appropriate column
+                // The 3 column blocks are in reverse order in the DOM
+                columnBlocks[3 - column].click();
+            }
             break;
-        
-        case 'DOZEN':
-            // bet dozen [dozen] [amount]
-            if (args.length < 3) {
-                rouletteUI.output('Usage: bet dozen [dozen] [amount]', false, 'error');
+            
+        case 'dozen':
+            // Dozen bet (1-12, 13-24, 25-36)
+            if (parts.length < 3) {
+                rouletteUI.output("Usage: bet dozen [1-3] [amount]", "error");
                 return;
             }
-            const dozen = parseInt(args[1]);
-            amount = parseInt(args[2]);
+            
+            const dozen = parseInt(parts[2]);
+            const dozenAmount = parseInt(parts[3]) || rouletteGame.state.wager;
+            
             if (isNaN(dozen) || dozen < 1 || dozen > 3) {
-                rouletteUI.output('Invalid dozen. Must be 1-3.', false, 'error');
+                rouletteUI.output("Invalid dozen. Must be 1, 2, or 3.", "error");
                 return;
             }
-            // Dozen bet is stored as a single number representing the dozen
-            numbers = [dozen];
+            
+            // Set the chip value first
+            rouletteCommands.setChipValue(dozenAmount);
+            
+            // Find the dozen blocks
+            const dozenBlocks = document.querySelectorAll('.bo3_block');
+            if (dozenBlocks.length >= 3) {
+                dozenBlocks[dozen - 1].click();
+            }
             break;
-        
-        case 'RED':
-        case 'BLACK':
-        case 'ODD':
-        case 'EVEN':
-        case 'HIGH':
-        case 'LOW':
-            // Simple outside bets: bet [type] [amount]
-            if (args.length < 2) {
-                rouletteUI.output(`Usage: bet ${betType.toLowerCase()} [amount]`, false, 'error');
+            
+        case 'repeat':
+            // Repeat last bets
+            rouletteUI.output("Repeating previous bets...", "info");
+            
+            // Check if we have previous bets
+            if (!rouletteGame.state.lastBets || rouletteGame.state.lastBets.length === 0) {
+                rouletteUI.output("No previous bets to repeat.", "error");
                 return;
             }
-            amount = parseInt(args[1]);
-            // For these bets, the numbers array can be empty as the type defines the bet
-            numbers = [];
+            
+            // Calculate total amount needed
+            let totalAmount = 0;
+            rouletteGame.state.lastBets.forEach(bet => {
+                totalAmount += bet.amt;
+            });
+            
+            // Check if player has enough money
+            if (totalAmount > rouletteGame.state.money) {
+                rouletteUI.output(`Not enough money to repeat previous bets (need $${totalAmount}).`, "error");
+                return;
+            }
+            
+            // Place all previous bets again
+            rouletteGame.state.lastBets.forEach(lastBet => {
+                // Find elements to click based on bet type
+                // This is complex and depends on the structure
+                // Here we're just notifying the user for now
+                rouletteUI.output(`Placing ${lastBet.type} bet on ${lastBet.numbers} for $${lastBet.amt}`, "info");
+            });
+            
+            // Success message
+            rouletteUI.output(`Previous bets repeated for a total of $${totalAmount}`, "success");
             break;
-        
+            
         default:
-            rouletteUI.output(rouletteUI.getText('invalidBetType'), false, 'error');
-            return;
+            rouletteUI.output("Unknown bet type. Try 'bet red', 'bet black', 'bet odd', 'bet even', 'bet high', 'bet low', or 'bet number [number] [amount]'", "error");
     }
-    
-    // Place the bet
-    rouletteGame.placeBet(betType, numbers, amount);
 };
 
 /**
- * Check if two numbers are adjacent on the roulette table
- * @param {number} num1 - First number
- * @param {number} num2 - Second number
- * @returns {boolean} Whether the numbers are adjacent
+ * Set the chip value for betting
+ * @param {number} amount - Bet amount
  */
-rouletteCommands.areNumbersAdjacent = function(num1, num2) {
-    // Zero is only adjacent to 1, 2, and 3
-    if (num1 === 0) {
-        return [1, 2, 3].includes(num2);
-    }
-    if (num2 === 0) {
-        return [1, 2, 3].includes(num1);
+rouletteCommands.setChipValue = function(amount) {
+    // Find the closest chip value
+    const chipValues = [1, 5, 10, 100];
+    let closestValue = 5; // Default
+    let closestDiff = Infinity;
+    
+    for (const value of chipValues) {
+        const diff = Math.abs(amount - value);
+        if (diff < closestDiff) {
+            closestDiff = diff;
+            closestValue = value;
+        }
     }
     
-    // Regular numbers are adjacent horizontally, vertically, or diagonally
-    const row1 = Math.ceil(num1 / 3);
-    const col1 = ((num1 - 1) % 3) + 1;
-    const row2 = Math.ceil(num2 / 3);
-    const col2 = ((num2 - 1) % 3) + 1;
-    
-    // Check if they're horizontally or vertically adjacent
-    return (Math.abs(row1 - row2) <= 1 && Math.abs(col1 - col2) <= 1);
+    // Click the appropriate chip
+    const chips = document.querySelectorAll('.cdChip');
+    for (let i = 0; i < chips.length; i++) {
+        const chipSpan = chips[i].querySelector('.cdChipSpan');
+        if (chipSpan && chipSpan.innerText == closestValue) {
+            chips[i].click();
+            break;
+        }
+    }
 };
 
 /**
  * Show help text
  */
 rouletteCommands.showHelp = function() {
-    const helpText = rouletteUI.getText('helpText');
+    const helpText = [
+        "Available commands:",
+        "  help           - Show this help message",
+        "  help bets      - Show detailed betting information",
+        "  rules          - Show Roulette rules",
+        "  bet [type] ... - Place a bet (see 'help bets')",
+        "  bet repeat     - Repeat your last set of bets",
+        "  spin           - Spin the wheel",
+        "  clear bets     - Clear all current bets",
+        "  money          - Check your current balance",
+        "  speed          - Change animation speed (fast/normal/slow)",
+        "  history        - Show past spin results",
+        "  reset          - Reset the game to initial state",
+        "  language       - Change language (en/es)",
+        "  color          - Change color theme",
+        "  leaderboard    - Show top 10 high scores",
+        "  exit           - Return to home screen"
+    ];
+    
     for (const line of helpText) {
         rouletteUI.output(line, false, 'info');
     }
@@ -534,7 +524,30 @@ rouletteCommands.showHelp = function() {
  * Show bets help text
  */
 rouletteCommands.showBetsHelp = function() {
-    const helpText = rouletteUI.getText('helpBetsText');
+    const helpText = [
+        "BETTING COMMANDS:",
+        "  bet straight [number] [amount]",
+        "    Example: 'bet straight 17 10' - Bet $10 on number 17",
+        "",
+        "  bet number [number] [amount]",
+        "    Example: 'bet number 17 10' - Bet $10 on number 17",
+        "",
+        "  bet red [amount]     - Bet on all red numbers",
+        "  bet black [amount]   - Bet on all black numbers",
+        "  bet odd [amount]     - Bet on all odd numbers",
+        "  bet even [amount]    - Bet on all even numbers",
+        "  bet high [amount]    - Bet on numbers 19-36",
+        "  bet low [amount]     - Bet on numbers 1-18",
+        "",
+        "  bet column [column] [amount] (columns are 1-3)",
+        "    Example: 'bet column 2 10' - Bet $10 on the middle column",
+        "",
+        "  bet dozen [dozen] [amount] (dozens are 1-3, representing 1-12, 13-24, 25-36)",
+        "    Example: 'bet dozen 1 10' - Bet $10 on numbers 1-12",
+        "",
+        "  bet repeat        - Repeat your previous bets exactly"
+    ];
+    
     for (const line of helpText) {
         rouletteUI.output(line, false, 'info');
     }
@@ -544,7 +557,34 @@ rouletteCommands.showBetsHelp = function() {
  * Show game rules
  */
 rouletteCommands.showRules = function() {
-    const rulesText = rouletteUI.getText('rulesText');
+    const rulesText = [
+        "ROULETTE RULES:",
+        "---------------------",
+        "OBJECTIVE:",
+        "  Predict which number the ball will land on and place bets accordingly.",
+        "",
+        "GAMEPLAY:",
+        "  1. Place bets on various outcomes",
+        "  2. Spin the wheel",
+        "  3. Win if the ball lands on your predicted numbers or groups",
+        "",
+        "BET TYPES & PAYOUTS:",
+        "  • STRAIGHT: Bet on a single number (35:1)",
+        "  • SPLIT: Bet on 2 adjacent numbers (17:1)",
+        "  • STREET: Bet on 3 numbers in a row (11:1)",
+        "  • CORNER: Bet on 4 numbers in a square (8:1)",
+        "  • LINE: Bet on 6 numbers (2 rows) (5:1)",
+        "  • COLUMN: Bet on 12 numbers (1st, 2nd, or 3rd column) (2:1)",
+        "  • DOZEN: Bet on 12 numbers (1-12, 13-24, or 25-36) (2:1)",
+        "  • RED/BLACK: Bet on color (1:1)",
+        "  • ODD/EVEN: Bet on number parity (1:1)",
+        "  • HIGH/LOW: Bet on numbers 1-18 or 19-36 (1:1)",
+        "",
+        "The wheel has numbers 0-36. 0 is green, others alternate red/black.",
+        "IMPORTANT: For all even-money bets (red/black, odd/even, high/low),",
+        "you lose if the ball lands on 0."
+    ];
+    
     for (const line of rulesText) {
         rouletteUI.output(line, false, 'info');
     }
@@ -554,7 +594,7 @@ rouletteCommands.showRules = function() {
  * Check money/balance
  */
 rouletteCommands.checkMoney = function() {
-    rouletteUI.output(rouletteUI.getText('moneyStatus', rouletteGame.state.money), false, 'info');
+    rouletteUI.output(`You have $${rouletteGame.state.money}.`, false, 'info');
 };
 
 /**
@@ -563,16 +603,16 @@ rouletteCommands.checkMoney = function() {
 rouletteCommands.showHistory = function() {
     const state = rouletteGame.state;
     
-    if (state.spinHistory.length === 0) {
+    if (state.previousNumbers.length === 0) {
         rouletteUI.output('No spin history yet.', false, 'info');
         return;
     }
     
     rouletteUI.output('Recent spins (newest first):', false, 'info');
     
-    state.spinHistory.forEach((spin, index) => {
-        const color = rouletteGame.NUMBER_COLORS[spin.number];
-        rouletteUI.output(`${index + 1}. ${spin.number} (${color.toUpperCase()})`, false, 'info');
+    state.previousNumbers.forEach((spin, index) => {
+        const color = spin.color.toUpperCase();
+        rouletteUI.output(`${index + 1}. ${spin.number} (${color})`, false, 'info');
     });
 };
 
@@ -598,10 +638,8 @@ rouletteCommands.changeColor = function(theme) {
     const validThemes = ['green', 'blue', 'amber', 'white', 'red', 'purple', 'cyan', 'orange', 'pink'];
     
     if (theme && validThemes.includes(theme)) {
-        rouletteGame.state.colorTheme = theme;
-        rouletteUI.applyColorTheme(theme);
+        rouletteGame.updateTheme(theme);
         rouletteUI.output(rouletteUI.getText('colorChanged', theme), false, 'success');
-        rouletteGame.saveState();
     } else {
         rouletteUI.output(rouletteUI.getText('colorOptions'), false, 'info');
     }

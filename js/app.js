@@ -198,10 +198,12 @@ async function loadGame(gameId) {
     // Change current screen
     appState.currentScreen = 'game';
     
-    // Show game container
+    // Show game container and properly hide home screen
     document.getElementById('home-screen').classList.remove('active-screen');
+    document.getElementById('home-screen').style.display = 'none'; // Add this line
     const gameContainer = document.getElementById('game-container');
     gameContainer.classList.add('active');
+    gameContainer.style.display = 'block'; // Add this line
     
     try {
         // Check if game is already loaded
@@ -227,7 +229,7 @@ async function loadGame(gameId) {
             }
         } else {
             // Game already loaded, just show it
-            document.getElementById(`${gameId}-game`).style.display = 'flex';
+            document.getElementById(`${gameId}-game`).style.display = 'block';
             if (typeof appState.loadedGames[gameId].resume === 'function') {
                 appState.loadedGames[gameId].resume();
             }
@@ -273,11 +275,13 @@ function loadCSS(href) {
 function navigateToHome() {
     // Hide all games
     document.getElementById('game-container').classList.remove('active');
+    document.getElementById('game-container').style.display = 'none'; // Add this line
     Array.from(document.getElementById('game-container').children).forEach(child => {
         child.style.display = 'none';
     });
     
     // Show home screen
+    document.getElementById('home-screen').style.display = 'block'; // Add this line
     document.getElementById('home-screen').classList.add('active-screen');
     
     // Update state
