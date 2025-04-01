@@ -185,6 +185,121 @@ rouletteUI.createGameUI = function(container) {
 };
 
 /**
+ * Create responsive layout CSS
+ * Ensures the roulette game fits properly within the viewport
+ */
+rouletteUI.createResponsiveStyles = function() {
+  // Create a style element if it doesn't exist
+  let styleElement = document.getElementById('roulette-responsive-styles');
+  if (!styleElement) {
+    styleElement = document.createElement('style');
+    styleElement.id = 'roulette-responsive-styles';
+    document.head.appendChild(styleElement);
+  }
+
+  // Calculate viewport dimensions
+  const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+  const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+  
+  // Determine scaling factor based on viewport size
+  const maxBoardWidth = 500; // Original betting board width
+  const scaleFactor = viewportWidth < 768 ? 
+                     (viewportWidth < 576 ? 
+                      Math.min(0.8, (viewportWidth - 32) / maxBoardWidth) : 
+                      Math.min(0.9, (viewportWidth - 48) / maxBoardWidth)) : 
+                     1;
+  
+  // Terminal height + padding
+  const terminalHeight = 70;
+  const availableHeight = viewportHeight - terminalHeight;
+  
+  // Set the CSS
+  styleElement.textContent = `
+    /* Responsive layout for roulette game */
+    .game-content-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 100%;
+      padding: 10px;
+      margin-bottom: ${terminalHeight + 20}px;
+      overflow-x: hidden;
+    }
+    
+    /* Make wheel responsive */
+    .wheel {
+      transform: scale(${scaleFactor * 0.8});
+      transform-origin: center;
+      margin: 0 auto;
+      height: ${250 * scaleFactor}px;
+      min-height: ${250 * scaleFactor}px;
+    }
+    
+    /* Betting board responsive sizing */
+    #betting_board {
+      transform: scale(${scaleFactor});
+      transform-origin: top center;
+      width: ${maxBoardWidth}px;
+      max-width: ${maxBoardWidth}px;
+      margin: 0 auto;
+      margin-top: -${40 * (1 - scaleFactor)}px;
+    }
+    
+    /* Controls container layout */
+    .controls-container {
+      width: ${Math.min(maxBoardWidth, viewportWidth - 32)}px;
+      transform: scale(${scaleFactor});
+      transform-origin: top center;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: -${20 * (1 - scaleFactor)}px;
+    }
+    
+    /* Previous numbers block */
+    .pnBlock {
+      width: ${Math.min(maxBoardWidth, viewportWidth - 32)}px;
+      margin: 10px auto 0;
+      transform-origin: top center;
+    }
+    
+    /* Make chip deck and bank container stack on small screens */
+    @media screen and (max-width: 576px) {
+      .chipDeck, .bankContainer {
+        width: 100%;
+        margin: 5px 0;
+      }
+      
+      .controls-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      /* Ensure the terminal input is visible */
+      .terminal-input {
+        padding: 6px 10px;
+        height: 40px;
+      }
+    }
+    
+    /* Ensure no horizontal scrolling */
+    body {
+      overflow-x: hidden;
+    }
+    
+    /* Fix issues with the notification position */
+    #notification {
+      width: 90%;
+      max-width: 500px;
+      height: auto;
+      min-height: 200px;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+  `;
+};
+
+/**
  * Create settings modal
  * @param {HTMLElement} container - The container element
  */
@@ -718,7 +833,7 @@ rouletteUI.output = function(text, isAsciiArt = false, messageType = 'auto') {
 };
 
 /**
- * Display the current game state
+ * Display the game state with improved layout
  */
 rouletteUI.displayGameState = function() {
     // Store reference to container
@@ -728,12 +843,26 @@ rouletteUI.displayGameState = function() {
     // Clear the container
     container.innerHTML = '';
     
+    // Create game layout wrapper
+    const gameWrapper = document.createElement('div');
+    gameWrapper.className = 'game-layout-wrapper';
+    gameWrapper.style.cssText = 'width:100%; display:flex; flex-direction:column; align-items:center;';
+    container.appendChild(gameWrapper);
+    
     // Build wheel and betting board
     rouletteUI.buildWheel();
     rouletteUI.buildBettingBoard();
     
     // Update previous numbers display
     rouletteUI.updatePreviousNumbers(rouletteGame.state.previousNumbers);
+    
+    // Make sure the terminal can scroll to the bottom
+    setTimeout(() => {
+        const outputElement = document.getElementById('roulette-output');
+        if (outputElement) {
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+    }, 100);
 };
 
 /**
@@ -832,15 +961,39 @@ rouletteUI.buildWheel = function() {
     // Store references
     rouletteUI.elements.wheel = wheel;
     rouletteUI.elements.ballTrack = ballTrack;
+    
+    // Apply responsive styles
+    rouletteUI.createResponsiveStyles();
+    
+    // Add window resize handler to adjust layout as needed
+    window.removeEventListener('resize', rouletteUI.handleResize);
+    window.addEventListener('resize', rouletteUI.handleResize);
 };
 
 /**
- * Build the betting board
+ * Handle window resize events
+ */
+rouletteUI.handleResize = function() {
+    // Debounce resize events to prevent excessive recalculation
+    clearTimeout(rouletteUI.resizeTimer);
+    rouletteUI.resizeTimer = setTimeout(() => {
+        rouletteUI.createResponsiveStyles();
+    }, 250);
+};
+
+/**
+ * Build the betting board with improved layout
  */
 rouletteUI.buildBettingBoard = function() {
     const gameContentWrapper = rouletteUI.elements.gameContentWrapper;
     const state = rouletteGame.state;
     
+    // Create a wrapper div for the betting components for better layout control
+    const boardWrapper = document.createElement('div');
+    boardWrapper.className = 'betting-board-wrapper';
+    boardWrapper.style.cssText = 'width:100%; display:flex; flex-direction:column; align-items:center;';
+    
+    // Create betting board
     let bettingBoard = document.createElement('div');
     bettingBoard.setAttribute('id', 'betting_board');
     
@@ -1111,8 +1264,16 @@ rouletteUI.buildBettingBoard = function() {
     }
     bettingBoard.append(otoBoard);
     
-    // Add to game content wrapper
-    gameContentWrapper.appendChild(bettingBoard);
+    // Create previous numbers block
+    let pnBlock = document.createElement('div');
+    pnBlock.setAttribute('class', 'pnBlock');
+    let pnContent = document.createElement('div');
+    pnContent.setAttribute('id', 'pnContent');
+    pnContent.onwheel = function(e) {
+        e.preventDefault();
+        pnContent.scrollLeft += e.deltaY;
+    };
+    pnBlock.append(pnContent);
     
     // Create controls container
     const controlsContainer = document.createElement('div');
@@ -1172,22 +1333,8 @@ rouletteUI.buildBettingBoard = function() {
     betSpan.setAttribute('id', 'betSpan');
     betSpan.innerText = '' + state.currentBet.toLocaleString("en-GB") + '';
     betDisplay.append(betSpan);
-    bankContainer.append(betDisplay);    
+    bankContainer.append(betDisplay);
     controlsContainer.appendChild(bankContainer);
-    
-    // Create previous numbers block
-    let pnBlock = document.createElement('div');
-    pnBlock.setAttribute('class', 'pnBlock');
-    let pnContent = document.createElement('div');
-    pnContent.setAttribute('id', 'pnContent');
-    pnContent.onwheel = function(e) {
-        e.preventDefault();
-        pnContent.scrollLeft += e.deltaY;
-    };
-    pnBlock.append(pnContent);    
-    
-    // Add to controls container
-    controlsContainer.appendChild(pnBlock);
     
     // Add spin button if bets are placed
     if (state.currentBet > 0) {
@@ -1201,11 +1348,19 @@ rouletteUI.buildBettingBoard = function() {
         controlsContainer.appendChild(spinBtn);
     }
     
-    // Add controls container to game content wrapper
-    gameContentWrapper.appendChild(controlsContainer);
+    // Assemble everything in the wrapper
+    boardWrapper.appendChild(bettingBoard);
+    boardWrapper.appendChild(pnBlock);
+    boardWrapper.appendChild(controlsContainer);
+    
+    // Add to game content wrapper
+    gameContentWrapper.appendChild(boardWrapper);
     
     // Store reference
     rouletteUI.elements.bettingBoard = bettingBoard;
+    
+    // Apply responsive styles
+    rouletteUI.createResponsiveStyles();
 };
 
 /**
@@ -1318,7 +1473,7 @@ rouletteUI.showWin = function(winningNumber, winValue, betTotal) {
 };
 
 /**
- * Spin the wheel with animation
+ * Spin the wheel with animation - optimized for performance
  * @param {number} winningNumber - The predetermined winning number
  */
 rouletteUI.spinWheel = function(winningNumber) {
@@ -1336,27 +1491,52 @@ rouletteUI.spinWheel = function(winningNumber) {
         }
     }
     
-    // Start fast wheel rotation
-    wheel.style.cssText = 'animation: wheelRotate 5s linear infinite;';
-    ballTrack.style.cssText = 'animation: ballRotate 1s linear infinite;';
+    // Force hardware acceleration for smoother animations
+    wheel.style.cssText = 'animation: wheelRotate 5s linear infinite; will-change: transform;';
+    ballTrack.style.cssText = 'animation: ballRotate 1s linear infinite; will-change: transform;';
+    
+    // Reduce animation complexity on smaller screens
+    if (window.innerWidth < 576) {
+        const simplifiedAnimation = document.createElement('style');
+        simplifiedAnimation.textContent = `
+          @keyframes wheelRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(359deg); }
+          }
+          @keyframes ballRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-359deg); }
+          }
+          @keyframes ballStop {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-${degree}deg); }
+          }
+        `;
+        document.head.appendChild(simplifiedAnimation);
+        
+        // Store for cleanup
+        window.lastStyle = simplifiedAnimation;
+    }
     
     // Slow down the ball after 2 seconds
     setTimeout(function() {
-        ballTrack.style.cssText = 'animation: ballRotate 2s linear infinite;';
+        ballTrack.style.cssText = 'animation: ballRotate 2s linear infinite; will-change: transform;';
         
         // Create the stopping animation to land on the winning number
-        let style = document.createElement('style');
-        style.type = 'text/css';
-        style.innerText = '@keyframes ballStop {from {transform: rotate(0deg);}to{transform: rotate(-'+degree+'deg);}}';
-        document.head.appendChild(style);
-        
-        // Keep reference to remove later
-        window.lastStyle = style;
+        if (!window.lastStyle) {
+            let style = document.createElement('style');
+            style.type = 'text/css';
+            style.innerText = '@keyframes ballStop {from {transform: rotate(0deg);}to{transform: rotate(-'+degree+'deg);}}';
+            document.head.appendChild(style);
+            
+            // Keep reference to remove later
+            window.lastStyle = style;
+        }
     }, 2000);
     
     // Start stopping animation
     setTimeout(function() {
-        ballTrack.style.cssText = 'animation: ballStop 3s linear;';
+        ballTrack.style.cssText = 'animation: ballStop 3s linear forwards; will-change: transform;';
     }, 6000);
     
     // Final position
