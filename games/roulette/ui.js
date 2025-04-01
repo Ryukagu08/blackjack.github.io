@@ -131,6 +131,50 @@ rouletteUI.createGameUI = function(container) {
             z-index: 100;
             border-top: 1px solid var(--terminal-border);
         }
+        
+        /* Additional spacing for chip deck and controls */
+        .chipDeck, .bankContainer {
+            position: relative;
+            margin-left: 0;
+            margin-top: 10px;
+            width: 310px;
+            display: inline-block;
+            vertical-align: top;
+        }
+        
+        .bankContainer {
+            margin-top: 10px;
+            margin-left: 20px;
+        }
+        
+        .wheel {
+            margin-right: 20px;
+            transform: scale(0.9);
+            transform-origin: center;
+        }
+        
+        .spinBtn {
+            position: relative;
+            margin-top: 10px;
+            margin-left: 10px;
+            display: inline-block;
+        }
+        
+        /* Make sure betting board fits within the container */
+        #betting_board {
+            max-width: 100%;
+            margin-top: 10px;
+        }
+        
+        /* Controls container */
+        .controls-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            align-items: center;
+            margin-top: 10px;
+            width: 100%;
+        }
     `;
     document.head.appendChild(style);
     
@@ -800,54 +844,25 @@ rouletteUI.displayGameState = function() {
     container.innerHTML = '';
     
     // Create game layout wrapper
-    const gameLayout = document.createElement('div');
-    gameLayout.className = 'roulette-game-layout';
-    container.appendChild(gameLayout);
+    const gameWrapper = document.createElement('div');
+    gameWrapper.className = 'game-layout-wrapper';
+    gameWrapper.style.cssText = 'width:100%; display:flex; flex-direction:column; align-items:center;';
+    container.appendChild(gameWrapper);
     
-    // Create left column for wheel and controls
-    const leftColumn = document.createElement('div');
-    leftColumn.className = 'roulette-left-column';
-    gameLayout.appendChild(leftColumn);
+    // Build wheel and betting board
+    rouletteUI.buildWheel();
+    rouletteUI.buildBettingBoard();
     
-    // Create right column for betting board
-    const rightColumn = document.createElement('div');
-    rightColumn.className = 'roulette-right-column';
-    gameLayout.appendChild(rightColumn);
+    // Update previous numbers display
+    rouletteUI.updatePreviousNumbers(rouletteGame.state.previousNumbers);
     
-    // Build wheel and add to left column
-    rouletteUI.buildWheel(leftColumn);
-    
-    // Create controls container in left column
-    const controlsContainer = document.createElement('div');
-    controlsContainer.className = 'controls-container';
-    leftColumn.appendChild(controlsContainer);
-    
-    // Create chip deck
-    rouletteUI.buildChipDeck(controlsContainer);
-    
-    // Create bank container
-    rouletteUI.buildBankContainer(controlsContainer);
-    
-    // Add spin button if bets are placed
-    if (rouletteGame.state.currentBet > 0) {
-        let spinBtn = document.createElement('div');
-        spinBtn.setAttribute('class', 'spinBtn');
-        spinBtn.innerText = 'spin';
-        spinBtn.onclick = function() {
-            this.remove();
-            rouletteGame.spin();
-        };
-        controlsContainer.appendChild(spinBtn);
-    }
-    
-    // Build betting board and add to right column
-    rouletteUI.buildBettingBoard(rightColumn);
-    
-    // Create previous numbers block and add to right column
-    rouletteUI.buildPreviousNumbers(rightColumn);
-    
-    // Apply responsive styles
-    rouletteUI.createResponsiveStyles();
+    // Make sure the terminal can scroll to the bottom
+    setTimeout(() => {
+        const outputElement = document.getElementById('roulette-output');
+        if (outputElement) {
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+    }, 100);
 };
 
 /**
@@ -879,10 +894,9 @@ rouletteUI.updatePreviousNumbers = function(previousNumbers) {
 
 /**
  * Build the roulette wheel
- * @param {HTMLElement} container - Container to append wheel to
  */
-rouletteUI.buildWheel = function(container) {
-    const parentContainer = container || rouletteUI.elements.gameContentWrapper;
+rouletteUI.buildWheel = function() {
+    const gameContentWrapper = rouletteUI.elements.gameContentWrapper;
     
     let wheel = document.createElement('div');
     wheel.setAttribute('class', 'wheel');
@@ -942,114 +956,42 @@ rouletteUI.buildWheel = function(container) {
     wheel.append(turretHandle);
     
     // Add to game content wrapper
-    parentContainer.appendChild(wheel);
+    gameContentWrapper.appendChild(wheel);
     
     // Store references
     rouletteUI.elements.wheel = wheel;
     rouletteUI.elements.ballTrack = ballTrack;
+    
+    // Apply responsive styles
+    rouletteUI.createResponsiveStyles();
+    
+    // Add window resize handler to adjust layout as needed
+    window.removeEventListener('resize', rouletteUI.handleResize);
+    window.addEventListener('resize', rouletteUI.handleResize);
 };
 
 /**
- * Build the chip deck
- * @param {HTMLElement} container - Container to append chip deck to
+ * Handle window resize events
  */
-rouletteUI.buildChipDeck = function(container) {
+rouletteUI.handleResize = function() {
+    // Debounce resize events to prevent excessive recalculation
+    clearTimeout(rouletteUI.resizeTimer);
+    rouletteUI.resizeTimer = setTimeout(() => {
+        rouletteUI.createResponsiveStyles();
+    }, 250);
+};
+
+/**
+ * Build the betting board with improved layout
+ */
+rouletteUI.buildBettingBoard = function() {
+    const gameContentWrapper = rouletteUI.elements.gameContentWrapper;
     const state = rouletteGame.state;
     
-    let chipDeck = document.createElement('div');
-    chipDeck.setAttribute('class', 'chipDeck');
-    let chipValues = [1, 5, 10, 100, 'clear'];
-    
-    for(let i = 0; i < chipValues.length; i++) {
-        let cvi = i;
-        let chipColour = (i == 0) ? 'red' : ((i == 1) ? 'blue cdChipActive' : ((i == 2) ? 'orange' : ((i == 3) ? 'gold' : 'clearBet')));
-        let chip = document.createElement('div');
-        chip.setAttribute('class', 'cdChip ' + chipColour);
-        chip.onclick = function() {
-            if(cvi !== 4) {
-                let cdChipActive = document.getElementsByClassName('cdChipActive');
-                for(let i = 0; i < cdChipActive.length; i++) {
-                    cdChipActive[i].classList.remove('cdChipActive');
-                }
-                let curClass = this.getAttribute('class');
-                if(!curClass.includes('cdChipActive')) {
-                    this.setAttribute('class', curClass + ' cdChipActive');
-                }
-                state.wager = parseInt(chip.childNodes[0].innerText);
-                
-                // Output to terminal when chip value changes
-                rouletteUI.output(`Bet amount changed to $${state.wager}`, "info");
-            } else {
-                // Clear button - refund bets
-                rouletteGame.clearBets();
-            }
-        };
-        let chipSpan = document.createElement('span');
-        chipSpan.setAttribute('class', 'cdChipSpan');
-        chipSpan.innerText = chipValues[i];
-        chip.append(chipSpan);
-        chipDeck.append(chip);
-    }
-    
-    container.appendChild(chipDeck);
-};
-
-/**
- * Build the bank container
- * @param {HTMLElement} container - Container to append bank container to
- */
-rouletteUI.buildBankContainer = function(container) {
-    const state = rouletteGame.state;
-    
-    let bankContainer = document.createElement('div');
-    bankContainer.setAttribute('class', 'bankContainer');
-    
-    let bank = document.createElement('div');
-    bank.setAttribute('class', 'bank');
-    let bankSpan = document.createElement('span');
-    bankSpan.setAttribute('id', 'bankSpan');
-    bankSpan.innerText = '' + state.money.toLocaleString("en-GB") + '';
-    bank.append(bankSpan);
-    bankContainer.append(bank);
-    
-    let betDisplay = document.createElement('div');
-    betDisplay.setAttribute('class', 'bet');
-    let betSpan = document.createElement('span');
-    betSpan.setAttribute('id', 'betSpan');
-    betSpan.innerText = '' + state.currentBet.toLocaleString("en-GB") + '';
-    betDisplay.append(betSpan);
-    bankContainer.append(betDisplay);
-    
-    container.appendChild(bankContainer);
-};
-
-/**
- * Build the previous numbers display
- * @param {HTMLElement} container - Container to append previous numbers to
- */
-rouletteUI.buildPreviousNumbers = function(container) {
-    let pnBlock = document.createElement('div');
-    pnBlock.setAttribute('class', 'pnBlock');
-    let pnContent = document.createElement('div');
-    pnContent.setAttribute('id', 'pnContent');
-    pnContent.onwheel = function(e) {
-        e.preventDefault();
-        pnContent.scrollLeft += e.deltaY;
-    };
-    pnBlock.append(pnContent);
-    
-    container.appendChild(pnBlock);
-    
-    // Update with any previous numbers
-    rouletteUI.updatePreviousNumbers(rouletteGame.state.previousNumbers);
-};
-
-/**
- * Build the betting board
- * @param {HTMLElement} container - Container to append betting board to
- */
-rouletteUI.buildBettingBoard = function(container) {
-    const parentContainer = container || rouletteUI.elements.gameContentWrapper;
+    // Create a wrapper div for the betting components for better layout control
+    const boardWrapper = document.createElement('div');
+    boardWrapper.className = 'betting-board-wrapper';
+    boardWrapper.style.cssText = 'width:100%; display:flex; flex-direction:column; align-items:center;';
     
     // Create betting board
     let bettingBoard = document.createElement('div');
@@ -1322,11 +1264,103 @@ rouletteUI.buildBettingBoard = function(container) {
     }
     bettingBoard.append(otoBoard);
     
-    // Add to parent container
-    parentContainer.appendChild(bettingBoard);
+    // Create previous numbers block
+    let pnBlock = document.createElement('div');
+    pnBlock.setAttribute('class', 'pnBlock');
+    let pnContent = document.createElement('div');
+    pnContent.setAttribute('id', 'pnContent');
+    pnContent.onwheel = function(e) {
+        e.preventDefault();
+        pnContent.scrollLeft += e.deltaY;
+    };
+    pnBlock.append(pnContent);
+    
+    // Create controls container
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'controls-container';
+    
+    // Create chip deck
+    let chipDeck = document.createElement('div');
+    chipDeck.setAttribute('class', 'chipDeck');
+    let chipValues = [1, 5, 10, 100, 'clear'];
+    for(let i = 0; i < chipValues.length; i++) {
+        let cvi = i;
+        let chipColour = (i == 0) ? 'red' : ((i == 1) ? 'blue cdChipActive' : ((i == 2) ? 'orange' : ((i == 3) ? 'gold' : 'clearBet')));
+        let chip = document.createElement('div');
+        chip.setAttribute('class', 'cdChip ' + chipColour);
+        chip.onclick = function() {
+            if(cvi !== 4) {
+                let cdChipActive = document.getElementsByClassName('cdChipActive');
+                for(let i = 0; i < cdChipActive.length; i++) {
+                    cdChipActive[i].classList.remove('cdChipActive');
+                }
+                let curClass = this.getAttribute('class');
+                if(!curClass.includes('cdChipActive')) {
+                    this.setAttribute('class', curClass + ' cdChipActive');
+                }
+                state.wager = parseInt(chip.childNodes[0].innerText);
+                
+                // Output to terminal when chip value changes
+                rouletteUI.output(`Bet amount changed to $${state.wager}`, "info");
+            } else {
+                // Clear button - refund bets
+                rouletteGame.clearBets();
+            }
+        };
+        let chipSpan = document.createElement('span');
+        chipSpan.setAttribute('class', 'cdChipSpan');
+        chipSpan.innerText = chipValues[i];
+        chip.append(chipSpan);
+        chipDeck.append(chip);
+    }
+    controlsContainer.appendChild(chipDeck);
+    
+    // Create bank container
+    let bankContainer = document.createElement('div');
+    bankContainer.setAttribute('class', 'bankContainer');
+    
+    let bank = document.createElement('div');
+    bank.setAttribute('class', 'bank');
+    let bankSpan = document.createElement('span');
+    bankSpan.setAttribute('id', 'bankSpan');
+    bankSpan.innerText = '' + state.money.toLocaleString("en-GB") + '';
+    bank.append(bankSpan);
+    bankContainer.append(bank);
+    
+    let betDisplay = document.createElement('div');
+    betDisplay.setAttribute('class', 'bet');
+    let betSpan = document.createElement('span');
+    betSpan.setAttribute('id', 'betSpan');
+    betSpan.innerText = '' + state.currentBet.toLocaleString("en-GB") + '';
+    betDisplay.append(betSpan);
+    bankContainer.append(betDisplay);
+    controlsContainer.appendChild(bankContainer);
+    
+    // Add spin button if bets are placed
+    if (state.currentBet > 0) {
+        let spinBtn = document.createElement('div');
+        spinBtn.setAttribute('class', 'spinBtn');
+        spinBtn.innerText = 'spin';
+        spinBtn.onclick = function() {
+            this.remove();
+            rouletteGame.spin();
+        };
+        controlsContainer.appendChild(spinBtn);
+    }
+    
+    // Assemble everything in the wrapper
+    boardWrapper.appendChild(bettingBoard);
+    boardWrapper.appendChild(pnBlock);
+    boardWrapper.appendChild(controlsContainer);
+    
+    // Add to game content wrapper
+    gameContentWrapper.appendChild(boardWrapper);
     
     // Store reference
     rouletteUI.elements.bettingBoard = bettingBoard;
+    
+    // Apply responsive styles
+    rouletteUI.createResponsiveStyles();
 };
 
 /**
@@ -1521,20 +1555,8 @@ rouletteUI.spinWheel = function(winningNumber) {
 };
 
 /**
- * Handle window resize events
- */
-rouletteUI.handleResize = function() {
-    // Debounce resize events to prevent excessive recalculation
-    clearTimeout(rouletteUI.resizeTimer);
-    rouletteUI.resizeTimer = setTimeout(() => {
-        rouletteUI.createResponsiveStyles();
-    }, 250);
-};
-
-/**
  * Get translated text based on current language
  * @param {string} key - Translation key
- * @param {string} defaultText - Default text if translation is missing
  * @param  {...any} args - Arguments for translation function
  * @returns {string} Translated text
  */
