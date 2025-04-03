@@ -394,6 +394,51 @@ body {
   font-weight: bold;
   transition: all 0.3s ease;
   z-index: 1;
+  position: relative;
+}
+
+/* New Balance popup animation */
+.balance-popup {
+  position: absolute;
+  font-weight: bold;
+  font-size: 1rem;
+  opacity: 0;
+  z-index: 10;
+  padding: 5px 10px;
+  border-radius: 5px;
+  animation: popup-animation 1.5s ease-out forwards;
+  white-space: nowrap;
+  pointer-events: none;
+  top: 10px;
+  left: 55%;
+  transform: translateX(-50%);
+}
+
+.balance-popup.positive {
+  color: #23d160;
+}
+
+.balance-popup.negative {
+  color: #ff3860;
+}
+
+@keyframes popup-animation {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-10px);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
 }
 
 /* Fixed blackjack table to match the width of the header */
@@ -409,26 +454,6 @@ body {
   flex-direction: column;
   gap: 20px;
   height: calc(95vh - 90px);
-}
-
-/* Balance change animation */
-.balance-change {
-  animation: balance-flash 0.5s ease;
-}
-
-@keyframes balance-flash {
-  0% {
-    background-color: rgba(91, 192, 222, 0.1);
-    transform: scale(1);
-  }
-  50% {
-    background-color: rgba(91, 192, 222, 0.3);
-    transform: scale(1.05);
-  }
-  100% {
-    background-color: rgba(0, 0, 0, 0.3);
-    transform: scale(1);
-  }
 }
 
 .dealer-area, .player-area {

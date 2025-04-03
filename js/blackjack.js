@@ -159,13 +159,16 @@ const blackjack = {
         } else if (playerHasBlackjack) {
             // Player has blackjack
             blackjackTerminal.print("Blackjack! You win 3:2 on your bet!", "success");
-            this.balance += this.currentBet * 2.5; // Return bet + 1.5x winnings
-            this.updateBalanceDisplay(true);
+            const winAmount = this.currentBet * 1.5; // Blackjack pays 3:2
+            const totalReturn = this.currentBet + winAmount; // Original bet + winnings
+            this.balance += totalReturn;
+            this.updateBalanceDisplay(true, totalReturn); // Show the total amount added
             this.endRound("player");
         } else if (dealerHasBlackjack) {
             // Dealer has blackjack
             blackjackTerminal.print("Dealer has Blackjack! You lose your bet.", "error");
             // Bet already subtracted when placed
+            this.updateBalanceDisplay(true, 0); // No change, but show zero
             this.endRound("dealer");
         } else {
             // No blackjack, continue the game
@@ -194,6 +197,7 @@ const blackjack = {
         if (this.playerScore > 21) {
             blackjackTerminal.print("Bust! Your score: " + this.playerScore, "error");
             // Bet already subtracted when placed
+            this.updateBalanceDisplay(true, 0); // Show zero, already lost
             this.endRound("dealer");
         } else if (this.playerScore === 21) {
             blackjackTerminal.print("You have 21! Standing automatically.", "success");
@@ -235,11 +239,13 @@ const blackjack = {
         
         // Subtract additional bet from balance
         this.balance -= this.currentBet;
+        const originalBet = this.currentBet; // Store original bet
+        
         // Double the bet
         this.currentBet *= 2;
         
         // Update balance display with animation
-        this.updateBalanceDisplay(true);
+        this.updateBalanceDisplay(true, -originalBet);
         
         blackjackTerminal.print("Doubling down! Bet increased to $" + this.currentBet, "info");
         
@@ -254,6 +260,7 @@ const blackjack = {
         if (this.playerScore > 21) {
             blackjackTerminal.print("Bust! Your score: " + this.playerScore, "error");
             // Bet already subtracted
+            this.updateBalanceDisplay(true, 0); // Show zero, already lost
             this.endRound("dealer");
         } else {
             blackjackTerminal.print("You stand with " + this.playerScore + " after doubling down.", "info");
@@ -307,19 +314,24 @@ const blackjack = {
         if (this.dealerScore > 21) {
             // Dealer busts
             blackjackTerminal.print("Dealer busts with " + this.dealerScore + "! You win!", "success");
-            this.balance += this.currentBet * 2; // Return bet + winnings
-            this.updateBalanceDisplay(true);
+            const winAmount = this.currentBet; // This is just the profit amount
+            const totalReturn = this.currentBet * 2; // This is the total added to balance
+            this.balance += totalReturn; // Return bet + winnings
+            this.updateBalanceDisplay(true, totalReturn); // Show the total amount added
             this.endRound("player");
         } else if (this.dealerScore > this.playerScore) {
             // Dealer wins
             blackjackTerminal.print("Dealer wins with " + this.dealerScore + " vs your " + this.playerScore + ".", "error");
             // Bet already subtracted when placed
+            this.updateBalanceDisplay(true, 0); // Show zero, already lost
             this.endRound("dealer");
         } else if (this.dealerScore < this.playerScore) {
             // Player wins
             blackjackTerminal.print("You win with " + this.playerScore + " vs dealer's " + this.dealerScore + "!", "success");
-            this.balance += this.currentBet * 2; // Return bet + winnings
-            this.updateBalanceDisplay(true);
+            const winAmount = this.currentBet; // This is just the profit amount
+            const totalReturn = this.currentBet * 2; // This is the total added to balance
+            this.balance += totalReturn; // Return bet + winnings
+            this.updateBalanceDisplay(true, totalReturn); // Show the total amount added
             this.endRound("player");
         } else {
             // Push (tie)
@@ -342,7 +354,7 @@ const blackjack = {
         // Handle push - return the bet
         if (winner === 'push') {
             this.balance += this.currentBet;
-            this.updateBalanceDisplay(true);
+            this.updateBalanceDisplay(true, this.currentBet);
         }
         
         // Reset bet for next round
@@ -394,7 +406,7 @@ const blackjack = {
         this.currentBet += amount;
         
         // Update displays with animation
-        this.updateBalanceDisplay(true);
+        this.updateBalanceDisplay(true, -amount);
         document.getElementById('bet-amount').textContent = this.currentBet;
         
         // Enable the deal button once a bet is placed
@@ -414,7 +426,7 @@ const blackjack = {
         
         // Return bet to balance
         this.balance += this.currentBet;
-        this.updateBalanceDisplay(true);
+        this.updateBalanceDisplay(true, this.currentBet);
         
         // Reset bet and button state
         this.currentBet = 0;
@@ -425,21 +437,35 @@ const blackjack = {
     },
     
     /**
-     * Update the balance display with optional animation
+     * Update the balance display with popup animation showing the amount changed
      * @param {boolean} animate - Whether to animate the balance change
+     * @param {number} amountChanged - Amount by which the balance changed (can be negative)
      */
-    updateBalanceDisplay(animate = false) {
+    updateBalanceDisplay(animate = false, amountChanged = 0) {
         const balanceElement = document.getElementById('player-balance');
-        
-        if (animate) {
-            // Flash the balance element to indicate change
-            balanceElement.classList.add('balance-change');
-            setTimeout(() => {
-                balanceElement.classList.remove('balance-change');
-            }, 500);
-        }
-        
         balanceElement.textContent = this.balance;
+        
+        if (animate && amountChanged !== 0) {
+            // Create popup element
+            const popup = document.createElement('div');
+            
+            // Set text with appropriate sign
+            const isPositive = amountChanged > 0;
+            popup.textContent = isPositive ? `+$${amountChanged}` : `-$${Math.abs(amountChanged)}`;
+            
+            // Add appropriate classes
+            popup.className = `balance-popup ${isPositive ? 'positive' : 'negative'}`;
+            
+            // Position the popup near the balance display
+            const balanceContainer = document.querySelector('.balance');
+            balanceContainer.style.position = 'relative';
+            balanceContainer.appendChild(popup);
+            
+            // Remove popup after animation completes
+            setTimeout(() => {
+                popup.remove();
+            }, 1500);
+        }
     },
     
     /**
