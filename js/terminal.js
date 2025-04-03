@@ -5,13 +5,14 @@
 class Terminal {
     constructor(inputId, outputId) {
         this.inputElement = document.getElementById(inputId);
-        this.outputElement = document.getElementById(outputId);
+        this.outputElement = outputId ? document.getElementById(outputId) : null;
         this.commandHistory = [];
         this.historyIndex = -1;
         this.commands = {};
         
-        if (!this.inputElement || !this.outputElement) {
-            console.error(`Terminal elements not found: input=${inputId}, output=${outputId}`);
+        // Fixed: Only check for inputElement existence, outputElement is optional
+        if (!this.inputElement) {
+            console.error(`Terminal input element not found: input=${inputId}`);
             return;
         }
         
@@ -58,8 +59,10 @@ class Terminal {
         this.commandHistory.push(commandText);
         this.historyIndex = this.commandHistory.length;
         
-        // Echo the command
-        this.print(`> ${commandText}`, 'command');
+        // Echo the command if output element exists
+        if (this.outputElement) {
+            this.print(`> ${commandText}`, 'command');
+        }
         
         // Process command
         this.processCommand(commandText);
@@ -78,7 +81,7 @@ class Terminal {
         
         if (this.commands[cmd]) {
             this.commands[cmd](args.slice(1));
-        } else {
+        } else if (this.outputElement) {
             this.print(`Command not found: ${cmd}. Type 'help' for available commands.`, 'error');
         }
     }
@@ -89,6 +92,9 @@ class Terminal {
      * @param {string} type - Type of message (default, command, error, success, info)
      */
     print(text, type = 'default') {
+        // Skip if no output element exists
+        if (!this.outputElement) return;
+        
         const message = document.createElement('p');
         message.textContent = text;
         message.classList.add(`message-${type}`);
@@ -117,7 +123,9 @@ class Terminal {
      * Scroll the output to the bottom
      */
     scrollToBottom() {
-        this.outputElement.scrollTop = this.outputElement.scrollHeight;
+        if (this.outputElement) {
+            this.outputElement.scrollTop = this.outputElement.scrollHeight;
+        }
     }
     
     /**
@@ -162,7 +170,7 @@ class Terminal {
         if (matches.length === 1) {
             // Single match, autocomplete
             this.inputElement.value = matches[0] + ' ';
-        } else if (matches.length > 1) {
+        } else if (matches.length > 1 && this.outputElement) {
             // Multiple matches, show options
             this.print('Available commands:', 'info');
             matches.forEach(match => {
@@ -175,7 +183,9 @@ class Terminal {
      * Clear the terminal output
      */
     clear() {
-        this.outputElement.innerHTML = '';
+        if (this.outputElement) {
+            this.outputElement.innerHTML = '';
+        }
     }
     
     /**
@@ -194,7 +204,7 @@ const terminalSystem = {
      * Initialize a terminal
      * @param {string} id - Terminal identifier
      * @param {string} inputId - Terminal input element ID
-     * @param {string} outputId - Terminal output element ID
+     * @param {string} outputId - Terminal output element ID (optional)
      * @returns {Terminal} Terminal instance
      */
     init(id, inputId, outputId) {
@@ -215,7 +225,8 @@ const terminalSystem = {
 
 // Initialize welcome screen terminal
 document.addEventListener('DOMContentLoaded', () => {
-    const welcomeTerminal = terminalSystem.init('welcome', 'welcome-input', null);
+    // Initialize with the proper output element
+    const welcomeTerminal = terminalSystem.init('welcome', 'welcome-input', 'welcome-output');
     
     welcomeTerminal.registerCommands({
         'play': (args) => {
