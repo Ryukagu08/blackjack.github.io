@@ -1,6 +1,10 @@
 /**
- * Blackjack.js - Blackjack game implementation
+ * Blackjack.js - Optimized Blackjack game implementation
  */
+
+// Popup animation state
+let activePopup = null;
+let popupTimeout = null;
 
 // Blackjack game state
 const blackjack = {
@@ -437,7 +441,7 @@ const blackjack = {
     },
     
     /**
-     * Update the balance display with popup animation showing the amount changed
+     * Update the balance display with accumulative popup animation
      * @param {boolean} animate - Whether to animate the balance change
      * @param {number} amountChanged - Amount by which the balance changed (can be negative)
      */
@@ -446,25 +450,68 @@ const blackjack = {
         balanceElement.textContent = this.balance;
         
         if (animate && amountChanged !== 0) {
-            // Create popup element
-            const popup = document.createElement('div');
-            
-            // Set text with appropriate sign
             const isPositive = amountChanged > 0;
-            popup.textContent = isPositive ? `+$${amountChanged}` : `-$${Math.abs(amountChanged)}`;
-            
-            // Add appropriate classes
-            popup.className = `balance-popup ${isPositive ? 'positive' : 'negative'}`;
-            
-            // Position the popup near the balance display
             const balanceContainer = document.querySelector('.balance');
-            balanceContainer.style.position = 'relative';
-            balanceContainer.appendChild(popup);
             
-            // Remove popup after animation completes
-            setTimeout(() => {
-                popup.remove();
-            }, 1500);
+            // If there's an active popup of the same type (positive/negative)
+            if (activePopup && 
+                ((isPositive && activePopup.classList.contains('positive')) || 
+                (!isPositive && activePopup.classList.contains('negative')))) {
+                
+                // Get the current value and calculate the new accumulated value
+                const currentValue = parseInt(activePopup.textContent.replace(/[^0-9-]/g, ''));
+                const newValue = currentValue + amountChanged;
+                
+                // Remove the existing popup
+                activePopup.remove();
+                clearTimeout(popupTimeout);
+                
+                // Create a new popup with the accumulated value
+                const popup = document.createElement('div');
+                popup.textContent = isPositive ? `+${newValue}` : `-${Math.abs(newValue)}`;
+                popup.className = `balance-popup ${isPositive ? 'positive' : 'negative'}`;
+                
+                // Add to the balance container
+                balanceContainer.appendChild(popup);
+                
+                // Set as active popup
+                activePopup = popup;
+                
+                // Remove popup after animation completes
+                popupTimeout = setTimeout(() => {
+                    popup.remove();
+                    activePopup = null;
+                }, 1500);
+                
+            } else {
+                // Remove any existing popup of different type
+                if (activePopup) {
+                    activePopup.remove();
+                    clearTimeout(popupTimeout);
+                }
+                
+                // Create new popup element
+                const popup = document.createElement('div');
+                
+                // Set text with appropriate sign
+                popup.textContent = isPositive ? `+$${amountChanged}` : `-$${Math.abs(amountChanged)}`;
+                
+                // Add appropriate classes
+                popup.className = `balance-popup ${isPositive ? 'positive' : 'negative'}`;
+                
+                // Position the popup near the balance display
+                balanceContainer.style.position = 'relative';
+                balanceContainer.appendChild(popup);
+                
+                // Set as active popup
+                activePopup = popup;
+                
+                // Remove popup after animation completes
+                popupTimeout = setTimeout(() => {
+                    popup.remove();
+                    activePopup = null;
+                }, 1500);
+            }
         }
     },
     
@@ -473,23 +520,32 @@ const blackjack = {
      * @param {boolean} showDealerHand - Whether to show dealer's hidden card
      */
     updateUI(showDealerHand = false) {
-        // Update player cards
         const playerCardsContainer = document.getElementById('player-cards');
-        playerCardsContainer.innerHTML = '';
-        
-        this.playerHand.forEach(card => {
-            playerCardsContainer.appendChild(this.createCardElement(card));
-        });
-        
-        // Update dealer cards
         const dealerCardsContainer = document.getElementById('dealer-cards');
+        
+        // Clear existing cards with a more efficient method
+        playerCardsContainer.innerHTML = '';
         dealerCardsContainer.innerHTML = '';
         
+        // Create a document fragment for better performance when adding multiple elements
+        const playerFragment = document.createDocumentFragment();
+        const dealerFragment = document.createDocumentFragment();
+        
+        // Add player cards to fragment
+        this.playerHand.forEach(card => {
+            playerFragment.appendChild(this.createCardElement(card));
+        });
+        
+        // Add dealer cards to fragment
         this.dealerHand.forEach((card, index) => {
             // Hide dealer's second card if not showing dealer hand
             const hideCard = !showDealerHand && index === 1 && this.dealerHand.length > 1;
-            dealerCardsContainer.appendChild(this.createCardElement(card, hideCard));
+            dealerFragment.appendChild(this.createCardElement(card, hideCard));
         });
+        
+        // Append fragments to containers (single DOM operation)
+        playerCardsContainer.appendChild(playerFragment);
+        dealerCardsContainer.appendChild(dealerFragment);
         
         // Update scores
         document.getElementById('player-score').textContent = this.playerScore;
@@ -520,50 +576,26 @@ const blackjack = {
         const cardElement = document.createElement('div');
         cardElement.className = 'card' + (hidden ? ' hidden' : '');
         
-        if (!hidden) {
-            // Card is red if it's hearts or diamonds
-            const isRed = card.suit === '♥' || card.suit === '♦';
-            const colorClass = isRed ? 'red' : 'black';
-            
-            // Top left corner
-            const topLeft = document.createElement('div');
-            topLeft.className = 'card-top-left ' + colorClass;
-            
-            const topValue = document.createElement('span');
-            topValue.className = 'card-value';
-            topValue.textContent = card.value;
-            
-            const topSuit = document.createElement('span');
-            topSuit.className = 'card-suit';
-            topSuit.textContent = card.suit;
-            
-            topLeft.appendChild(topValue);
-            topLeft.appendChild(topSuit);
-            
-            // Bottom right corner (identical but rotated via CSS)
-            const bottomRight = document.createElement('div');
-            bottomRight.className = 'card-bottom-right ' + colorClass;
-            
-            const bottomValue = document.createElement('span');
-            bottomValue.className = 'card-value';
-            bottomValue.textContent = card.value;
-            
-            const bottomSuit = document.createElement('span');
-            bottomSuit.className = 'card-suit';
-            bottomSuit.textContent = card.suit;
-            
-            bottomRight.appendChild(bottomValue);
-            bottomRight.appendChild(bottomSuit);
-            
-            // Center suit
-            const center = document.createElement('div');
-            center.className = 'card-center ' + colorClass;
-            center.textContent = card.suit;
-            
-            cardElement.appendChild(topLeft);
-            cardElement.appendChild(center);
-            cardElement.appendChild(bottomRight);
+        if (hidden) {
+            return cardElement;
         }
+        
+        // Card is red if it's hearts or diamonds
+        const isRed = card.suit === '♥' || card.suit === '♦';
+        const colorClass = isRed ? 'red' : 'black';
+        
+        // Use template strings for cleaner HTML construction
+        cardElement.innerHTML = `
+            <div class="card-top-left ${colorClass}">
+                <span class="card-value">${card.value}</span>
+                <span class="card-suit">${card.suit}</span>
+            </div>
+            <div class="card-center ${colorClass}">${card.suit}</div>
+            <div class="card-bottom-right ${colorClass}">
+                <span class="card-value">${card.value}</span>
+                <span class="card-suit">${card.suit}</span>
+            </div>
+        `;
         
         return cardElement;
     }
@@ -659,7 +691,7 @@ function initBlackjack() {
             },
             
             'balance': () => {
-                blackjackTerminal.print(`Your current balance: ${blackjack.balance}`, 'info');
+                blackjackTerminal.print(`Your current balance: $${blackjack.balance}`, 'info');
             },
             
             'exit': () => {
@@ -684,73 +716,109 @@ function initBlackjack() {
     // Initialize the deal button (disabled until a bet is placed)
     document.getElementById('deal-btn').disabled = true;
     
-    // Set up UI event listeners
+    // Set up UI event listeners - use efficient event delegation where possible
     setupBlackjackUI();
     
     // Focus the terminal input
     setTimeout(() => {
         blackjackTerminal.focus();
     }, 100);
+    
+    // Add the CSS for the popup reset animation if it doesn't already exist
+    if (!document.querySelector('#popup-animation-style')) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'popup-animation-style';
+        styleElement.textContent = `
+            @keyframes popup-animation {
+                0% {
+                    opacity: 0;
+                    transform: translateY(0);
+                }
+                20% {
+                    opacity: 1;
+                    transform: translateY(-10px);
+                }
+                80% {
+                    opacity: 1;
+                    transform: translateY(-20px);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateY(-30px);
+                }
+            }
+            
+            .balance-popup {
+                position: absolute;
+                font-weight: bold;
+                font-size: 1rem;
+                opacity: 0;
+                z-index: 10;
+                padding: 5px 10px;
+                border-radius: 5px;
+                animation: popup-animation 1.5s ease-out forwards;
+                white-space: nowrap;
+                pointer-events: none;
+                top: 10px;
+                left: 55%;
+                transform: translateX(-50%);
+            }
+            
+            .balance-popup.positive {
+                color: #23d160;
+            }
+            
+            .balance-popup.negative {
+                color: #ff3860;
+            }
+        `;
+        document.head.appendChild(styleElement);
+    }
 }
 
 /**
- * Set up blackjack UI event listeners
+ * Set up blackjack UI event listeners using more efficient event delegation
  */
 function setupBlackjackUI() {
-    // Remove any existing event listeners
-    const oldChips = document.querySelectorAll('.chip');
-    oldChips.forEach(chip => {
-        const newChip = chip.cloneNode(true);
-        chip.parentNode.replaceChild(newChip, chip);
+    // Use proper event listener management instead of cloning and replacing elements
+    const gameControls = document.querySelector('.game-controls');
+    
+    // Remove existing listeners by using a single handler at the container level
+    const controlsClone = gameControls.cloneNode(true);
+    gameControls.parentNode.replaceChild(controlsClone, gameControls);
+    
+    // Set up event delegation on the game controls
+    controlsClone.addEventListener('click', (e) => {
+        // Handle chip clicks for betting
+        if (e.target.classList.contains('chip')) {
+            const value = parseInt(e.target.getAttribute('data-value'));
+            if (!isNaN(value)) {
+                blackjack.placeBet(value);
+            }
+            return;
+        }
+        
+        // Handle button clicks
+        if (e.target.id === 'deal-btn') {
+            blackjack.startRound();
+        } else if (e.target.id === 'hit-btn') {
+            blackjack.hit();
+        } else if (e.target.id === 'stand-btn') {
+            blackjack.stand();
+        } else if (e.target.id === 'double-btn') {
+            blackjack.doubleDown();
+        }
     });
     
-    const oldHitBtn = document.getElementById('hit-btn');
-    const newHitBtn = oldHitBtn.cloneNode(true);
-    oldHitBtn.parentNode.replaceChild(newHitBtn, oldHitBtn);
-    
-    const oldStandBtn = document.getElementById('stand-btn');
-    const newStandBtn = oldStandBtn.cloneNode(true);
-    oldStandBtn.parentNode.replaceChild(newStandBtn, oldStandBtn);
-    
-    const oldDoubleBtn = document.getElementById('double-btn');
-    const newDoubleBtn = oldDoubleBtn.cloneNode(true);
-    oldDoubleBtn.parentNode.replaceChild(newDoubleBtn, oldDoubleBtn);
-    
-    // Add deal button event listener replacement
-    const oldDealBtn = document.getElementById('deal-btn');
-    const newDealBtn = oldDealBtn.cloneNode(true);
-    oldDealBtn.parentNode.replaceChild(newDealBtn, oldDealBtn);
-    
     // Back button
-    document.querySelector('.back-btn').addEventListener('click', () => {
+    const backBtn = document.querySelector('.back-btn');
+    // Clone to remove old listeners
+    const newBackBtn = backBtn.cloneNode(true);
+    backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+    
+    newBackBtn.addEventListener('click', () => {
         document.getElementById('blackjack-screen').classList.remove('active');
         document.getElementById('welcome-screen').classList.add('active');
         blackjackInitialized = false; // Allow re-initialization when returning
-    });
-    
-    // Chip buttons
-    document.querySelectorAll('.chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            const value = parseInt(chip.getAttribute('data-value'));
-            blackjack.placeBet(value);
-        });
-    });
-    
-    // Deal button
-    document.getElementById('deal-btn').addEventListener('click', () => {
-        blackjack.startRound();
-    });
-    
-    // Action buttons
-    document.getElementById('hit-btn').addEventListener('click', () => {
-        blackjack.hit();
-    });
-    
-    document.getElementById('stand-btn').addEventListener('click', () => {
-        blackjack.stand();
-    });
-    
-    document.getElementById('double-btn').addEventListener('click', () => {
-        blackjack.doubleDown();
     });
 }
