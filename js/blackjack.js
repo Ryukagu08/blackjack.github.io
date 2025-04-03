@@ -105,6 +105,11 @@ const blackjack = {
             return;
         }
         
+        if (this.isGameActive) {
+            blackjackTerminal.print("Game already in progress.", "error");
+            return;
+        }
+        
         // Reset game state
         this.playerHand = [];
         this.dealerHand = [];
@@ -129,6 +134,9 @@ const blackjack = {
         
         // Check if player can double down
         this.canDouble = this.balance >= this.currentBet;
+        
+        // Hide the deal button during gameplay
+        document.getElementById('deal-btn').style.display = 'none';
         
         // Update UI
         this.updateUI();
@@ -341,6 +349,10 @@ const blackjack = {
         document.getElementById('bet-amount').textContent = '0';
         this.currentBet = 0;
         
+        // Reset and show deal button
+        document.getElementById('deal-btn').disabled = true;
+        document.getElementById('deal-btn').style.display = 'block';
+        
         // Show bet controls, hide action buttons
         document.getElementById('bet-controls').classList.remove('hidden');
         document.getElementById('action-buttons').classList.add('hidden');
@@ -385,6 +397,9 @@ const blackjack = {
         this.updateBalanceDisplay(true);
         document.getElementById('bet-amount').textContent = this.currentBet;
         
+        // Enable the deal button once a bet is placed
+        document.getElementById('deal-btn').disabled = false;
+        
         blackjackTerminal.print("Bet placed: $" + amount + ". Total bet: $" + this.currentBet, "info");
     },
     
@@ -401,8 +416,11 @@ const blackjack = {
         this.balance += this.currentBet;
         this.updateBalanceDisplay(true);
         
+        // Reset bet and button state
         this.currentBet = 0;
         document.getElementById('bet-amount').textContent = '0';
+        document.getElementById('deal-btn').disabled = true;
+        
         blackjackTerminal.print("Bet cleared.", "info");
     },
     
@@ -579,6 +597,11 @@ function initBlackjack() {
                     return;
                 }
                 
+                if (blackjack.isGameActive) {
+                    blackjackTerminal.print('A game is already in progress. Finish the current round first.', 'error');
+                    return;
+                }
+                
                 blackjack.startRound();
             },
             
@@ -632,6 +655,9 @@ function initBlackjack() {
     blackjackTerminal.print('Place your bet to begin.', 'info');
     blackjackTerminal.print('Type "help" for a list of commands.', 'info');
     
+    // Initialize the deal button (disabled until a bet is placed)
+    document.getElementById('deal-btn').disabled = true;
+    
     // Set up UI event listeners
     setupBlackjackUI();
     
@@ -664,6 +690,11 @@ function setupBlackjackUI() {
     const newDoubleBtn = oldDoubleBtn.cloneNode(true);
     oldDoubleBtn.parentNode.replaceChild(newDoubleBtn, oldDoubleBtn);
     
+    // Add deal button event listener replacement
+    const oldDealBtn = document.getElementById('deal-btn');
+    const newDealBtn = oldDealBtn.cloneNode(true);
+    oldDealBtn.parentNode.replaceChild(newDealBtn, oldDealBtn);
+    
     // Back button
     document.querySelector('.back-btn').addEventListener('click', () => {
         document.getElementById('blackjack-screen').classList.remove('active');
@@ -677,6 +708,11 @@ function setupBlackjackUI() {
             const value = parseInt(chip.getAttribute('data-value'));
             blackjack.placeBet(value);
         });
+    });
+    
+    // Deal button
+    document.getElementById('deal-btn').addEventListener('click', () => {
+        blackjack.startRound();
     });
     
     // Action buttons
