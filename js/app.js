@@ -1,359 +1,190 @@
 /**
- * Core application logic for Terminal Arcade
+ * App.js - Main application logic
  */
 
 // Application state
-const appState = {
-    currentScreen: 'home',
-    selectedGame: null,
-    currentTheme: 'green',
-    availableGames: ['blackjack', 'roulette'], // Added roulette to available games
-    loadedGames: {}, // Will hold loaded game modules
-    gameScripts: {
-        // Map of game IDs to their required script files
-        blackjack: [
-            'games/blackjack/blackjack.js',
-            'games/blackjack/ui.js',
-            'games/blackjack/commands.js',
-            'games/blackjack/leaderboard.js'
-        ],
-        // Added roulette game scripts
-        roulette: [
-            'games/roulette/roulette.js',
-            'games/roulette/ui.js',
-            'games/roulette/commands.js',
-            'games/roulette/leaderboard.js'
-        ]
+const app = {
+    currentScreen: 'welcome',
+    
+    /**
+     * Initialize the application
+     */
+    init() {
+        // Set up navigation between screens
+        this.setupNavigation();
+        
+        // Set up terminal text animation
+        this.setupTypewriter();
+        
+        // Set up glitch text effect
+        this.setupGlitchEffect();
+        
+        console.log('Neon Casino initialized!');
+    },
+    
+    /**
+     * Set up navigation between screens
+     */
+    setupNavigation() {
+        // Back button functionality
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.navigateTo('welcome');
+            });
+        });
+        
+        // Game option selection
+        document.querySelectorAll('.game-option').forEach(option => {
+            option.addEventListener('click', () => {
+                if (!option.classList.contains('disabled')) {
+                    const game = option.getAttribute('data-game');
+                    if (game) {
+                        this.navigateTo(game);
+                    }
+                }
+            });
+        });
+    },
+    
+    /**
+     * Navigate to a screen
+     * @param {string} screenId - ID of the screen to navigate to
+     */
+    navigateTo(screenId) {
+        // Hide current screen
+        document.getElementById(`${this.currentScreen}-screen`).classList.remove('active');
+        
+        // Show target screen
+        document.getElementById(`${screenId}-screen`).classList.add('active');
+        
+        // Update current screen
+        this.currentScreen = screenId;
+        
+        // Initialize screen if needed
+        if (screenId === 'blackjack' && typeof initBlackjack === 'function') {
+            setTimeout(() => {
+                initBlackjack();
+            }, 300);
+        }
+    },
+    
+    /**
+     * Set up typewriter effect for welcome text
+     */
+    setupTypewriter() {
+        const typeElements = document.querySelectorAll('.type-text');
+        
+        typeElements.forEach(element => {
+            // Store the original text
+            const text = element.textContent;
+            
+            // Create a hidden span to maintain the space
+            const hiddenSpan = document.createElement('span');
+            hiddenSpan.textContent = text;
+            hiddenSpan.style.visibility = 'hidden';
+            hiddenSpan.style.position = 'absolute';
+            hiddenSpan.style.whiteSpace = 'nowrap';
+            
+            // Create a visible span for the typed text
+            const visibleSpan = document.createElement('span');
+            visibleSpan.style.whiteSpace = 'nowrap';
+            
+            // Clear the original element and add both spans
+            element.textContent = '';
+            element.appendChild(hiddenSpan);
+            element.appendChild(visibleSpan);
+            
+            // Type the text into the visible span
+            let i = 0;
+            const typeWriter = () => {
+                if (i < text.length) {
+                    visibleSpan.textContent += text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 50);
+                }
+            };
+            
+            // Start the typewriter effect
+            setTimeout(typeWriter, 1000);
+        });
+    },
+    
+    /**
+     * Set up glitch text effect
+     */
+    setupGlitchEffect() {
+        const glitchElements = document.querySelectorAll('.glitch');
+        
+        glitchElements.forEach(element => {
+            // Store original text as a data attribute
+            const text = element.textContent;
+            element.setAttribute('data-text', text);
+        });
+    },
+    
+    /**
+     * Check if the device is mobile
+     * @returns {boolean} True if device is mobile
+     */
+    isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    },
+    
+    /**
+     * Add a custom CSS class to a DOM element
+     * @param {HTMLElement} element - The element to add the class to
+     * @param {string} className - The CSS class to add
+     * @param {number} delay - Delay in milliseconds before adding the class
+     */
+    addClassWithDelay(element, className, delay) {
+        setTimeout(() => {
+            element.classList.add(className);
+        }, delay);
     }
 };
 
-/**
- * Initialize the application
- */
-function initApp() {
-    // Apply saved theme if available
-    const savedTheme = localStorage.getItem('terminalArcadeTheme') || 'green';
-    setColorTheme(savedTheme);
+// Initialize the app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    app.init();
     
-    // Add event listeners
-    addHomeScreenListeners();
-    
-    // Handle keyboard navigation
-    document.addEventListener('keydown', handleHomeKeyboardNavigation);
-    
-    // Listen for navigation events
-    window.addEventListener('popstate', handlePopState);
-    
-    // Wait for Firebase to initialize
-    checkFirebaseInitialization();
-    
-    // Check if this is a page refresh with an active game
-    const isPageRefresh = sessionStorage.getItem('sessionActive') === 'true';
-    const lastActiveGame = localStorage.getItem('lastActiveGame');
-    
-    if (isPageRefresh && lastActiveGame) {
-        // Set a short timeout to ensure all resources are loaded
-        setTimeout(() => {
-            selectGame(lastActiveGame);
-        }, 300);
-    } else {
-        // First visit or manual navigation, show home screen
-        navigateToHome();
-    }
-    
-    // Set session flag to detect refreshes later
-    sessionStorage.setItem('sessionActive', 'true');
-    
-    // Add beforeunload listener to detect actual page closes vs refreshes
-    window.addEventListener('beforeunload', function() {
-        // Don't clear session storage on refresh
-        // This will remain for refresh but be cleared on actual close/navigate away
-    });
-    
-    console.log('Terminal Arcade initialized!');
-}
-
-/**
- * Check if Firebase is initialized
- */
-function checkFirebaseInitialization() {
-    const maxAttempts = 10;
-    let attempts = 0;
-    
-    const checkFirebase = setInterval(() => {
-        attempts++;
-        
-        if (window.firebaseDB) {
-            clearInterval(checkFirebase);
-            console.log('Firebase detected and ready!');
-        } else if (attempts >= maxAttempts) {
-            clearInterval(checkFirebase);
-            console.warn('Firebase initialization failed after multiple attempts');
-        }
-    }, 500);
-}
-
-/**
- * Add event listeners to home screen elements
- */
-function addHomeScreenListeners() {
-    // Game selection
-    const gameCards = document.querySelectorAll('.game-card:not(.coming-soon)');
-    gameCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const gameId = card.getAttribute('data-game');
-            if (gameId) {
-                selectGame(gameId);
+    // Add keyboard navigation for menu
+    document.addEventListener('keydown', (e) => {
+        if (app.currentScreen === 'welcome') {
+            if (e.key === 'Enter' && e.target.id === 'welcome-input') {
+                // Let the terminal handle this
+                return;
             }
-        });
-    });
-}
-
-/**
- * Handle keyboard navigation on home screen
- */
-function handleHomeKeyboardNavigation(e) {
-    if (appState.currentScreen !== 'home') return;
-    
-    const gameCards = Array.from(document.querySelectorAll('.game-card:not(.coming-soon)'));
-    if (!gameCards.length) return;
-    
-    // Find currently selected card
-    let selectedIndex = gameCards.findIndex(card => card.classList.contains('selected'));
-    
-    // If none selected, select the first one by default
-    if (selectedIndex === -1) {
-        selectedIndex = 0;
-        gameCards[selectedIndex].classList.add('selected');
-        gameCards[selectedIndex].focus();
-        return;
-    }
-    
-    // Handle arrow keys
-    switch(e.key) {
-        case 'ArrowRight':
-            selectedIndex = (selectedIndex + 1) % gameCards.length;
-            break;
-        case 'ArrowLeft':
-            selectedIndex = (selectedIndex - 1 + gameCards.length) % gameCards.length;
-            break;
-        case 'Enter':
-            const gameId = gameCards[selectedIndex].getAttribute('data-game');
-            if (gameId) {
-                selectGame(gameId);
-            }
-            return;
-        default:
-            return;
-    }
-    
-    // Update selection
-    gameCards.forEach(card => card.classList.remove('selected'));
-    gameCards[selectedIndex].classList.add('selected');
-    gameCards[selectedIndex].focus();
-}
-
-/**
- * Handle browser back/forward navigation with localStorage handling
- */
-function handlePopState() {
-    const state = history.state || {};
-    if (state.screen === 'game' && state.gameId) {
-        loadGame(state.gameId);
-        // Update localStorage to reflect the current game
-        localStorage.setItem('lastActiveGame', state.gameId);
-    } else {
-        navigateToHome();
-        // Clear the active game in localStorage
-        localStorage.removeItem('lastActiveGame');
-    }
-}
-
-/**
- * Select and load a game with localStorage tracking
- */
-function selectGame(gameId) {
-    if (!appState.availableGames.includes(gameId)) {
-        console.error(`Game ${gameId} is not available`);
-        return;
-    }
-    
-    // Update state
-    appState.selectedGame = gameId;
-    
-    // Store active game in localStorage for refresh detection
-    localStorage.setItem('lastActiveGame', gameId);
-    
-    // Update history for navigation
-    history.pushState({ screen: 'game', gameId }, `Playing ${gameId}`, `#${gameId}`);
-    
-    // Load and initialize the game
-    loadGame(gameId);
-}
-
-/**
- * Load game scripts and initialize
- */
-async function loadGame(gameId) {
-    // Change current screen
-    appState.currentScreen = 'game';
-    
-    // Show game container and properly hide home screen
-    document.getElementById('home-screen').classList.remove('active-screen');
-    document.getElementById('home-screen').style.display = 'none'; // Add this line
-    const gameContainer = document.getElementById('game-container');
-    gameContainer.classList.add('active');
-    gameContainer.style.display = 'block'; // Add this line
-    
-    try {
-        // Check if game is already loaded
-        if (!appState.loadedGames[gameId]) {
-            // Create game-specific container
-            const gameElement = document.createElement('div');
-            gameElement.id = `${gameId}-game`;
-            gameElement.className = 'game-terminal';
-            gameContainer.appendChild(gameElement);
             
-            // Dynamically load game CSS
-            loadCSS(`games/${gameId}/styles.css`);
-            
-            // Load game scripts
-            await loadGameScripts(gameId);
-            
-            // Initialize game
-            if (window[gameId + 'Game'] && typeof window[gameId + 'Game'].init === 'function') {
-                appState.loadedGames[gameId] = window[gameId + 'Game'];
-                window[gameId + 'Game'].init(gameElement, navigateToHome);
-            } else {
-                throw new Error(`Failed to initialize ${gameId} game`);
-            }
-        } else {
-            // Game already loaded, just show it
-            document.getElementById(`${gameId}-game`).style.display = 'block';
-            if (typeof appState.loadedGames[gameId].resume === 'function') {
-                appState.loadedGames[gameId].resume();
+            // Handle number keys for quick game selection
+            if (e.key >= '1' && e.key <= '3') {
+                const index = parseInt(e.key) - 1;
+                const gameOptions = document.querySelectorAll('.game-option');
+                
+                if (index < gameOptions.length) {
+                    if (!gameOptions[index].classList.contains('disabled')) {
+                        const game = gameOptions[index].getAttribute('data-game');
+                        const welcomeTerminal = terminalSystem.getTerminal('welcome');
+                        
+                        if (welcomeTerminal) {
+                            welcomeTerminal.inputElement.value = `play ${game}`;
+                            welcomeTerminal.handleCommand();
+                        }
+                    }
+                }
             }
         }
-    } catch (error) {
-        console.error(`Error loading game ${gameId}:`, error);
-        showErrorMessage(`Failed to load game: ${error.message}`);
-        navigateToHome();
-    }
-}
-
-/**
- * Load game scripts dynamically
- */
-async function loadGameScripts(gameId) {
-    const scripts = appState.gameScripts[gameId] || [];
-    
-    // Load each script sequentially
-    for (const src of scripts) {
-        await new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-            document.body.appendChild(script);
-        });
-    }
-}
-
-/**
- * Load CSS file dynamically
- */
-function loadCSS(href) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    document.head.appendChild(link);
-}
-
-/**
- * Navigate back to home screen and clear the active game flag
- */
-function navigateToHome() {
-    // Hide all games
-    document.getElementById('game-container').classList.remove('active');
-    document.getElementById('game-container').style.display = 'none'; // Add this line
-    Array.from(document.getElementById('game-container').children).forEach(child => {
-        child.style.display = 'none';
     });
     
-    // Show home screen
-    document.getElementById('home-screen').style.display = 'block'; // Add this line
-    document.getElementById('home-screen').classList.add('active-screen');
-    
-    // Update state
-    appState.currentScreen = 'home';
-    
-    // Clear the active game in localStorage
-    localStorage.removeItem('lastActiveGame');
-    
-    // Update history
-    if (history.state && history.state.screen === 'game') {
-        history.pushState({ screen: 'home' }, 'Terminal Arcade', '/');
+    // Create a neon flicker effect on the logo
+    const neonLogo = document.querySelector('.neon-logo h1');
+    if (neonLogo) {
+        setInterval(() => {
+            if (Math.random() < 0.1) {
+                neonLogo.style.opacity = 0.7;
+                setTimeout(() => {
+                    neonLogo.style.opacity = 1;
+                }, 100);
+            }
+        }, 500);
     }
-}
-
-/**
- * Set application color theme
- */
-function setColorTheme(theme) {
-    if (!theme || !['green', 'blue', 'amber', 'white', 'red', 'purple', 'cyan', 'orange', 'pink'].includes(theme)) {
-        theme = 'green';
-    }
-    
-    // Update app state
-    appState.currentTheme = theme;
-    
-    // Remove all theme classes
-    document.body.classList.remove('theme-green', 'theme-blue', 'theme-amber', 'theme-white', 'theme-red', 'theme-purple', 'theme-cyan', 'theme-orange', 'theme-pink');
-    
-    // Add new theme class
-    document.body.classList.add(`theme-${theme}`);
-    
-    // Update home screen UI
-    const gameCards = document.querySelectorAll('.game-card');
-    gameCards.forEach(card => {
-        card.style.borderColor = `var(--text-primary)`;
-    });
-    
-    // Update buttons
-    const buttons = document.querySelectorAll('.btn, .back-button, .settings-button');
-    buttons.forEach(button => {
-        button.style.borderColor = `var(--text-primary)`;
-        button.style.color = `var(--text-primary)`;
-    });
-    
-    // Update terminal headers and borders
-    const terminalHeaders = document.querySelectorAll('.terminal-header, .game-header');
-    terminalHeaders.forEach(header => {
-        header.style.borderBottomColor = `var(--terminal-border)`;
-    });
-    
-    const terminalInputs = document.querySelectorAll('.terminal-input');
-    terminalInputs.forEach(input => {
-        input.style.borderTopColor = `var(--terminal-border)`;
-    });
-    
-    // Save preference
-    localStorage.setItem('terminalArcadeTheme', theme);
-    
-    // Notify any active game
-    if (appState.selectedGame && appState.loadedGames[appState.selectedGame]) {
-        if (typeof appState.loadedGames[appState.selectedGame].updateTheme === 'function') {
-            appState.loadedGames[appState.selectedGame].updateTheme(theme);
-        }
-    }
-}
-
-/**
- * Show error message to user
- */
-function showErrorMessage(message) {
-    alert(message); // Simple implementation; could be enhanced with a custom modal
-}
-
-// Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', initApp);
+});

@@ -2,134 +2,158 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Terminal Arcade</title>
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="57x57" href="favicon/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="favicon/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="favicon/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="favicon/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="favicon/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="favicon/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="favicon/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="favicon/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192"  href="favicon/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
-    <link rel="manifest" href="favicon/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="favicon/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">
-
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/home.css">
-    <link rel="stylesheet" href="css/terminal.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Casino | Terminal Style Games</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="app">
-        <div id="home-screen" class="active-screen">
-            <div class="terminal-container">
+    <div class="app-container">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="screen active">
+            <div class="neon-logo">
+                <h1>NEON <span>CASINO</span></h1>
+            </div>
+            <div class="terminal-window">
                 <div class="terminal-header">
                     <div class="terminal-controls">
-                        <span class="control close"></span>
-                        <span class="control minimize"></span>
-                        <span class="control maximize"></span>
+                        <span class="control"></span>
+                        <span class="control"></span>
+                        <span class="control"></span>
                     </div>
-                    <div class="terminal-title">Terminal Arcade</div>
+                    <div class="terminal-title">Terminal</div>
                 </div>
-                <div class="terminal-content">
-                    <div class="ascii-logo">
-                        <!-- ASCII Art Logo -->
-                        <pre>
-
-________  _________   _____           _             
-/  ___|  \/  || ___ \ /  __ \         (_)            
-\ `--.| .  . || |_/ / | /  \/ __ _ ___ _ _ __   ___  
- `--. \ |\/| ||    /  | |    / _` / __| | '_ \ / _ \ 
-/\__/ / |  | || |\ \  | \__/\ (_| \__ \ | | | | (_) |
-\____/\_|  |_/\_| \_|  \____/\__,_|___/_|_| |_|\___/ 
-                                                                                 
-
-                        </pre>
-                    </div>
+                <div class="terminal-body">
+                    <p class="welcome-text glitch">
+                        Welcome to Neon Casino. Your stylish terminal gaming experience.
+                    </p>
+                    <p class="type-text">Select a game to play:</p>
                     
-                    <div class="welcome-message">
-                        <p>Welcome to Terminal Arcade! Select a game to play:</p>
-                    </div>
-                    
-                    <div class="game-grid">
-                        <div class="game-card blackjack-card" data-game="blackjack">
-                            <div class="card-corner top-left">A<span class="suit">♠</span></div>
-                            <div class="card-center">
-                                <span class="big-suit">♠</span>
-                            </div>
-                            <h3>Blackjack</h3>
-                            <p>Try your luck at this classic card game!</p>
-                            <div class="card-corner bottom-right">A<span class="suit">♠</span></div>
+                    <div class="game-options">
+                        <div class="game-option" data-game="blackjack">
+                            <div class="option-number">01.</div>
+                            <div class="option-title">Blackjack</div>
+                            <div class="option-desc">Classic card game. Beat the dealer without going over 21.</div>
                         </div>
-                        
-                        <div class="game-card roulette-card" data-game="roulette">
-                            <div class="card-corner top-left">R<span class="suit">♦</span></div>
-                            <div class="card-center">
-                                <div class="roulette-wheel">
-                                    <div class="wheel-ring"></div>
-                                    <div class="wheel-center"></div>
-                                    <div class="wheel-ball"></div>
-                                </div>
-                            </div>
-                            <h3>Roulette</h3>
-                            <p>Place your bets on this casino favorite!</p>
-                            <div class="card-corner bottom-right">R<span class="suit">♦</span></div>
+                        <div class="game-option disabled" data-game="roulette">
+                            <div class="option-number">02.</div>
+                            <div class="option-title">Roulette</div>
+                            <div class="option-desc">Coming soon.</div>
                         </div>
-                        
-                        <!-- Template for future games -->
-                        <div class="game-card coming-soon">
-                            <div class="game-icon">?</div>
-                            <h3>Coming Soon</h3>
-                            <p>More games on the way!</p>
+                        <div class="game-option disabled" data-game="poker">
+                            <div class="option-number">03.</div>
+                            <div class="option-title">Poker</div>
+                            <div class="option-desc">Coming soon.</div>
                         </div>
                     </div>
                     
-                    <div class="site-footer">
-                        <p>Use arrow keys to navigate, Enter to select</p>
-                        <p class="version">v2.3.0</p>
+                    <div class="terminal-input-line">
+                        <span class="prompt">></span>
+                        <input type="text" id="welcome-input" class="terminal-input" autofocus placeholder="Type 'play blackjack' to start...">
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Game containers will be inserted here dynamically -->
-        <div id="game-container"></div>
+
+        <!-- Blackjack Screen -->
+        <div id="blackjack-screen" class="screen">
+            <!-- Terminal moved to the left -->
+            <div class="terminal-window game-terminal">
+                <div class="terminal-header">
+                    <div class="terminal-controls">
+                        <span class="control"></span>
+                        <span class="control"></span>
+                        <span class="control"></span>
+                    </div>
+                    <div class="terminal-title">Blackjack Terminal</div>
+                </div>
+                <div class="terminal-body">
+                    <div id="blackjack-output" class="terminal-output">
+                        <!-- Terminal output appears here -->
+                    </div>
+                    <div class="terminal-input-line">
+                        <span class="prompt">></span>
+                        <input type="text" id="blackjack-input" class="terminal-input" placeholder="Type a command...">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game content moved to the right -->
+            <div class="game-content">
+                <div class="game-header">
+                    <button class="back-btn">← MENU</button>
+                    <h2 class="game-title">BLACKJACK</h2>
+                    <div class="balance">BALANCE: $<span id="player-balance">1000</span></div>
+                </div>
+                
+                <div class="blackjack-table">
+                    <div class="dealer-area">
+                        <h3>DEALER</h3>
+                        <div id="dealer-cards" class="cards-container">
+                            <!-- Cards will be added here dynamically -->
+                        </div>
+                        <div id="dealer-score" class="score">0</div>
+                    </div>
+                    
+                    <div class="player-area">
+                        <h3>PLAYER</h3>
+                        <div id="player-cards" class="cards-container">
+                            <!-- Cards will be added here dynamically -->
+                        </div>
+                        <div id="player-score" class="score">0</div>
+                    </div>
+                    
+                    <div class="game-controls">
+                        <div id="bet-controls" class="control-section">
+                            <div class="chip-container">
+                                <div class="chip" data-value="5" style="background-color: #4a90e2;">5</div>
+                                <div class="chip" data-value="25" style="background-color: #50e3c2;">25</div>
+                                <div class="chip" data-value="50" style="background-color: #e6a91a;">50</div>
+                                <div class="chip" data-value="100" style="background-color: #e83e8c;">100</div>
+                            </div>
+                            <div class="current-bet">BET: $<span id="bet-amount">0</span></div>
+                            <button id="deal-btn" class="deal-btn hidden">DEAL</button>
+                        </div>
+                        
+                        <div id="action-buttons" class="control-section hidden">
+                            <button id="hit-btn" class="action-btn">HIT</button>
+                            <button id="stand-btn" class="action-btn">STAND</button>
+                            <button id="double-btn" class="action-btn">DOUBLE</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <!-- Firebase SDK -->
-    <script type="module" src="js/firebase-config.js"></script>
-    
-    <!-- Core Scripts -->
-    <script src="js/utils.js"></script>
-    <script src="js/navigation.js"></script>
+
+    <!-- Load app.js last to ensure all other scripts are loaded first -->
+    <script src="js/terminal.js"></script>
+    <script src="js/blackjack.js"></script>
     <script src="js/app.js"></script>
     
-    <!-- Fallback for Firebase initialization -->
+    <!-- Fix for game selection -->
     <script>
-        // Check if Firebase failed to initialize after 3 seconds
-        setTimeout(() => {
-            if (!window.firebaseDB) {
-                console.warn('Firebase initialization timeout - creating fallback');
-                window.firebaseDB = {
-                    getRef: () => null,
-                    query: () => null,
-                    orderByChild: () => null,
-                    limitToLast: () => null,
-                    onValue: (_, callback) => callback({ val: () => ({}) }),
-                    push: () => ({ key: 'offline-key' }),
-                    set: () => Promise.resolve(),
-                    remove: () => Promise.resolve()
-                };
-            }
-        }, 3000);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Direct click handler for game options
+            document.querySelectorAll('.game-option:not(.disabled)').forEach(option => {
+                option.addEventListener('click', function() {
+                    const game = this.getAttribute('data-game');
+                    if (game === 'blackjack') {
+                        document.getElementById('welcome-screen').classList.remove('active');
+                        document.getElementById('blackjack-screen').classList.add('active');
+                        
+                        // Initialize the game
+                        setTimeout(() => {
+                            if (typeof initBlackjack === 'function') {
+                                initBlackjack();
+                            }
+                        }, 300);
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>
