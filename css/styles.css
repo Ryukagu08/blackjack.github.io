@@ -6,6 +6,9 @@
 }
 
 :root {
+  /* Viewport height fix */
+  --vh: 1vh;
+
   /* Color scheme */
   --background: #050a18;
   --terminal-bg: rgba(10, 18, 30, 0.85);
@@ -16,61 +19,70 @@
   --neon-primary: #00fff2;
   --neon-secondary: #f700ff;
   --dark-shadow: rgba(0, 0, 0, 0.7);
-  
+
   /* Card colors */
   --card-bg: #1a1a2e;
   --card-border: #5bc0de;
   --red-suit: #ff3860;
   --black-suit: #e0e0ff;
-  
+
   /* Buttons and interactive elements */
   --btn-primary: #2c3e50;
   --btn-hover: #3498db;
   --btn-active: #2980b9;
   --btn-disabled: #34495e;
-  
+
   /* Game table */
   --table-bg: #0d1b2a;
   --dealer-area: rgba(91, 192, 222, 0.05);
   --player-area: rgba(255, 56, 96, 0.05);
-  
+
   /* Chips - updated to match real casino chip colors */
   --chip-5: #e42819;    /* Red for $5 */
   --chip-25: #0a8e41;   /* Green for $25 */
   --chip-50: #27539d;   /* Blue for $50 */
   --chip-100: #0c0c0c;  /* Black for $100 */
-  
+
   /* Fonts */
   --font-terminal: 'Fira Code', monospace;
   --font-display: 'Poppins', sans-serif;
-  
+
   /* Scrollbar */
   --scrollbar-track: rgba(10, 18, 30, 0.5);
   --scrollbar-thumb: rgba(91, 192, 222, 0.4);
   --scrollbar-thumb-hover: rgba(91, 192, 222, 0.7);
+
+  /* Viewport height fix */
+  --vh: 1vh;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent body scroll */
 }
 
 body {
   font-family: var(--font-terminal);
   background-color: var(--background);
   color: var(--text-primary);
-  min-height: 100vh;
   line-height: 1.6;
-  overflow-x: hidden;
-  margin: 0; /* Added to fix scrolling */
-  background-image: 
+  background-image:
     radial-gradient(circle at 20% 30%, rgba(91, 192, 222, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 80% 70%, rgba(247, 0, 255, 0.1) 0%, transparent 40%);
 }
 
 .app-container {
   width: 100%;
-  min-height: 100vh;
-  padding: 20px;
+  height: calc(var(--vh, 1vh) * 100);
+  max-height: calc(var(--vh, 1vh) * 100);
+  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow: hidden; /* Prevent scrolling on the main container */
 }
 
 /* Screen management */
@@ -81,29 +93,40 @@ body {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.3s ease, transform 0.3s ease;
+  height: calc(var(--vh, 1vh) * 100);
+  max-height: calc(var(--vh, 1vh) * 100);
+  overflow: hidden; /* Prevent scrolling on inactive/active screens by default */
+  flex-direction: column; /* Default flex direction */
 }
 
 .screen.active {
   display: flex;
-  flex-direction: column;
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Welcome screen specific - ensure it fills viewport */
+#welcome-screen {
+  justify-content: flex-start; /* Align content to top */
+  padding: 0; /* Remove padding that might constrain content */
 }
 
 /* Neon logo styling */
 .neon-logo {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
+  padding-top: 10px;
   text-transform: uppercase;
   font-family: var(--font-display);
   font-weight: 600;
+  flex-shrink: 0; /* Prevent logo from shrinking */
 }
 
 .neon-logo h1 {
   font-size: 4rem;
   letter-spacing: 0.15em;
   color: var(--text-primary);
-  text-shadow: 
+  text-shadow:
     0 0 5px var(--neon-primary),
     0 0 10px var(--neon-primary),
     0 0 20px var(--neon-primary),
@@ -113,7 +136,7 @@ body {
 
 .neon-logo span {
   color: var(--text-primary);
-  text-shadow: 
+  text-shadow:
     0 0 5px var(--neon-secondary),
     0 0 10px var(--neon-secondary),
     0 0 20px var(--neon-secondary),
@@ -162,7 +185,7 @@ body {
 
 .terminal-body {
   padding: 8px;
-  height: calc(100% - 36px);
+  height: calc(100% - 36px); /* Adjust height relative to header */
   display: flex;
   flex-direction: column;
   background-color: #0a1624;
@@ -172,7 +195,7 @@ body {
   flex-grow: 1;
   margin-bottom: 8px;
   overflow-y: auto;
-  max-height: calc(100% - 30px);
+  max-height: calc(100% - 30px); /* Ensure it doesn't overflow */
   color: #5bc0de;
   font-size: 14px;
   line-height: 1.3;
@@ -217,7 +240,7 @@ body {
 .terminal-input-line {
   display: flex;
   align-items: center;
-  margin-top: auto;
+  margin-top: auto; /* Push input to bottom */
 }
 
 .prompt {
@@ -237,105 +260,42 @@ body {
   caret-color: var(--text-accent);
 }
 
-/* Welcome screen specific styles */
-.welcome-text {
-  font-size: 1.2rem;
-  margin-bottom: 20px;
-  color: var(--text-primary);
-}
-
-.type-text {
-  margin-bottom: 20px;
-  color: var(--text-accent);
-  font-weight: 500;
-  position: relative; /* Added for positioning of the absolute span */
-  display: inline-block; /* Ensures the element takes the right size */
-  min-height: 1.5em; /* Ensures consistent height */
-}
-
-.game-options {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.game-option {
-  display: flex;
-  gap: 15px;
-  padding: 15px 20px;
-  background-color: rgba(43, 48, 58, 0.3);
-  border-left: 3px solid var(--text-accent);
-  border-radius: 5px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.game-option:hover {
-  background-color: rgba(43, 48, 58, 0.5);
-  transform: translateX(5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.game-option.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  border-left-color: var(--text-secondary);
-}
-
-.game-option.disabled:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-.option-number {
-  color: var(--text-accent);
-  font-weight: bold;
-  min-width: 40px;
-}
-
-.option-title {
-  font-weight: bold;
-  font-size: 1.1rem;
-  min-width: 100px;
-}
-
-.option-desc {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-}
-
 /* Blackjack screen specific styles */
 #blackjack-screen {
-  display: flex !important;
-  flex-direction: row !important;
+  display: flex !important; /* Keep flex for desktop */
+  flex-direction: row !important; /* Desktop direction */
   gap: 0;
-  height: 95vh;
-  max-height: 95vh;
-  padding: 0;
   max-width: none;
   width: 100%;
-  overflow: hidden;
+  /* Height is handled by .screen */
 }
 
 .game-terminal {
   width: 40%;
-  max-height: 94vh;
-  height: auto;
+  max-height: 100%; /* Limit height */
+  height: calc(calc(var(--vh, 1vh) * 100) - 20px); /* Adjust height relative to viewport and margin */
   margin: 10px 0 10px 10px;
   border-radius: 5px;
-  overflow: hidden;
-  padding-bottom: 5px;
+  overflow: hidden; /* Ensure terminal itself doesn't overflow */
+  display: flex; /* Use flex for internal layout */
+  flex-direction: column;
+}
+
+.game-terminal .terminal-body {
+  flex-grow: 1; /* Allow body to take available space */
+  height: auto; /* Override fixed height */
 }
 
 .game-content {
-  flex: 1;
+  flex: 1; /* Take remaining width */
   padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-height: 95vh;
-  width: 60%;
+  max-height: 100%; /* Limit height */
+  height: 100%;
+  width: 60%; /* Desktop width */
+  overflow-y: auto; /* Allow game content to scroll if needed */
 }
 
 /* Game header styling with centered title */
@@ -347,6 +307,7 @@ body {
   margin-bottom: 15px;
   padding: 0 10px;
   position: relative;
+  flex-shrink: 0; /* Prevent header shrinking */
 }
 
 .game-title {
@@ -448,13 +409,13 @@ body {
   background-color: var(--table-bg);
   border-radius: 8px;
   padding: 20px;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   gap: 20px;
-  height: calc(95vh - 90px);
+  flex-grow: 1; /* Allow table to take available space */
+  overflow: hidden; /* Prevent internal overflow */
+  min-height: 0; /* Prevent flex item from growing beyond container */
 }
 
 .dealer-area, .player-area {
@@ -465,20 +426,19 @@ body {
   align-items: center;
   width: 100%;
   margin-bottom: 8px;
+  flex-shrink: 0;
+  min-height: 160px;
+  height: 35%;
 }
 
 .dealer-area {
   background-color: rgba(91, 192, 222, 0.05);
   border: 1px solid rgba(91, 192, 222, 0.2);
-  height: 42%;
-  min-height: 160px;
 }
 
 .player-area {
   background-color: rgba(255, 56, 96, 0.05);
   border: 1px solid rgba(255, 56, 96, 0.2);
-  height: 42%;
-  min-height: 160px;
 }
 
 .dealer-area h3, .player-area h3 {
@@ -493,12 +453,12 @@ body {
 .cards-container {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  min-height: 120px;
-  width: 100%;
   align-items: center;
-  flex: 1;
-  flex-wrap: wrap;
+  flex-wrap: wrap; /* Allow cards to wrap */
+  gap: 15px;
+  min-height: 120px; /* Base minimum height */
+  width: 100%;
+  flex: 1; /* Allow container to grow/shrink */
 }
 
 .card {
@@ -512,6 +472,7 @@ body {
   transition: transform 0.3s ease;
   overflow: hidden;
   color: white;
+  flex-shrink: 0; /* Prevent cards shrinking */
 }
 
 .card:hover {
@@ -581,27 +542,32 @@ body {
   background-color: rgba(0, 0, 0, 0.3);
   padding: 5px 15px;
   border-radius: 15px;
+  margin-top: 10px; /* Add some space above score */
 }
 
 .game-controls {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-top: 20px;
+  gap: 15px; /* Reduced gap */
+  padding-top: 15px; /* Reduced padding */
   border-top: 1px solid var(--terminal-border);
+  margin-top: auto; /* Push controls to bottom */
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .control-section {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 15px; /* Reduced gap */
   align-items: center;
 }
 
 .chip-container {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap; /* Allow chips to wrap */
+  justify-content: center;
 }
 
 .chip {
@@ -618,23 +584,24 @@ body {
   transition: all 0.2s ease;
   position: relative;
   /* Enhanced 3D effect */
-  box-shadow: 
+  box-shadow:
     0 6px 10px rgba(0, 0, 0, 0.5),
     0 -1px 1px rgba(255, 255, 255, 0.2) inset,
     0 2px 2px rgba(0, 0, 0, 0.4) inset;
   /* Simulated chip texture */
   background-image: radial-gradient(
     circle at center,
-    rgba(255, 255, 255, 0.2) 0%, 
+    rgba(255, 255, 255, 0.2) 0%,
     rgba(255, 255, 255, 0) 60%
   );
   /* Chip edge styling */
   border: 8px solid; /* Will be colored in the individual chip styles */
+  flex-shrink: 0;
 }
 
 .chip:hover {
   transform: translateY(-3px) rotate(5deg);
-  box-shadow: 
+  box-shadow:
     0 8px 16px rgba(0, 0, 0, 0.5),
     0 -1px 1px rgba(255, 255, 255, 0.2) inset,
     0 2px 2px rgba(0, 0, 0, 0.4) inset;
@@ -642,7 +609,7 @@ body {
 
 .chip:active {
   transform: translateY(0) rotate(0);
-  box-shadow: 
+  box-shadow:
     0 3px 6px rgba(0, 0, 0, 0.4),
     0 -1px 1px rgba(255, 255, 255, 0.2) inset,
     0 2px 2px rgba(0, 0, 0, 0.4) inset;
@@ -724,6 +691,7 @@ body {
   padding: 10px 20px;
   border-radius: 4px;
   transition: all 0.3s ease;
+  white-space: nowrap; /* Prevent wrapping */
 }
 
 .action-btn {
@@ -739,12 +707,12 @@ body {
   min-width: 100px;
 }
 
-.action-btn:hover {
+.action-btn:hover:not(:disabled) {
   background-color: var(--btn-hover);
   transform: translateY(-3px);
 }
 
-.action-btn:active {
+.action-btn:active:not(:disabled) {
   background-color: var(--btn-active);
   transform: translateY(0);
 }
@@ -753,41 +721,17 @@ body {
   background-color: var(--btn-disabled);
   cursor: not-allowed;
   transform: none;
+  opacity: 0.7;
 }
 
-/* Deal button styling - redundant with action-btn but keeping for reference */
-.deal-btn {
-  background-color: var(--btn-primary);
-  color: var(--text-primary);
-  border: none;
-  padding: 10px 25px;
-  border-radius: 4px;
-  font-family: var(--font-terminal);
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 100px;
-}
-
-.deal-btn:hover {
-  background-color: var(--btn-hover);
-  transform: translateY(-3px);
-}
-
-.deal-btn:active {
-  background-color: var(--btn-active);
-  transform: translateY(0);
-}
-
-.deal-btn:disabled {
-  background-color: var(--btn-disabled);
-  cursor: not-allowed;
-  transform: none;
+/* Deal button alias for consistency */
+#deal-btn {
+  /* Styles are same as .action-btn */
 }
 
 /* Utility classes */
 .hidden {
-  display: none;
+  display: none !important; /* Use important if needed to override */
 }
 
 .glitch {
@@ -835,14 +779,14 @@ body {
 }
 
 /* Prevent text selection on interactive elements */
-.chip, 
-.action-btn, 
-.deal-btn, 
+.chip,
+.action-btn,
+#deal-btn,
 .back-btn,
-.card,
-.game-option,
 .neon-logo,
-.control {
+.control,
+.card-play-btn /* Added */
+{
   -webkit-user-select: none;  /* Safari */
   -moz-user-select: none;     /* Firefox */
   -ms-user-select: none;      /* IE/Edge */
@@ -850,12 +794,14 @@ body {
 }
 
 /* Add pointer cursor to elements that should be clickable */
-.chip, 
-.action-btn, 
-.deal-btn, 
+.chip,
+.action-btn,
+#deal-btn,
 .back-btn,
-.game-option,
-.control {
+.control,
+.game-card:not(.disabled),
+.card-play-btn:not(.disabled) /* Added */
+{
   cursor: pointer;
 }
 
@@ -865,7 +811,7 @@ body {
 }
 
 /* Ensure no highlighting on game areas */
-.dealer-area, 
+.dealer-area,
 .player-area,
 .score,
 .current-bet,

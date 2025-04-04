@@ -6,63 +6,76 @@
     <title>SMR Casino | Games</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/mobile-styles.css">
+    <link rel="stylesheet" href="css/welcome-cards.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-container">
-        <!-- Welcome Screen -->
+        <!-- Welcome Screen (Redesigned) -->
         <div id="welcome-screen" class="screen active">
             <div class="neon-logo">
                 <h1>SMR <span>CASINO</span></h1>
             </div>
-            <div class="terminal-window">
-                <div class="terminal-header">
-                    <div class="terminal-controls">
-                        <span class="control"></span>
-                        <span class="control"></span>
-                        <span class="control"></span>
-                    </div>
-                    <div class="terminal-title">Terminal</div>
-                </div>
-                <div class="terminal-body">
-                    <p class="welcome-text glitch">
-                        Welcome to SMR Casino. Your stylish terminal gaming experience.
-                    </p>
-                    <p class="type-text">Select a game to play:</p>
-                    
-                    <div class="terminal-output" id="welcome-output">
-                        <!-- Terminal output will appear here -->
-                    </div>
-                    
-                    <div class="game-options">
-                        <div class="game-option" data-game="blackjack">
-                            <div class="option-number">01.</div>
-                            <div class="option-title">Blackjack</div>
-                            <div class="option-desc">Classic card game. Beat the dealer without going over 21.</div>
-                        </div>
-                        <div class="game-option disabled" data-game="roulette">
-                            <div class="option-number">02.</div>
-                            <div class="option-title">Roulette</div>
-                            <div class="option-desc">Coming soon.</div>
-                        </div>
-                        <div class="game-option disabled" data-game="poker">
-                            <div class="option-number">03.</div>
-                            <div class="option-title">Poker</div>
-                            <div class="option-desc">Coming soon.</div>
+            
+            <div class="welcome-content">
+                <h2 class="welcome-heading">SELECT A GAME TO PLAY</h2>
+                
+                <div class="game-cards">
+                    <!-- Blackjack Card -->
+                    <div class="game-card" data-game="blackjack">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-icon blackjack-icon">
+                                    <div class="bj-card bj-card-ace">A<span>♠</span></div>
+                                    <div class="bj-card bj-card-king">K<span>♥</span></div>
+                                </div>
+                                <h3 class="card-title">Blackjack</h3>
+                                <p class="card-desc">Beat the dealer without going over 21</p>
+                                <div class="card-play-btn">PLAY NOW</div>
+                            </div>
+                            <div class="card-glow"></div>
                         </div>
                     </div>
                     
-                    <div class="terminal-input-line">
-                        <span class="prompt">></span>
-                        <input type="text" id="welcome-input" class="terminal-input" autofocus placeholder="Type 'play blackjack' to start...">
+                    <!-- Roulette Card -->
+                    <div class="game-card disabled" data-game="roulette">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-icon roulette-icon">
+                                    <div class="roulette-wheel"></div>
+                                    <div class="roulette-ball"></div>
+                                </div>
+                                <h3 class="card-title">Roulette</h3>
+                                <p class="card-desc">Coming soon</p>
+                                <div class="card-play-btn disabled">COMING SOON</div>
+                            </div>
+                            <div class="card-glow"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Poker Card -->
+                    <div class="game-card disabled" data-game="poker">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="card-icon poker-icon">
+                                    <div class="poker-card poker-card-1">A<span>♥</span></div>
+                                    <div class="poker-card poker-card-2">K<span>♥</span></div>
+                                    <div class="poker-card poker-card-3">Q<span>♥</span></div>
+                                </div>
+                                <h3 class="card-title">Poker</h3>
+                                <p class="card-desc">Coming soon</p>
+                                <div class="card-play-btn disabled">COMING SOON</div>
+                            </div>
+                            <div class="card-glow"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Blackjack Screen -->
+        <!-- Blackjack Screen (Unchanged) -->
         <div id="blackjack-screen" class="screen">
             <!-- Terminal moved to the left -->
             <div class="terminal-window game-terminal">
@@ -133,33 +146,11 @@
         </div>
     </div>
 
-    <!-- Load app.js last to ensure all other scripts are loaded first -->
+    <!-- Load scripts -->
     <script src="js/terminal.js"></script>
     <script src="js/blackjack.js"></script>
+    <script src="js/welcome-cards.js"></script>
     <script src="js/app.js"></script>
     <script src="js/responsive.js"></script>
-    
-    <!-- Fix for game selection -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Direct click handler for game options
-            document.querySelectorAll('.game-option:not(.disabled)').forEach(option => {
-                option.addEventListener('click', function() {
-                    const game = this.getAttribute('data-game');
-                    if (game === 'blackjack') {
-                        document.getElementById('welcome-screen').classList.remove('active');
-                        document.getElementById('blackjack-screen').classList.add('active');
-                        
-                        // Initialize the game
-                        setTimeout(() => {
-                            if (typeof initBlackjack === 'function') {
-                                initBlackjack();
-                            }
-                        }, 300);
-                    }
-                });
-            });
-        });
-    </script>
 </body>
 </html>
