@@ -1,0 +1,288 @@
+/**
+ * mobile-styles.css - Mobile-specific styles for Neon Casino
+ * Contains all responsive design code separated from main styles.css
+ */
+
+/* Base mobile adjustments - Tablet and below */
+@media (max-width: 1024px) {
+    /* Welcome screen adjustments */
+    .neon-logo h1 {
+      font-size: 2.8rem;
+    }
+    
+    .game-option {
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .option-number, .option-title {
+      min-width: auto;
+    }
+  }
+  
+  /* Mobile devices - Hide terminal and optimize game layout */
+  @media (max-width: 768px) {
+    /* Hide terminal and adjust layout */
+    #blackjack-screen {
+      flex-direction: column !important;
+    }
+    
+    .game-terminal {
+      display: none !important; /* Hide terminal on mobile */
+    }
+    
+    .game-content {
+      width: 100% !important;
+      padding: 10px 5px !important;
+    }
+  
+    /* Update game header */
+    .game-header {
+      padding: 5px !important;
+      margin-bottom: 10px !important;
+      justify-content: space-between !important;
+    }
+    
+    .game-title {
+      font-size: 1.5rem !important;
+      position: static !important;
+      transform: none !important;
+      text-align: center !important;
+      margin: 0 5px !important;
+    }
+    
+    .back-btn {
+      padding: 6px 12px !important;
+      font-size: 0.9rem !important;
+    }
+    
+    .balance {
+      padding: 6px 12px !important;
+      font-size: 0.9rem !important;
+    }
+    
+    /* Blackjack table adjustments */
+    .blackjack-table {
+      height: auto !important;
+      min-height: 85vh !important;
+      padding: 10px !important;
+      gap: 10px !important;
+    }
+    
+    .dealer-area, .player-area {
+      height: auto !important;
+      min-height: 130px !important;
+      padding: 10px !important;
+      margin-bottom: 10px !important;
+    }
+    
+    .score {
+      font-size: 1.2rem !important;
+      padding: 3px 10px !important;
+    }
+    
+    /* Cards container and cards */
+    .cards-container {
+      gap: 8px !important;
+    }
+    
+    .card {
+      width: 60px !important;
+      height: 90px !important;
+    }
+    
+    .card-top-left,
+    .card-bottom-right {
+      font-size: 1rem !important;
+    }
+    
+    .card-center {
+      font-size: 1.6rem !important;
+    }
+    
+    /* Action buttons */
+    #action-buttons {
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: space-between !important;
+      width: 100% !important;
+      gap: 5px !important;
+      margin-top: 5px !important;
+    }
+    
+    #action-buttons button {
+      width: 32% !important;
+      margin: 0 !important;
+      padding: 10px 0 !important;
+      font-size: 0.9rem !important;
+      min-width: unset !important;
+    }
+    
+    /* Control sections */
+    .control-section {
+      gap: 5px !important;
+      margin: 5px 0 !important;
+    }
+    
+    .game-controls {
+      padding-top: 10px !important;
+      gap: 5px !important;
+    }
+    
+    /* Chips and betting controls */
+    .chip-container {
+      display: flex !important;
+      justify-content: center !important;
+      flex-wrap: wrap !important;
+      gap: 10px !important;
+    }
+    
+    .chip {
+      width: 50px !important;
+      height: 50px !important;
+      font-size: 1rem !important;
+      border-width: 6px !important;
+    }
+    
+    .current-bet {
+      font-size: 1rem !important;
+      padding: 5px 10px !important;
+      margin: 5px 0 !important;
+    }
+    
+    #deal-btn {
+      padding: 8px 20px !important;
+      font-size: 0.9rem !important;
+      margin: 5px 0 !important;
+      min-width: unset !important;
+    }
+  }
+  
+  /* Small mobile phones */
+  @media (max-width: 480px) {
+    .neon-logo h1 {
+      font-size: 2rem !important;
+    }
+    
+    .game-title {
+      font-size: 1.2rem !important;
+      letter-spacing: 1px !important;
+    }
+    
+    .card {
+      width: 55px !important;
+      height: 80px !important;
+    }
+    
+    .card-top-left,
+    .card-bottom-right {
+      font-size: 0.9rem !important;
+    }
+    
+    .card-center {
+      font-size: 1.4rem !important;
+    }
+    
+    .chip {
+      width: 45px !important;
+      height: 45px !important;
+      font-size: 0.9rem !important;
+      border-width: 5px !important;
+    }
+    
+    /* More compact action buttons for very small screens */
+    #action-buttons {
+      gap: 3px !important;
+    }
+    
+    #action-buttons button {
+      padding: 8px 0 !important;
+      font-size: 0.85rem !important;
+      border-radius: 3px !important;
+    }
+    
+    /* Reduce header spacing */
+    .game-header {
+      margin-bottom: 8px !important;
+    }
+    
+    /* Compact bet controls */
+    .control-section {
+      gap: 3px !important;
+    }
+    
+    .current-bet {
+      font-size: 0.9rem !important;
+      padding: 4px 8px !important;
+    }
+    
+    #deal-btn {
+      padding: 6px 15px !important;
+      font-size: 0.85rem !important;
+    }
+  }
+  
+  /* Extra small phones */
+  @media (max-width: 360px) {
+    .game-title {
+      font-size: 1rem !important;
+    }
+    
+    .card {
+      width: 50px !important;
+      height: 75px !important;
+    }
+    
+    .chip {
+      width: 40px !important;
+      height: 40px !important;
+      font-size: 0.8rem !important;
+      border-width: 4px !important;
+    }
+    
+    #action-buttons button {
+      font-size: 0.8rem !important;
+      padding: 7px 0 !important;
+      width: 31% !important; /* Slightly narrower */
+      margin: 0 !important;
+    }
+    
+    .back-btn, .balance {
+      padding: 5px 8px !important;
+      font-size: 0.8rem !important;
+    }
+    
+    /* Ultra compact for tiny screens */
+    .game-header {
+      padding: 3px !important;
+    }
+    
+    .chip-container {
+      gap: 4px !important;
+    }
+  }
+  
+  /* Special override for very small phones (under 330px) */
+  @media (max-width: 330px) {
+    #action-buttons button {
+      font-size: 0.75rem !important;
+      padding: 6px 0 !important;
+      width: 30% !important;
+    }
+    
+    .game-title {
+      font-size: 0.9rem !important;
+    }
+    
+    .back-btn, .balance {
+      padding: 4px 6px !important;
+      font-size: 0.75rem !important;
+    }
+    
+    .chip {
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 0.7rem !important;
+      border-width: 3px !important;
+    }
+  }

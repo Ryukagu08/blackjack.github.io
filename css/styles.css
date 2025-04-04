@@ -57,6 +57,7 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   overflow-x: hidden;
+  margin: 0; /* Added to fix scrolling */
   background-image: 
     radial-gradient(circle at 20% 30%, rgba(91, 192, 222, 0.15) 0%, transparent 40%),
     radial-gradient(circle at 80% 70%, rgba(247, 0, 255, 0.1) 0%, transparent 40%);
@@ -833,140 +834,45 @@ body {
   100% { clip-path: inset(22% 0 74% 0); }
 }
 
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-  #blackjack-screen {
-    flex-direction: column !important;
-  }
-  
-  .game-terminal {
-    width: 100%;
-    height: 300px;
-    margin: 10px;
-  }
-  
-  .game-content {
-    width: 100%;
-  }
-
-  .game-title {
-    position: static;
-    transform: none;
-    text-align: center;
-    margin: 0 auto;
-  }
-
-  .game-header {
-    justify-content: space-between;
-  }
+/* Prevent text selection on interactive elements */
+.chip, 
+.action-btn, 
+.deal-btn, 
+.back-btn,
+.card,
+.game-option,
+.neon-logo,
+.control {
+  -webkit-user-select: none;  /* Safari */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE/Edge */
+  user-select: none;          /* Standard syntax */
 }
 
-@media (max-width: 768px) {
-  .neon-logo h1 {
-    font-size: 2.5rem;
-  }
-  
-  .game-option {
-    flex-direction: column;
-    gap: 5px;
-  }
-  
-  .option-number, .option-title {
-    min-width: auto;
-  }
-  
-  .game-title {
-    font-size: 1.5rem;
-  }
-  
-  .cards-container {
-    gap: 5px;
-  }
-  
-  .card {
-    width: 60px;
-    height: 90px;
-  }
-  
-  .card-top-left,
-  .card-bottom-right {
-    font-size: 0.9rem;
-  }
-  
-  .card-center {
-    font-size: 1.5rem;
-  }
-  
-  .card-suit {
-    font-size: 0.8rem;
-  }
-  
-  .chip {
-    width: 50px;
-    height: 50px;
-    font-size: 1rem;
-    border-width: 6px;
-  }
-  
-  .action-btn {
-    padding: 8px 15px;
-    min-width: 80px;
-  }
+/* Add pointer cursor to elements that should be clickable */
+.chip, 
+.action-btn, 
+.deal-btn, 
+.back-btn,
+.game-option,
+.control {
+  cursor: pointer;
 }
 
-@media (max-width: 480px) {
-  .neon-logo h1 {
-    font-size: 2rem;
-  }
-  
-  .game-header {
-    flex-direction: row; /* Keep as row even on small screens */
-    align-items: center;
-    padding: 0 5px;
-  }
-  
-  .game-title {
-    font-size: 1.2rem;
-    letter-spacing: 1px;
-  }
-  
-  .back-btn {
-    padding: 6px 10px;
-    font-size: 0.8rem;
-  }
-  
-  .balance {
-    padding: 6px 10px;
-    font-size: 0.8rem;
-  }
-  
-  .card {
-    width: 60px;
-    height: 84px;
-    padding: 5px;
-  }
-  
-  .card-value {
-    font-size: 0.8rem;
-  }
-  
-  .card-suit {
-    font-size: 0.9rem;
-  }
-  
-  .chip {
-    width: 40px;
-    height: 40px;
-    font-size: 0.7rem;
-    border-width: 4px;
-  }
-  
-  .chip::before {
-    margin: 1px;
-    border-width: 1px;
-  }
-  
-  .control-section {
-    flex-direction: column;
-  }
+/* Cards shouldn't appear clickable */
+.card {
+  cursor: default;
+}
+
+/* Ensure no highlighting on game areas */
+.dealer-area, 
+.player-area,
+.score,
+.current-bet,
+.balance,
+.game-title {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
